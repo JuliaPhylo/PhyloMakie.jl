@@ -6,250 +6,152 @@ date-updated: 2026-05-09T03:07:47
 # Controlled vocabulary
 
 This file is the authoritative terminology reference for PhyloMakie.
-All code, documentation, tests, tranche documents, review reports, and pull
-requests must use the canonical terms defined here.
+All code, documentation, tests, workflow documents, review notes, and
+delegated tasks must use the canonical terms defined here.
 Proscribed terms must not appear in project-owned identifiers, type names,
-function names, keyword arguments, symbols, field names, or workflow documents
-except when quoting a third-party API or discussing legacy source material.
+function names, keyword arguments, symbols, or field names unless the project
+owner explicitly approves an exception.
 
-This list is not exhaustive and is not final.
-If a contributor needs to coin a new term, or is uncertain whether an existing
-term applies, that question must be raised with the project owner before the
-term is introduced into project-owned code or documentation.
-Once a term is ratified, this file must be updated and passed forward into all
-downstream workflow documents and agent handoffs.
+This file works alongside `STYLE-workflow-vocabulary.md`.
+`STYLE-workflow-vocabulary.md` remains authoritative for workflow-process
+terms such as `tranche`, `lock item`, and `red-state repro`.
+This file is the domain vocabulary authority for PhyloMakie-specific plotting,
+graph, and rendering concepts.
 
 ## Reader-facing prose versus API names
 
 Controlled vocabulary distinguishes reader-facing prose from exact API names.
 Use conventional spaced English terms in explanatory prose when that improves
-clarity for readers outside the project.
-Use compact project spellings only when referring to exact identifiers,
-keyword arguments, symbols, struct fields, or public API names.
+clarity. Use exact project spellings only when referring to code identifiers,
+keyword arguments, symbols, struct fields, or deliberate project terms.
 
 Examples:
 
-- Write "major hybrid edge" in prose; write `majorhybridedgecolor` only when
-  referring to the exact legacy keyword or a deliberate project-owned
-  identifier.
-- Write "leaf label" in prose; write `showleaflabel` only when referring to
-  the exact keyword argument.
-- Code examples in this repository are project-owned code and must follow the
-  canonical identifier forms recorded here.
-
-## Compound-word naming convention
-
-Compound accessor names and domain-specific identifiers in this package are
-written without underscores when the compound reads naturally as a single
-concept.
-Examples include `phyloplot`, `edgeweight`, `branchingtime`,
-`coalescenceage`, `basenode`, `boundingbox`, and `lineageunits`.
-This is consistent with `STYLE-julia.md` section 2.1.
+- Write "major hybrid edge" in prose; write `majorhybridedgecolor` only for
+  the exact keyword name.
+- Write "tip label" in prose; write `showtiplabel` only for the exact keyword
+  name.
+- Write "full-tree style" in prose; write `:fulltree` only for the exact style
+  symbol.
 
 ## Entries
 
-### `edge label`
+### Edge label
 
-**Part of speech:** noun.
+An edge label is text annotation attached to an edge.
+This includes built-in edge annotations such as length, gamma, and edge
+number, plus user-supplied annotations from the `edgelabel` data frame.
 
-**Definition:** Text associated with an edge by explicit user request, whether
-through a DataFrame-provided annotation or through a built-in edge display such
-as edge number, edge length, or inheritance value.
+Use "edge label" as the default project term.
+Do not use "branch label" as the default term in project-owned code or docs
+for this production run.
 
-**Usage notes:** Use "edge label" for the rendered concept in prose.
-Use `edgelabel` only for the exact keyword or identifier.
+### FigureAxisPlot
 
-**Proscribed alternates:** `branch label` for project-owned terminology when
-the plotted object is the network edge abstraction.
+`Makie.FigureAxisPlot` is the canonical non-mutating return contract for
+`phyloplot(net; kwargs...)`.
 
----
+Use the exact type name when discussing the API contract.
+Do not replace it with vague phrases such as "plot tuple" when the return-type
+contract is the point under discussion.
 
-### `full tree style`
+### Foreign project terms
 
-**Part of speech:** noun.
+Terms such as `lineageplot`, `lineageunits`, `EdgeLayer`, `LeafLayer`,
+`LeafLabelLayer`, `NodeLayer`, `NodeLabelLayer`, `CladeHighlightLayer`,
+`CladeLabelLayer`, and `ScaleBarLayer` belong to another project's domain
+vocabulary and are not part of PhyloMakie's default terminology.
 
-**Definition:** The plotting style in which minor hybrid edges are rendered as
-their own branches rather than as simple overlays on the major tree.
+Do not let those foreign domain tables shape PhyloMakie naming, planning, or
+review unless the project owner explicitly adopts a specific term later.
 
-**Usage notes:** The canonical prose term is "full tree style".
-The exact symbol is `:fulltree`.
+### Fulltree and majortree
 
-**Proscribed alternates:** `fulltree` in ordinary prose; `IcyTree style` as the
-project's canonical term.
+`:fulltree` and `:majortree` are the exact legacy style symbols inherited from
+`PhyloPlots.plot`.
 
----
+For this production run, keep these exact public spellings and behaviors.
+In reader-facing prose, describe them as "full-tree style" and "major-tree
+style".
 
-### `hybrid edge`
+### HybridNetwork
 
-**Part of speech:** noun.
+`PhyloNetworks.HybridNetwork` is the canonical input type for the current
+production run.
 
-**Definition:** An edge incident to a hybrid node in a `HybridNetwork`.
-Hybrid edges participate in major/minor role assignment and inheritance-value
-display.
+Do not generalize planning language to arbitrary graphs, arbitrary trees, or
+arbitrary network types when the contract being discussed is specific to
+`HybridNetwork`.
 
-**Usage notes:** Use "hybrid edge" as the umbrella term.
-Use the more specific terms "major hybrid edge" and "minor hybrid edge" when
-the distinction matters.
+### Keyword surface
 
-**Proscribed alternates:** `reticulation arrow` when the term is meant to name
-the network edge rather than the rendered glyph.
+The keyword surface is the complete public keyword argument behavior inherited
+from `PhyloPlots.plot(net::HybridNetwork; ...)` for this production run.
 
----
+This includes keyword names, defaults, validation rules, warnings, and visible
+effects.
+Do not rename or reinterpret that public surface in this production run unless
+the project owner explicitly reopens a specific keyword contract.
 
-### `layout engine`
+### Layout engine
 
-**Part of speech:** noun.
+The layout engine is the internal owner that computes node, edge, and
+minor-hybrid-edge geometry plus annotation anchor data before Makie rendering.
 
-**Definition:** The internal owner that computes coordinate, extent, and
-geometry information for nodes, edges, and hybrid-edge diagonals before Makie
-rendering occurs.
+For this project, the layout engine is the Makie-independent descendant of the
+pure Julia helper logic in `PhyloPlots.jl/src/phylonetworksPlots.jl`.
+Do not use "renderer" when the geometry owner is what you mean.
 
-**Usage notes:** The layout engine is a deep internal module, not a public API
-name.
-It owns plotting geometry semantics and should remain independent from Makie
-primitive creation where practical.
+### Major hybrid edge and minor hybrid edge
 
-**Proscribed alternates:** `R layout`; `plotting shell` when the subject is the
-coordinate owner rather than the renderer.
+Major hybrid edge and minor hybrid edge are the canonical parent-edge terms
+used by PhyloNetworks and PhyloPlots for hybrid nodes.
 
----
+Use these exact terms in code, docs, tests, and workflow documents.
+Do not replace them with vague substitutes such as "primary edge",
+"secondary edge", or "overlay edge".
 
-### `leaf`
+### PhyloPlot
 
-**Part of speech:** noun.
+`PhyloPlot` is the Makie recipe type name produced by `@recipe(PhyloPlot, net)`.
 
-**Definition:** The canonical project term for a terminal taxon node.
+Treat `PhyloPlot` as an implementation-detail type.
+User-facing prose should prefer `phyloplot` and `phyloplot!`.
 
-**Usage notes:** PhyloMakie uses `leaf` consistently in new project-owned API
-names, prose, and implementation terminology.
-Legacy `PhyloPlots` material may use `tip`; that legacy term is only acceptable
-when quoting or cross-referencing old sources.
+### Phyloplot
 
-**Proscribed alternates:** `tip` in new project-owned identifiers, docs, and
-workflow documents; `terminal` when the project term intended is the concrete
-leaf abstraction.
+`phyloplot(net; kwargs...)` is the canonical non-mutating public plotting
+function in PhyloMakie.
 
----
+It must return `Makie.FigureAxisPlot` and must follow the `PhyloPlots.plot`
+public behavior completely for this production run.
+Do not use `plot` as the primary user-facing PhyloMakie name when the package
+specific API is intended.
 
-### `major hybrid edge`
+### Phyloplot!
 
-**Part of speech:** noun.
+`phyloplot!(ax, net; kwargs...)` is the canonical mutating public plotting
+function for plotting into an existing Makie axis-like owner.
 
-**Definition:** The hybrid parent edge whose `ismajor` role is true for a
-hybrid node under `PhyloNetworks` direction and traversal semantics.
+Preserve Makie's mutating semantics.
+Do not create a non-bang wrapper that silently mutates an existing axis.
 
-**Usage notes:** Use this term when discussing color policy, style differences,
-or inheritance-label placement.
+### Render adapter
 
-**Proscribed alternates:** `primary hybrid edge`; `dark blue edge` as a
-semantic name.
+The render adapter is the internal owner that translates resolved plot options
+and layout-engine outputs into Makie primitives, text, and recipe composition.
 
----
+Keep render concerns separate from layout calculation and keyword
+normalization.
 
-### `major tree style`
+### Tip and leaf
 
-**Part of speech:** noun.
+`tip` is the canonical public plotting term inherited from PhyloPlots for
+current user-facing keyword names such as `showtiplabel`, `tipoffset`, and
+`tipcex`.
+`leaf` is the graph-structural term used when discussing `PhyloNetworks` node
+properties or general tree and network structure.
 
-**Definition:** The plotting style in which minor hybrid edges are rendered as
-overlay diagonals on the major tree rather than as separate branches.
-
-**Usage notes:** The canonical prose term is "major tree style".
-The exact symbol is `:majortree`.
-
-**Proscribed alternates:** `majortree` in ordinary prose; `overlay style` as
-the canonical project term.
-
----
-
-### `minor hybrid edge`
-
-**Part of speech:** noun.
-
-**Definition:** The non-major parent hybrid edge for a hybrid node.
-In plotting, this edge is the one rendered with the minor-edge diagonal or
-branch treatment and is the default owner of arrow-tip display.
-
-**Usage notes:** Use this term when discussing `:fulltree` versus `:majortree`
-rendering, line style, arrow policy, and minor-edge color semantics.
-
-**Proscribed alternates:** `secondary hybrid edge`; `arrow edge` as a semantic
-name.
-
----
-
-### `node label`
-
-**Part of speech:** noun.
-
-**Definition:** Text associated with a node by explicit user request, whether
-through built-in node-name or node-number displays or through a DataFrame-based
-annotation.
-
-**Usage notes:** Use "node label" for the rendered concept in prose.
-Use `nodelabel` only for the exact keyword or identifier.
-
-**Proscribed alternates:** `vertex label` in project-owned terminology.
-
----
-
-### `node number`
-
-**Part of speech:** noun.
-
-**Definition:** The internal integer identifier carried by a `PhyloNetworks`
-node and optionally exposed for plotting, annotation, and rotation workflows.
-
-**Usage notes:** Distinguish node number from node name.
-Names are reader-facing labels such as `H1`; numbers are internal identifiers
-such as `-5`.
-
-**Proscribed alternates:** `vertex number` in project-owned terminology.
-
----
-
-### `PhyloPlot`
-
-**Part of speech:** noun.
-
-**Definition:** The canonical Makie recipe type name for the main network plot
-surface.
-
-**Usage notes:** `PhyloPlot` is the type name generated by `@recipe`.
-The public user-facing functions are `phyloplot` and `phyloplot!`.
-
-**Proscribed alternates:** `PhyloNetworkPlot`; `TipPlot`; `TreePlot` when the
-project-owned recipe is specifically the hybrid-network plotting surface.
-
----
-
-### `phyloplot`
-
-**Part of speech:** noun and function name.
-
-**Definition:** The canonical public-facing plotting name for
-`PhyloMakie`'s non-mutating `HybridNetwork` recipe surface.
-
-**Usage notes:** Use `phyloplot` for the public entrypoint that creates a
-`Makie.FigureAxisPlot`.
-Use `phyloplot!` for the mutating entrypoint that renders into an existing
-Makie axis.
-
-**Proscribed alternates:** `plotphylo`; `plotnetwork`; `phyloplot` with mixed
-`tip` vocabulary in adjacent identifiers.
-
----
-
-### `rendering shell`
-
-**Part of speech:** noun.
-
-**Definition:** The internal owner that maps resolved layout and annotation
-data onto Makie primitives, text, and axis-owned decorations.
-
-**Usage notes:** The rendering shell may use Makie-specific types and
-attributes.
-It should consume already-resolved semantics from the layout engine and
-annotation-preparation owners rather than recomputing those policies locally.
-
-**Proscribed alternates:** `layout engine` when the subject is the Makie
-primitive owner rather than the geometry owner.
+Do not rename existing public plotting keywords from `tip` to `leaf` in this
+production run.
+Use `leaf` in internal design prose only when structural precision matters.
