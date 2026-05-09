@@ -138,7 +138,7 @@ const VERIFICATION_FOUNDATION = (
         (
             id = :jet,
             artifact = "JET remains supplemental proof inside the test suite.",
-            command = "JET.test_package(PhyloMakie; target_defined_modules = true)",
+            command = "JET.test_package(PhyloMakie; target_modules = (PhyloMakie,))",
         ),
         (
             id = :docs_build,

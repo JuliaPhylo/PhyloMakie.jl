@@ -1,7 +1,8 @@
 ---
 date-created: 2026-05-09T03:07:47
+date-updated: 2026-05-09T14:40:00
 parent-prd: 01_prd.md
-status: proposed
+status: tranche-1-approved
 ---
 
 # Tranches for Makie-native HybridNetwork plotting in PhyloMakie
@@ -12,9 +13,12 @@ status: proposed
 
 ## Approval state
 
-- This tranche plan is proposed planning output.
-- Do not treat it as ratified for downstream `Tranches -> Tasks` execution
-  until the project owner explicitly approves it.
+- This tranche plan remains proposed planning output for Tranches 2 through 6.
+- Project-owner approval for Tranche 1 and its tranche-1 tasking file was
+  recorded on 2026-05-09 via the explicit execution request for tranche-1
+  implementation.
+- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 2
+  through 6 until the project owner explicitly approves them.
 
 ## Active authorities
 
@@ -96,7 +100,7 @@ Inference boundary note:
 
 | Tranch id | Title | Status |
 | --- | --- | --- |
-| 1 | Verification and module shell foundation | Proposed |
+| 1 | Verification and module shell foundation | Approved and implemented |
 | 2 | Public keyword normalization owner | Proposed |
 | 3 | Layout and annotation data owner | Proposed |
 | 4 | Makie render adapter and style parity closure | Proposed |
@@ -107,6 +111,8 @@ Inference boundary note:
 
 **Type**: AFK
 **Blocked by**: None — can start immediately
+**Approval record**: Project-owner approval was recorded on 2026-05-09 via the
+explicit execution request for tranche-1 implementation.
 
 ### Parent PRD
 

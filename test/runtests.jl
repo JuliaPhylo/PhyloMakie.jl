@@ -13,6 +13,6 @@ include("support/fixture_corpus.jl")
         Aqua.test_all(PhyloMakie)
     end
     @testset "Code linting (JET.jl)" begin
-        JET.test_package(PhyloMakie; target_defined_modules = true)
+        JET.test_package(PhyloMakie; target_modules = (PhyloMakie,))
     end
 end

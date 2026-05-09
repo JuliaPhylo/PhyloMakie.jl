@@ -12,10 +12,10 @@ now owns a thin module shell, a source-backed verification matrix, and a
 repo-owned fixture corpus. It does not yet implement `phyloplot`,
 `phyloplot!`, or Makie `plot(net)` dispatch.
 
-The workflow documentation requires explicit project-owner approval before a
-tranche executes. This code snapshot only establishes the verification
-foundation for that work; it does not widen the plotting API surface to match
-the later tranches.
+Project-owner approval for the tranche-1 `Tasks -> Execute` run was recorded on
+2026-05-09. This code snapshot captures that implemented verification
+foundation; it does not widen the plotting API surface to match the later
+tranches.
 
 ## What tranche 1 establishes
 

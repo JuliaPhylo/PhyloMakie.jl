@@ -1,8 +1,9 @@
 ---
 date-created: 2026-05-09T03:07:47
+date-updated: 2026-05-09T14:40:00
 parent-tranche: 02_tranches.md
 parent-prd: 01_prd.md
-status: proposed
+status: implemented
 ---
 
 # Tasks for tranche 1: Verification and module shell foundation
@@ -12,9 +13,12 @@ Parent PRD: `01_prd.md`
 
 ## Approval state
 
-- This tasking file is proposed planning output derived from a proposed tranche plan.
-- Do not treat it as ratified for downstream `Tasks -> Execute` execution until the project owner explicitly approves both Tranche 1 in `02_tranches.md` and this tasking file.
-- If project-owner approval is not yet recorded for both, downstream implementation must stop before changing project code, tests, or docs.
+- This tasking file was proposed planning output derived from a proposed tranche
+  plan and is now the execution record for the implemented tranche-1 snapshot.
+- Project-owner approval for both Tranche 1 in `02_tranches.md` and this
+  tasking file was recorded on 2026-05-09 via the explicit execution request
+  for tranche-1 implementation.
+- This file is ratified for the completed tranche-1 `Tasks -> Execute` run only.
 
 ## Settled user decisions and environment baseline
 
@@ -32,7 +36,9 @@ Parent PRD: `01_prd.md`
 - Public entry-surface proof closure is intentionally deferred to Tranche 5. Full verification-envelope closure is intentionally deferred to Tranche 6.
 - In this tranche, docs must tell the truth about the current implementation state. They must not imply that `phyloplot`, `phyloplot!`, or `plot(net)` already exist.
 - In this tranche, the three plotting entry surfaces are target public surfaces for the production run, not implemented tranche-1 APIs.
-- Current observed baseline: `julia --project=test test/runtests.jl` fails before running tests because the `test/` manifest does not currently resolve `PhyloMakie` as a runnable direct dependency.
+- Historical tranche-start baseline: `julia --project=test test/runtests.jl`
+  failed before running tests because the `test/` manifest did not yet resolve
+  `PhyloMakie` as a runnable direct dependency.
 
 ## Governance
 
@@ -124,14 +130,22 @@ Read-only git and shell commands may be used freely. Mutating git operations suc
 
 ## Handoff packet
 
-- Approval state: proposed; blocked for downstream `Tasks -> Execute` until the project owner explicitly approves both Tranche 1 in `02_tranches.md` and this tasking file.
+- Approval state: approved and executed; project-owner approval for both
+  Tranche 1 in `02_tranches.md` and this tasking file was recorded on
+  2026-05-09 via the explicit tranche-1 implementation request.
 - Active authorities: `CONTRIBUTING.md`; repo-local `STYLE*.md`; `STYLE-vocabulary.md`; `STYLE-workflow-vocabulary.md`; `design/prod01-vision.md`; `design/prod01-vision-supplement.md`; `01_prd.md`; `02_tranches.md`.
 - Parent documents: `01_prd.md`; `02_tranches.md`; `design/prod01-vision.md`; `design/prod01-vision-supplement.md`.
 - Settled decisions and non-negotiables: preserve the `PhyloPlots.plot` public behavior target; keep `phyloplot`, `phyloplot!`, and `plot(net)` as the target public surfaces; keep `PhyloPlot` as the recipe type name; keep `HybridNetwork` as the only supported public input type; keep R interop out of scope; do not let foreign domain vocabulary enter project-owned assets; keep the root/test/docs project split and `[sources.PhyloMakie] path = "../"` overrides; use documented public `Pkg` operations to curate the local project environments.
 - Authorization boundary: deep internal redesign is allowed; public behavior drift is not; compatibility aliases are not required; this tranche must not implement the plotting API itself.
-- Current-state diagnosis: `src/PhyloMakie.jl` is an empty shell; `test/runtests.jl` is Aqua/JET-only and the `test/` project is not currently runnable from its own manifest; docs are boilerplate-only; there is no plotting-specific verification owner.
+- Historical tranche-start diagnosis: `src/PhyloMakie.jl` was an empty shell;
+  `test/runtests.jl` was Aqua/JET-only and the `test/` project was not
+  runnable from its own manifest; docs were boilerplate-only; there was no
+  plotting-specific verification owner.
 - Primary-goal lock: the 7 lock items above.
-- Direct red-state repros: no `VERIFICATION_FOUNDATION`; no fixture corpus; no target-surface matrix; no docs verification page; no plot-sensitive tests; stale `test/Manifest.toml`; pure boilerplate docs; no recorded project-owner approval gate in the tasking file.
+- Historical tranche-start red-state repros: no `VERIFICATION_FOUNDATION`; no
+  fixture corpus; no target-surface matrix; no docs verification page; no
+  plot-sensitive tests; stale `test/Manifest.toml`; pure boilerplate docs; no
+  recorded project-owner approval gate in the tasking file.
 - Owner and invariant under repair: verification ownership, fixture ownership, honest deferred-proof ownership, and thin-module ownership.
 - Target public surfaces affected by this owner boundary: `phyloplot`, `phyloplot!`, and `plot(net)` via Makie dispatch. This tranche must record all three as target surfaces with `implemented = false`. It must not implement direct proofs for them yet.
 - Exact files or surfaces in scope: `src/PhyloMakie.jl`; new source files under `src/`; `test/Project.toml`; `test/Manifest.toml`; `test/runtests.jl`; new files under `test/`; `docs/make.jl`; `docs/src/`; the workflow docs created by this file.
@@ -139,12 +153,19 @@ Read-only git and shell commands may be used freely. Mutating git operations suc
 - Required upstream primary sources: `PhyloPlots.jl/src/phylonetworksPlots.jl`; `PhyloPlots.jl/src/plotRCall.jl`; `PhyloPlots.jl/test/test_phylonetworkPlots.jl`; `PhyloNetworks.jl/src/types.jl`; `PhyloNetworks.jl/src/manipulateNet.jl`; `PhyloNetworks.jl/docs/src/man/net_plot.md`; `~/.julia/packages/Makie/FUAHr/MakieCore/src/recipes.jl`; `~/.julia/packages/Makie/TOy8O/src/figureplotting.jl`.
 - Upstream contract conclusions already settled for this tranche: Makie `@recipe(PhyloPlot, net)` generates `phyloplot` and `phyloplot!`; Makie non-mutating plotting returns `FigureAxisPlot`; Makie bang plotting targets an axis-like owner; `PhyloPlots` owns the authoritative keyword surface and current helper-regression fixtures; `PhyloNetworks.directedges!` and `preorder!` are the current mutation owners used by the legacy plotting path.
 - Green-state gates: runnable `test/` project; package tests; Aqua; JET; docs build.
-- Stop conditions: stop if project-owner approval is not yet recorded for both the parent tranche and this tasking file; stop if making the verification owner runnable requires implementing recipe, keyword, layout, or render logic; stop if the fixture corpus cannot be encoded without importing out-of-scope R behavior; stop if a later tranche would still need to infer target surfaces or scenario IDs from prose alone; stop if docs would need to lie about implemented plotting behavior to stay green.
+- Stop conditions during implementation: stop if making the verification owner
+  runnable requires implementing recipe, keyword, layout, or render logic;
+  stop if the fixture corpus cannot be encoded without importing out-of-scope
+  R behavior; stop if a later tranche would still need to infer target
+  surfaces or scenario IDs from prose alone; stop if docs would need to lie
+  about implemented plotting behavior to stay green.
 
 ## Required revalidation before implementation
 
 - Read `02_tranches.md` and `01_prd.md` in full.
-- Confirm that project-owner approval is recorded for both Tranche 1 in `02_tranches.md` and this tasking file. If approval is missing, stop and do not begin implementation.
+- Confirm that project-owner approval is recorded for both Tranche 1 in
+  `02_tranches.md` and this tasking file. For the executed tranche-1 run, this
+  approval was recorded on 2026-05-09.
 - Read all governance files named above line by line.
 - Re-read `src/PhyloMakie.jl`, `test/runtests.jl`, `docs/src/index.md`, `docs/make.jl`, `test/Project.toml`, and `test/Manifest.toml` in full.
 - Re-read the upstream sources named in the handoff packet, especially the `PhyloPlots` helper tests and the Makie recipe and `FigureAxisPlot` source files.
@@ -154,7 +175,10 @@ Read-only git and shell commands may be used freely. Mutating git operations suc
 
 ## Tranche execution rule
 
-This tranche may redesign the source layout and verification ownership deeply, but it remains proposed planning output until the project owner approves it. Once approved for execution, it must begin and end in a green, policy-compliant state for its scope.
+This tranche could redesign the source layout and verification ownership
+deeply, but it remained proposed planning output until the project owner
+approved it on 2026-05-09. After approval for execution, it had to begin and
+end in a green, policy-compliant state for its scope.
 
 When this tranche completes:
 
@@ -262,4 +286,15 @@ Create a canonical fixture corpus under `test/support/fixture_corpus.jl` as plai
 **Out of scope**: public API docs for working plotting functions; screenshot regression assets; recipe examples that require implemented plot behavior; `README.md`
 **Verification**: `julia --project=docs docs/make.jl` passes and executes source-backed blocks that render the target-surface matrix, lock-item inventory, and deferred proof boundary. The current boilerplate docs state must fail this proof shape because the page and source-backed owner do not exist there.
 
-Replace the current docs boilerplate with a truthful tranche-1 docs scaffold. Keep the docs project lightweight and tied to the source-side owner rather than to aspirational API examples. The home page must explain that Tranche 1 establishes the verification owner, fixture corpus, and thin-module shell only, and that `Tasks -> Execute` remains blocked until project-owner approval is recorded. The dedicated verification-foundation page must render, from `PhyloMakie.VERIFICATION_FOUNDATION`, the 3 target public surfaces, the explicit `implemented = false` and deferred-proof status for each, the 7 PRD lock items, the 8 design acceptance scenarios, the 7 upstream helper-regression IDs, the green-state gates, and the stop conditions. Use executable Documenter blocks so a stale or missing source-side owner breaks the docs build instead of drifting silently.
+Replace the current docs boilerplate with a truthful tranche-1 docs scaffold.
+Keep the docs project lightweight and tied to the source-side owner rather
+than to aspirational API examples. The home page must explain that Tranche 1
+establishes the verification owner, fixture corpus, and thin-module shell
+only, and that project-owner approval for the tranche-1 `Tasks -> Execute` run
+was recorded on 2026-05-09. The dedicated verification-foundation page must
+render, from `PhyloMakie.VERIFICATION_FOUNDATION`, the 3 target public
+surfaces, the explicit `implemented = false` and deferred-proof status for
+each, the 7 PRD lock items, the 8 design acceptance scenarios, the 7 upstream
+helper-regression IDs, the green-state gates, and the stop conditions. Use
+executable Documenter blocks so a stale or missing source-side owner breaks
+the docs build instead of drifting silently.
