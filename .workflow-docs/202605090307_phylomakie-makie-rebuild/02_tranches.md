@@ -2,7 +2,8 @@
 date-created: 2026-05-09T03:07:47
 date-updated: 2026-05-09T14:40:00
 parent-prd: 01_prd.md
-status: tranche-1-approved
+workflow-instrument: Tranche plan
+workflow-status: Approved
 ---
 
 # Tranches for Makie-native HybridNetwork plotting in PhyloMakie

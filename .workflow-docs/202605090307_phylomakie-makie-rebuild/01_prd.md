@@ -1,5 +1,7 @@
 ---
 date-created: 2026-05-09T03:07:47
+workflow-instrument: PRD
+workflow-status: Approved
 ---
 
 # PRD: Makie-native HybridNetwork plotting for PhyloMakie

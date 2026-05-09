@@ -3,7 +3,8 @@ date-created: 2026-05-09T03:07:47
 date-updated: 2026-05-09T14:40:00
 parent-tranche: 02_tranches.md
 parent-prd: 01_prd.md
-status: implemented
+workflow-instrument: Tasking
+workflow-status: Implemented
 ---
 
 # Tasks for tranche 1: Verification and module shell foundation
