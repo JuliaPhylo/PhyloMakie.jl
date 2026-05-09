@@ -1,7 +1,7 @@
 ---
-date-created: 2026-05-09T00:00:00
+date-created: 2026-05-09T03:07:47
 parent-prd: 01_prd.md
-status: approved
+status: proposed
 ---
 
 # Tranches for Makie-native HybridNetwork plotting in PhyloMakie
@@ -9,6 +9,12 @@ status: approved
 ## Parent PRD
 
 `01_prd.md`
+
+## Approval state
+
+- This tranche plan is proposed planning output.
+- Do not treat it as ratified for downstream `Tranches -> Tasks` execution
+  until the project owner explicitly approves it.
 
 ## Active authorities
 
@@ -90,12 +96,12 @@ Inference boundary note:
 
 | Tranch id | Title | Status |
 | --- | --- | --- |
-| 1 | Verification and module shell foundation | Approved |
-| 2 | Public keyword normalization owner | Approved |
-| 3 | Layout and annotation data owner | Approved |
-| 4 | Makie render adapter and style parity closure | Approved |
-| 5 | Recipe and entry surface integration | Approved |
-| 6 | Stabilization, docs, and cross-surface parity sweep | Approved |
+| 1 | Verification and module shell foundation | Proposed |
+| 2 | Public keyword normalization owner | Proposed |
+| 3 | Layout and annotation data owner | Proposed |
+| 4 | Makie render adapter and style parity closure | Proposed |
+| 5 | Recipe and entry surface integration | Proposed |
+| 6 | Stabilization, docs, and cross-surface parity sweep | Proposed |
 
 ## Tranche 1: Verification and module shell foundation
 
