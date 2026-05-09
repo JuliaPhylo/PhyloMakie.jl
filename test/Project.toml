@@ -1,0 +1,8 @@
+[deps]
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+
+[sources.PhyloMakie]
+path = "../"

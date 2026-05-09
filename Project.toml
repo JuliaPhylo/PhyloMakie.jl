@@ -1,0 +1,7 @@
+name = "PhyloMakie"
+uuid = "ccbd7354-87c9-452d-961c-17247803ee9f"
+authors = ["Jeet Sukumaran <jeetsukumaran@gmail.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1.11"
