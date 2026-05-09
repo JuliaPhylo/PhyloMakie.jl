@@ -12,11 +12,13 @@ The internal API and architecture can be designed from the ground up for idiomat
 The main function from PhyloMakie that we are redelivering here is: `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)`.
 (The remainder of the public user surface consists of R interoperability functions `PhyloPlots.sexp` and `PhyloPlots.rexport`, and as *NO* R interoperability support will be required or retained, these can be ignored as out of scope for this production run).
 
-The function PhyloMakie will provide as the Makie-based counter-part to `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)` is 
+The function PhyloMakie will provide as the Makie-based counter-part to `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)` is `phyloplot`, which takes one positional argument of type `PhyloNetworks.HybridNetwork` and returns the result as a `Makie.FigureAxisPlot` object.
 
 ```julia
 PhyloMakie.phyloplot(::PhyloNetworks.HybridNetwork; ...)::Makie.FigureAxisPlot
 ```
+
+A user-facing MWE:
 
 ```julia
 using PhyloNetworks: readnewick
@@ -41,4 +43,21 @@ fig = Figure()
 phyloplot!(Axis(fig[1, 1], title = "net"),  net)
 phyloplot!(Axis(fig[1, 2], title = "net2"), net2)
 fig
+```
+
+Sketch of Makie scaffold:
+
+
+```julia
+@recipe(PhyloPlot, net) do scene
+    Attributes(useedgelength=false, showtiplabel=true, style=:fulltree, ...)
+end
+
+function Makie.plot!(p::PhyloPlot)
+    net = p[:net][]
+    #....
+end
+
+Makie.plottype(::HybridNetwork) = PhyloPlot
+
 ```
