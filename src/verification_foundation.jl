@@ -53,19 +53,70 @@ const VERIFICATION_FOUNDATION = (
         ),
         deferred_contracts = DEFERRED_PLOT_KEYWORD_CONTRACTS,
         reviewer_gate = (
-            clear = "the canonical keyword owner exists, direct keyword regressions pass, malformed explicit xlim and ylim overrides are rejected structurally at the keyword-owner boundary, and the deferred DataFrame-validation and exact limit-message contracts remain explicit in source, tests, and docs.",
-            reject = "it partially reimplements DataFrame validation parity or exact xlim and ylim message parity, falsely marks those contracts closed, or leaves the deferred-owner boundary implicit.",
+            clear = "the canonical keyword owner exists, direct keyword regressions pass, malformed explicit xlim and ylim overrides are rejected structurally at the keyword-owner boundary, helper-level annotation validation and bounds-message contracts are closed in the layout and annotation owners, and the remaining direct public entry-surface proofs stay explicit in source, tests, and docs.",
+            reject = "it reopens helper-level annotation or bounds ownership in the keyword layer, falsely marks tranche-5 direct public proof closed, or leaves the deferred direct-public boundary implicit.",
+        ),
+    ),
+    layout_annotation_owner = (
+        source_files = (
+            "src/layout_engine.jl",
+            "src/annotation_data.jl",
+        ),
+        supporting_types = (
+            "PlotGeometry",
+            "PlotBounds",
+            "PlotAnnotationData",
+        ),
+        canonical_payload = "PlotLayout",
+        regression_suites = (
+            "test/test_layout_engine.jl",
+            "test/test_annotation_data.jl",
+        ),
+        closed_helper_regressions = (
+            :edgenode_coords_with_lengths_fulltree,
+            :edgenode_coords_with_lengths_majortree,
+            :edgenode_coords_without_lengths_majortree,
+            :level2_network_with_gamma,
+            :level2_network_without_gamma,
+            :mixed_missing_lengths_warning,
+            :all_missing_lengths_fulltree_fallback,
+            :incompatible_root,
+            :preorder_mutation_boundary,
+            :nodelabel_validation_and_prep,
+            :edgelabel_validation_and_prep,
+            :major_tree_minor_edge_midpoint,
+            :helper_bounds_messages,
+        ),
+        deferred_render_proof = (
+            owner_tranche = 4,
+            contracts = (
+                "Render-level style distinction, hybrid-edge visibility, gamma text, and color semantics via the Makie render adapter.",
+                "Render-time proof that plotted annotations consume PlotLayout without geometry or midpoint recomputation.",
+            ),
+        ),
+        deferred_public_surface_proof = (
+            owner_tranche = 5,
+            contracts = (
+                "Direct public proof for phyloplot.",
+                "Direct public proof for phyloplot!.",
+                "Direct Makie dispatch proof for plot(net).",
+                "Direct public xlim and ylim error-path proof through the plotting entry surfaces.",
+            ),
+        ),
+        reviewer_gate = (
+            clear = "src/layout_engine.jl and src/annotation_data.jl remain the only helper owners, exact geometry and annotation regressions pass locally, PlotLayout remains the canonical helper payload, and render-level plus direct public-surface proof stays deferred explicitly to tranches 4 and 5.",
+            reject = "it reimplements geometry, midpoint, or helper-bounds semantics in render-facing code, leaves the canonical helper payload implicit, or falsely marks render or direct public entry-surface proof closed.",
         ),
     ),
     accepted_design_scenarios = (
         simple_tree_no_hybrid = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 6,
+            direct_proof_owner = 4,
             required_output = "Renders without error; no hybrid-edge drawing code is invoked.",
         ),
         single_reticulation_gamma = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 6,
+            direct_proof_owner = 4,
             required_output = "Major and minor hybrid edges are visible in distinct colors, and the minor edge has an arrow tip.",
         ),
         style_distinction_fulltree_vs_majortree = (
@@ -75,12 +126,12 @@ const VERIFICATION_FOUNDATION = (
         ),
         useedgelength_scaling = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 3,
+            direct_proof_owner = 4,
             required_output = "Node x positions follow edge lengths, and missing lengths render as 1.0.",
         ),
         dataframe_label_rendering = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 3,
+            direct_proof_owner = 4,
             required_output = "Node and edge labels render at the correct midpoint anchors after validation.",
         ),
         showgamma_rendering = (
@@ -144,7 +195,7 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :package_tests,
-            artifact = "Tranche-1 shell-owner, verification-owner, and fixture-corpus tests pass.",
+            artifact = "Shell-owner, keyword-owner, layout-owner, annotation-owner, and verification-owner tests pass together under the repo-local test project.",
             command = "julia --project=test test/runtests.jl",
         ),
         (
@@ -159,51 +210,46 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :docs_build,
-            artifact = "Documenter renders the source-backed verification-foundation page.",
+            artifact = "Documenter renders the source-backed verification-foundation page, including the tranche-3 layout and annotation owner block and the deferred proof boundary.",
             command = "julia --project=docs docs/make.jl",
         ),
     ),
     current_red_state = (
         (
-            id = :test_project_manifest_repro,
-            status = :tranche_start_repro,
-            fact = "At tranche start, `julia --project=test test/runtests.jl` failed before running tests because the repo-local PhyloMakie dependency was missing from `test/Manifest.toml`.",
+            id = :partial_tranche_3_shell_owner_drift,
+            status = :remediation_start_repro,
+            fact = "On 2026-05-10, `test/test_PhyloMakie.jl` still expected the old three-include module shell and failed once the tranche-3 owners landed in `src/`.",
         ),
         (
-            id = :empty_module_shell,
-            status = :tranche_start_repro,
-            fact = "`src/PhyloMakie.jl` was an empty placeholder shell with no includes and no source-side verification owner.",
+            id = :partial_tranche_3_dependency_drift,
+            status = :remediation_start_repro,
+            fact = "On 2026-05-10, Aqua reported a missing `PhyloNetworks` compat entry and the docs build failed until the repo-local dependency state was re-resolved.",
         ),
         (
-            id = :missing_fixture_owner,
-            status = :tranche_start_repro,
-            fact = "The repository had no canonical fixture corpus for design scenarios or upstream helper regressions.",
+            id = :partial_tranche_3_jet_branch_gap,
+            status = :remediation_start_repro,
+            fact = "On 2026-05-10, JET reported that `child_y` might be undefined in the `usedirecthybridline` branch of `src/layout_engine.jl`.",
         ),
         (
-            id = :missing_target_surface_matrix,
-            status = :tranche_start_repro,
-            fact = "No source-owned matrix recorded `phyloplot`, `phyloplot!`, and `plot(net)` as deferred target public surfaces.",
+            id = :partial_tranche_3_missing_helper_proof_suites,
+            status = :remediation_start_repro,
+            fact = "At remediation start, no local layout or annotation regression suites owned exact geometry tuples, fallback warnings, midpoint placement, or helper-level bounds messages.",
         ),
         (
-            id = :boilerplate_only_tests,
-            status = :tranche_start_repro,
-            fact = "Aqua and JET were the only automated proof surfaces for plotting work.",
-        ),
-        (
-            id = :boilerplate_only_docs,
-            status = :tranche_start_repro,
-            fact = "The docs home page was still the Documenter boilerplate landing page with no verification-foundation page.",
+            id = :partial_tranche_3_stale_truth_surface,
+            status = :remediation_start_repro,
+            fact = "At remediation start, `src/keyword_contract.jl`, `src/verification_foundation.jl`, `docs/src/verification-foundation.md`, and `docs/src/index.md` still described the repository as a tranche-1 or tranche-2 state instead of a tranche-3 helper-owner closeout.",
         ),
         (
             id = :target_surfaces_still_deferred,
-            status = :intentional_tranche_1_state,
-            fact = "The plotting entry surfaces remain intentionally unimplemented in tranche 1 and stay recorded as deferred proof obligations.",
+            status = :intentional_current_state,
+            fact = "The plotting entry surfaces remain intentionally unimplemented after tranche 3; render-level proof is deferred to tranche 4 and direct public entry-surface proof remains deferred to tranche 5.",
         ),
     ),
     stop_conditions = (
         (
             id = :would_require_plotting_logic,
-            condition = "Stop if keeping the verification owner green would require recipe, keyword, layout, annotation, or render implementation.",
+            condition = "Stop if tranche-3 closeout would require implementing public plotting entrypoints, recipe code, or render adapter logic.",
         ),
         (
             id = :fixture_corpus_requires_r_behavior,
@@ -219,7 +265,7 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :approval_gate_unrecorded,
-            condition = "Stop if project-owner approval to execute tranche 1 is absent from the current run context.",
+            condition = "Stop if project-owner approval to execute the tranche-3 remediation is absent from the current run context.",
         ),
     ),
 )

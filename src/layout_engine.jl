@@ -173,15 +173,15 @@ function layout_plot_geometry(
         for edge in current_node.edge
             if current_node === PhyloNetworks.getparent(edge)
                 if usedirecthybridline
-                    if edge.ismajor || no_major_child
+                    if edge.ismajor
                         child_index = _node_index(net, PhyloNetworks.getchild(edge))
                         child_y = node_y[child_index]
-                    end
-                    if edge.ismajor
                         no_major_child = false
                         node_y_lo[node_index] = min(node_y_lo[node_index], child_y)
                         node_y_hi[node_index] = max(node_y_hi[node_index], child_y)
                     elseif no_major_child
+                        child_index = _node_index(net, PhyloNetworks.getchild(edge))
+                        child_y = node_y[child_index]
                         minor_y_lo = min(minor_y_lo, child_y)
                         minor_y_hi = max(minor_y_hi, child_y)
                     end

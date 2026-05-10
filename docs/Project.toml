@@ -2,5 +2,5 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
 
-[sources.PhyloMakie]
-path = "../"
+[sources]
+PhyloMakie = {path = ".."}

@@ -40,8 +40,8 @@ const EXPECTED_PLOT_KEYWORD_SPEC_FIELDS = (
 )
 
 const EXPECTED_DEFERRED_PLOT_CONTRACT_IDS = (
-    :nodelabel_validation,
-    :edgelabel_validation,
-    :xlim_exact_message_parity,
-    :ylim_exact_message_parity,
+    :edgelabel_public_surface_proof,
+    :nodelabel_public_surface_proof,
+    :xlim_public_surface_proof,
+    :ylim_public_surface_proof,
 )

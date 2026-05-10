@@ -4,9 +4,11 @@ CurrentModule = PhyloMakie
 
 # Verification foundation
 
-Tranche 1 establishes the source-side verification owner, the test-side
-fixture corpus, and the thin module shell. It does not implement
-`phyloplot`, `phyloplot!`, or Makie `plot(net)` dispatch.
+Tranche 3 closes the Makie-independent layout engine and annotation-data owner
+on top of the tranche-1 verification foundation and the tranche-2 keyword
+owner. It still does not implement `phyloplot`, `phyloplot!`, or Makie
+`plot(net)` dispatch, so render-level proof remains deferred to tranche 4 and
+direct public entry-surface proof remains deferred to tranche 5.
 
 The tables below are rendered from `PhyloMakie.VERIFICATION_FOUNDATION`. If
 the source-side owner drifts or disappears, this page should fail to build
@@ -104,7 +106,7 @@ end
 Markdown.parse(join(rows, "\n"))
 ```
 
-## Reviewer gate
+## Keyword owner reviewer gate
 
 ```@eval
 using Markdown
@@ -113,10 +115,63 @@ using PhyloMakie
 foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 Markdown.parse(
     string(
-        "Clear tranche 2 when ",
+        "Clear keyword-owner closeout when ",
         foundation.keyword_owner.reviewer_gate.clear,
-        "\n\nReject tranche 2 if ",
+        "\n\nReject keyword-owner closeout if ",
         foundation.keyword_owner.reviewer_gate.reject,
+    ),
+)
+```
+
+## Layout and annotation owner
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+owner = foundation.layout_annotation_owner
+source_files = join(["`$(file)`" for file in owner.source_files], ", ")
+supporting_types = join(["`$(type_name)`" for type_name in owner.supporting_types], ", ")
+regression_suites = join(["`$(suite)`" for suite in owner.regression_suites], ", ")
+rows = [
+    "| Source files | Supporting types | Canonical payload | Regression suites | Deferred render proof | Deferred public proof |",
+    "| --- | --- | --- | --- | --- | --- |",
+    "| $(source_files) | $(supporting_types) | `$(owner.canonical_payload)` | $(regression_suites) | `Tranche $(owner.deferred_render_proof.owner_tranche)` | `Tranche $(owner.deferred_public_surface_proof.owner_tranche)` |",
+]
+Markdown.parse(join(rows, "\n"))
+```
+
+## Closed helper regressions
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+rows = [
+    "| Regression ID |",
+    "| --- |",
+]
+for regression_id in foundation.layout_annotation_owner.closed_helper_regressions
+    push!(rows, "| `:$(regression_id)` |")
+end
+Markdown.parse(join(rows, "\n"))
+```
+
+## Layout and annotation reviewer gate
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+Markdown.parse(
+    string(
+        "Clear tranche 3 closeout when ",
+        foundation.layout_annotation_owner.reviewer_gate.clear,
+        "\n\nReject tranche 3 closeout if ",
+        foundation.layout_annotation_owner.reviewer_gate.reject,
     ),
 )
 ```
@@ -174,6 +229,23 @@ rows = [
 ]
 for gate in foundation.green_state_gates
     push!(rows, "| `$(gate.id)` | $(gate.artifact) | `$(gate.command)` |")
+end
+Markdown.parse(join(rows, "\n"))
+```
+
+## Remediation start repros
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+rows = [
+    "| Repro ID | Status | Fact |",
+    "| --- | --- | --- |",
+]
+for repro in foundation.current_red_state
+    push!(rows, "| `$(repro.id)` | `$(repro.status)` | $(repro.fact) |")
 end
 Markdown.parse(join(rows, "\n"))
 ```

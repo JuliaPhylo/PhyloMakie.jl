@@ -1,5 +1,8 @@
 @testset "Shell owner" begin
     @test isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
+    @test isdefined(PhyloMakie, :PlotGeometry)
+    @test isdefined(PhyloMakie, :PlotBounds)
+    @test isdefined(PhyloMakie, :PlotLayout)
     @test !isdefined(PhyloMakie, :phyloplot)
     @test !isdefined(PhyloMakie, Symbol("phyloplot!"))
     @test !isdefined(PhyloMakie, :PhyloPlot)
@@ -19,7 +22,7 @@
     @test module_body.head == :block
 
     top_level_forms = [form for form in module_body.args if !(form isa LineNumberNode)]
-    @test length(top_level_forms) == 3
+    @test length(top_level_forms) == 5
 
     include_paths = String[]
     for include_expr in top_level_forms
@@ -32,6 +35,8 @@
     @test include_paths == [
         "keyword_contract.jl",
         "keyword_normalization.jl",
+        "layout_engine.jl",
+        "annotation_data.jl",
         "verification_foundation.jl",
     ]
 end

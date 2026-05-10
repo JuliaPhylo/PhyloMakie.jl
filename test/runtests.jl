@@ -11,6 +11,8 @@ include("support/keyword_surface_cases.jl")
     include("test_PhyloMakie.jl")
     include("test_keyword_contract.jl")
     include("test_keyword_normalization.jl")
+    include("test_layout_engine.jl")
+    include("test_annotation_data.jl")
     include("test_verification_foundation.jl")
 
     @testset "Code quality (Aqua.jl)" begin
