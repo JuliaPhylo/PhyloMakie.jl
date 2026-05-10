@@ -27,7 +27,7 @@ struct TextRenderLayer{TPlot, TAlign}
     positions::Vector{Tuple{Float64, Float64}}
     colors::Vector{Makie.RGBAf}
     align::TAlign
-    fontsize::Float64
+    fontsize::Vector{Float64}
 end
 
 struct PlotRenderLayers{
@@ -168,8 +168,9 @@ function _render_segment_layer!(
     colors::Vector{Makie.RGBAf},
     linewidths::Vector{Float64},
     linestyle,
+    render_visible::Bool=true,
 )::SegmentRenderLayer
-    plot = if isempty(startpoints)
+    plot = if isempty(startpoints) || !render_visible
         nothing
     else
         Makie.linesegments!(
@@ -240,9 +241,30 @@ function _render_arrow_tip_layer!(
     )
 end
 
-function _resolve_minor_edge_linestyle(minorlinetype)::Symbol
-    minorlinetype == "longdash" && return :dash
-    return :solid
+function _resolve_minor_edge_linestyle(minorlinetype)
+    if minorlinetype isa Symbol && minorlinetype in (:solid, :dash, :dot, :dashdot, :dashdotdot)
+        return (linestyle=minorlinetype, render_visible=true)
+    end
+
+    normalized = if minorlinetype isa Symbol
+        lowercase(String(minorlinetype))
+    elseif minorlinetype isa AbstractString
+        lowercase(String(minorlinetype))
+    else
+        minorlinetype
+    end
+
+    normalized in (0, "0", "blank") && return (linestyle=nothing, render_visible=false)
+    normalized in (1, "1", "solid") && return (linestyle=:solid, render_visible=true)
+    normalized in (2, "2", "dash", "dashed") && return (linestyle=:dash, render_visible=true)
+    normalized in (3, "3", "dot", "dotted") && return (linestyle=:dot, render_visible=true)
+    normalized in (4, "4", "dotdash", "dashdot") &&
+        return (linestyle=:dashdot, render_visible=true)
+    normalized in (5, "5", "longdash") && return (linestyle=:dash, render_visible=true)
+    normalized in (6, "6", "twodash", "dashdotdot") &&
+        return (linestyle=:dashdotdot, render_visible=true)
+
+    return (linestyle=minorlinetype, render_visible=true)
 end
 
 function _resolve_limits(
@@ -301,15 +323,37 @@ function _table_strings(
     return [String(table[row, column]) for row in rows]
 end
 
+function _resolve_text_sizes(text_cex, count::Integer)::Vector{Float64}
+    count == 0 && return Float64[]
+
+    if text_cex isa Union{AbstractVector, Tuple}
+        length(text_cex) > 0 ||
+            throw(ArgumentError("text size vectors must contain at least 1 value"))
+        return [
+            DEFAULT_TEXT_SIZE * Float64(text_cex[mod1(index, length(text_cex))]) for
+            index in 1:count
+        ]
+    end
+
+    return fill(DEFAULT_TEXT_SIZE * Float64(text_cex), count)
+end
+
+function _default_text_sizes(count::Integer)::Vector{Float64}
+    count == 0 && return Float64[]
+    return fill(DEFAULT_TEXT_SIZE, count)
+end
+
 function _render_text_layer!(
     ax,
     strings::Vector{String},
     positions::Vector{Tuple{Float64, Float64}},
     colors::Vector{Makie.RGBAf},
-    fontsize::Real,
+    fontsize::Vector{Float64},
     align;
     font=nothing,
 )::TextRenderLayer
+    length(strings) == length(fontsize) ||
+        error("fontsize must provide exactly 1 value per rendered text entry")
     plot = if isempty(strings)
         nothing
     elseif isnothing(font)
@@ -318,7 +362,7 @@ function _render_text_layer!(
             [_point2f(position) for position in positions];
             text=strings,
             color=colors,
-            fontsize=Float64(fontsize),
+            fontsize=fontsize,
             align=align,
         )
     else
@@ -327,22 +371,22 @@ function _render_text_layer!(
             [_point2f(position) for position in positions];
             text=strings,
             color=colors,
-            fontsize=Float64(fontsize),
+            fontsize=fontsize,
             align=align,
             font=font,
         )
     end
-    return TextRenderLayer(plot, strings, positions, colors, align, Float64(fontsize))
+    return TextRenderLayer(plot, strings, positions, colors, align, fontsize)
 end
 
-function _empty_text_layer(align, fontsize::Real)::TextRenderLayer
+function _empty_text_layer(align)::TextRenderLayer
     return TextRenderLayer(
         nothing,
         String[],
         Tuple{Float64, Float64}[],
         Makie.RGBAf[],
         align,
-        Float64(fontsize),
+        Float64[],
     )
 end
 
@@ -394,24 +438,29 @@ function render_plot!(
         fill(DEFAULT_NODE_BAR_WIDTH, length(node_bar_startpoints)),
         :solid,
     )
-    minor_edge_linestyle = _resolve_minor_edge_linestyle(spec.strokes.minorlinetype)
+    minor_edge_style = _resolve_minor_edge_linestyle(spec.strokes.minorlinetype)
     minor_edge_shafts = _render_segment_layer!(
         ax,
         minor_edge_startpoints,
         minor_edge_endpoints,
         minor_edge_colors,
         minor_edge_widths,
-        minor_edge_linestyle,
+        minor_edge_style.linestyle,
+        minor_edge_style.render_visible,
     )
     minor_edge_tiplengths, minor_edge_tipwidths =
         _resolve_arrow_metrics(spec.strokes.arrowlen, minor_edge_widths)
+    if !minor_edge_style.render_visible
+        minor_edge_tiplengths = fill(0.0, length(minor_edge_widths))
+        minor_edge_tipwidths = fill(0.0, length(minor_edge_widths))
+    end
     minor_edge_tips = _render_arrow_tip_layer!(
         ax,
         minor_edge_startpoints,
         minor_edge_endpoints,
         minor_edge_colors,
         minor_edge_widths,
-        minor_edge_linestyle,
+        minor_edge_style.linestyle,
         minor_edge_tiplengths,
         minor_edge_tipwidths,
     )
@@ -423,60 +472,54 @@ function render_plot!(
         _table_strings(node_table, leaf_rows, :name),
         _table_positions(node_table, leaf_rows, spec.layout.tipoffset),
         _repeat_color(_resolve_color("black"), length(leaf_rows)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.tipcex),
+        _resolve_text_sizes(spec.annotations.tipcex, length(leaf_rows)),
         (:left, :center);
         font=:italic,
-    ) : _empty_text_layer((:left, :center), DEFAULT_TEXT_SIZE * Float64(spec.annotations.tipcex))
+    ) : _empty_text_layer((:left, :center))
     internal_node_names = spec.visibility.shownodelabel ? _render_text_layer!(
         ax,
         _table_strings(node_table, internal_rows, :name),
         _table_positions(node_table, internal_rows),
         _repeat_color(_resolve_color("black"), length(internal_rows)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.tipcex),
+        _resolve_text_sizes(spec.annotations.tipcex, length(internal_rows)),
         (0.5, 0.0);
         font=:italic,
-    ) : _empty_text_layer((0.5, 0.0), DEFAULT_TEXT_SIZE * Float64(spec.annotations.tipcex))
+    ) : _empty_text_layer((0.5, 0.0))
     node_number_align = _adj_to_align(1)
     node_numbers = spec.visibility.shownodenumber ? _render_text_layer!(
         ax,
         _table_strings(node_table, axes(node_table, 1), :num),
         _table_positions(node_table, axes(node_table, 1)),
         _repeat_color(_resolve_color("black"), size(node_table, 1)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.nodecex),
+        _default_text_sizes(size(node_table, 1)),
         node_number_align,
-    ) : _empty_text_layer(node_number_align, DEFAULT_TEXT_SIZE * Float64(spec.annotations.nodecex))
+    ) : _empty_text_layer(node_number_align)
     node_annotation_align = _adj_to_align(spec.annotations.nodelabeladj)
     node_annotations = layout.annotations.labelnodes ? _render_text_layer!(
         ax,
         _table_strings(node_table, axes(node_table, 1), :lab),
         _table_positions(node_table, axes(node_table, 1)),
         _repeat_color(_resolve_color(spec.colors.nodelabelcolor), size(node_table, 1)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.nodecex),
+        _resolve_text_sizes(spec.annotations.nodecex, size(node_table, 1)),
         node_annotation_align,
-    ) : _empty_text_layer(
-        node_annotation_align,
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.nodecex),
-    )
+    ) : _empty_text_layer(node_annotation_align)
     edge_annotation_align = _adj_to_align(spec.annotations.edgelabeladj)
     edge_annotations = layout.annotations.labeledges ? _render_text_layer!(
         ax,
         _table_strings(edge_table, axes(edge_table, 1), :lab),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color(spec.colors.edgelabelcolor), size(edge_table, 1)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
+        _resolve_text_sizes(spec.annotations.edgecex, size(edge_table, 1)),
         edge_annotation_align,
-    ) : _empty_text_layer(
-        edge_annotation_align,
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
-    )
+    ) : _empty_text_layer(edge_annotation_align)
     edge_lengths = spec.visibility.showedgelength ? _render_text_layer!(
         ax,
         _table_strings(edge_table, axes(edge_table, 1), :len),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color("black"), size(edge_table, 1)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
+        _default_text_sizes(size(edge_table, 1)),
         (0.5, 1.0),
-    ) : _empty_text_layer((0.5, 1.0), DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex))
+    ) : _empty_text_layer((0.5, 1.0))
 
     minor_gamma_rows = findall(edge_table.hyb .& edge_table.min)
     major_gamma_rows = findall(edge_table.hyb .& .!edge_table.min)
@@ -488,9 +531,9 @@ function render_plot!(
             _resolve_color(spec.colors.minorhybridedgecolor),
             length(minor_gamma_rows),
         ),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
+        _default_text_sizes(length(minor_gamma_rows)),
         (0.5, 1.0),
-    ) : _empty_text_layer((0.5, 1.0), DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex))
+    ) : _empty_text_layer((0.5, 1.0))
     major_gamma_labels = spec.visibility.showgamma ? _render_text_layer!(
         ax,
         _table_strings(edge_table, major_gamma_rows, :gam),
@@ -499,17 +542,17 @@ function render_plot!(
             _resolve_color(spec.colors.majorhybridedgecolor),
             length(major_gamma_rows),
         ),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
+        _default_text_sizes(length(major_gamma_rows)),
         (0.5, 1.0),
-    ) : _empty_text_layer((0.5, 1.0), DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex))
+    ) : _empty_text_layer((0.5, 1.0))
     edge_numbers = spec.visibility.showedgenumber ? _render_text_layer!(
         ax,
         _table_strings(edge_table, axes(edge_table, 1), :num),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color(spec.colors.edgenumbercolor), size(edge_table, 1)),
-        DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex),
+        _default_text_sizes(size(edge_table, 1)),
         (0.5, 0.0),
-    ) : _empty_text_layer((0.5, 0.0), DEFAULT_TEXT_SIZE * Float64(spec.annotations.edgecex))
+    ) : _empty_text_layer((0.5, 0.0))
 
     x_limits, y_limits = _resolve_limits(spec, layout.bounds)
     Makie.xlims!(ax, x_limits...)

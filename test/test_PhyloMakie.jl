@@ -1,3 +1,6 @@
+using Makie
+using PhyloNetworks: HybridNetwork, readnewick
+
 @testset "Shell owner" begin
     @test isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
     @test isdefined(PhyloMakie, :PlotGeometry)
@@ -47,4 +50,16 @@
         "render_adapter.jl",
         "verification_foundation.jl",
     ]
+
+    net = readnewick("(A,B);")
+    @test which(Makie.plottype, (HybridNetwork,)) == which(Makie.plottype, (Any,))
+
+    plot_error = try
+        Makie.plot(net)
+        nothing
+    catch err
+        err
+    end
+    @test plot_error isa ErrorException
+    @test occursin("No recipe for plot with args: Tuple{HybridNetwork}", sprint(showerror, plot_error))
 end

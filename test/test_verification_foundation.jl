@@ -139,8 +139,12 @@
         @test any(endswith("src/screen.jl"), owner.makie_source_files)
         @test owner.closed_render_regressions == (
             :style_distinction_fulltree_vs_majortree,
+            :minorlinetype_numeric_dotted_rendering,
+            :minorlinetype_blank_hides_minor_edges,
             :edgecolor_dict_fallback,
             :gamma_color_policy,
+            :text_cex_scope_policy,
+            :vector_text_cex_rendering,
             :tip_label_rendering,
             :internal_node_name_rendering,
             :node_number_rendering,
