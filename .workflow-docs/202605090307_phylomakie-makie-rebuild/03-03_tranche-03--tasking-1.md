@@ -132,13 +132,20 @@ otherwise.
 - The work is not complete if the local layout engine drifts from the exact
   upstream coordinate tuples for the accepted regression network under
   `useedgelength=true`, `style=:fulltree`, `style=:majortree`, and
-  `useedgelength=false` major-tree mode.
+  `useedgelength=false` major-tree mode, or if the all-edge-lengths-missing
+  fallback under `useedgelength=true` drifts from the upstream owner.
 - The direct red-state repro is the three exact tuples asserted in
   `PhyloPlots.jl/test/test_phylonetworkPlots.jl` for the network
-  `(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);`.
+  `(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);`, plus
+  the all-lengths-missing level-2 network
+  `((((B)#H1:::0.2)#H2,((D,C,#H2)S1,(#H1,A)S2)S3)S4);` when
+  `useedgelength=true`.
 - The tasks that close this are task 2 and task 3.
 - The verification artifact is direct tuple equality against source-owned
-  regression data, not screenshots or approximate visual checks.
+  regression data plus a direct fallback-path regression that proves the exact
+  upstream `"All edge lengths are missing, won't be used for plotting."`
+  print path and the computed-length fallback behavior, not screenshots or
+  approximate visual checks.
 
 ### Lock item 3: Level-2 hybrid geometry parity
 
@@ -163,7 +170,10 @@ otherwise.
 - The tasks that close this are task 2 and task 3.
 - The verification artifact is direct helper tests showing that
   `preorder=true` prepares traversal state locally and that `preorder=false`
-  remains a caller-visible contract rather than a silent no-op.
+  remains a caller-visible contract rather than a silent no-op, plus one
+  concrete incompatible-root repro that preserves the appended guidance
+  sentence `"Please change the root, perhaps using rootatnode! or rootatedge!"`
+  on the rethrown `RootMismatch`.
 
 ### Lock item 5: Canonical annotation-data validation owner
 
@@ -489,9 +499,12 @@ drift.
 **Depends on**: 2
 **Positive contract**: `test/support/fixture_corpus.jl` gains source-owned
 expected geometry data for the three accepted style and edge-length regressions
-and the two level-2 network regressions from upstream. A new
-`test/test_layout_engine.jl` covers exact tuple equality, the warning path for
-mixed missing and non-missing edge lengths, and the explicit `preorder=true` /
+and the two level-2 network regressions from upstream, plus concrete trigger
+fixtures for the all-edge-lengths-missing fallback and the augmented
+`RootMismatch` path. A new `test/test_layout_engine.jl` covers exact tuple
+equality, the warning path for mixed missing and non-missing edge lengths, the
+all-edge-lengths-missing fallback print path, the appended `RootMismatch`
+guidance sentence under `preorder=true`, and the explicit `preorder=true` /
 `preorder=false` mutation boundary.
 **Negative contract**: Do not use screenshots, approximate comparisons, or
 source-text greps as the primary proof. Do not call upstream `PhyloPlots`
@@ -504,17 +517,26 @@ metadata; public entry-surface tests; render-level proofs
 **Verification**: `julia --project=test test/runtests.jl` passes and fails the
 old repository state immediately because no local geometry owner or regression
 data exists there. The suite also fails any fake fix that changes the
-full-tree or major-tree coordinate tuples, mutates when `preorder=false`, or
-silently stops mutating when `preorder=true`.
+full-tree or major-tree coordinate tuples, drops the all-missing-length
+fallback print path, loses the appended `RootMismatch` guidance sentence,
+mutates when `preorder=false`, or silently stops mutating when `preorder=true`.
 
 Add source-mirroring tests for the local geometry owner. Cover, at minimum,
 the exact tuple currently asserted upstream for `useedgelength=true` under
 full-tree style, the exact tuple for `useedgelength=true` under major-tree
 style, the exact tuple for `useedgelength=false` under major-tree style, and
 the two exact level-2 network tuples that reproduce the non-tree-child hybrid
-case. Add one test that prepares a network explicitly with
-`directedges!` and `preorder!`, then proves `preorder=false` preserves the
-same geometry without re-owning that mutation implicitly.
+case. Also cover the all-lengths-missing branch with
+`readnewick("((((B)#H1:::0.2)#H2,((D,C,#H2)S1,(#H1,A)S2)S3)S4);")`, asserting
+that `useedgelength=true` prints the exact upstream fallback line
+`"All edge lengths are missing, won't be used for plotting."` and returns the
+same geometry as `useedgelength=false`. Add one test that prepares a network
+explicitly with `directedges!` and `preorder!`, then proves `preorder=false`
+preserves the same geometry without re-owning that mutation implicitly. Add
+one incompatible-root repro with
+`readnewick("((a,(b)#H1)i1,(#H1,c)i2)root:0.5;")` and `rooti = 2`, asserting
+that the local owner rethrows `PhyloNetworks.RootMismatch` with the appended
+guidance sentence exactly preserved.
 
 ### 4. Establish the annotation-data and bounds owner
 
