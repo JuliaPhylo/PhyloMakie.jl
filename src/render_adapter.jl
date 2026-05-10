@@ -390,8 +390,31 @@ function _empty_text_layer(align)::TextRenderLayer
     )
 end
 
+function _rect3d_from_limits(
+    x_limits::NTuple{2, Float64},
+    y_limits::NTuple{2, Float64},
+)::Makie.Rect3d
+    return Makie.Rect3d(
+        Makie.Point3d(x_limits[1], y_limits[1], 0.0),
+        Makie.Vec3d(x_limits[2] - x_limits[1], y_limits[2] - y_limits[1], 0.0),
+    )
+end
+
+function _apply_plot_limits!(target, x_limits::NTuple{2, Float64}, y_limits::NTuple{2, Float64})
+    if target isa Makie.AbstractAxis
+        Makie.xlims!(target, x_limits...)
+        Makie.ylims!(target, y_limits...)
+        return nothing
+    end
+    if target isa Makie.AbstractPlot
+        target[:data_limits] = _rect3d_from_limits(x_limits, y_limits)
+        return nothing
+    end
+    error("Unsupported render target $(typeof(target))")
+end
+
 function render_plot!(
-    ax,
+    target,
     net::PhyloNetworks.HybridNetwork,
     spec::PlotKeywordSpec,
     layout::PlotLayout,
@@ -423,7 +446,7 @@ function render_plot!(
     )
 
     edge_segments = _render_segment_layer!(
-        ax,
+        target,
         edge_startpoints,
         edge_endpoints,
         edge_colors,
@@ -431,7 +454,7 @@ function render_plot!(
         :solid,
     )
     node_bars = _render_segment_layer!(
-        ax,
+        target,
         node_bar_startpoints,
         node_bar_endpoints,
         _repeat_color(default_edge_color, length(node_bar_startpoints)),
@@ -440,7 +463,7 @@ function render_plot!(
     )
     minor_edge_style = _resolve_minor_edge_linestyle(spec.strokes.minorlinetype)
     minor_edge_shafts = _render_segment_layer!(
-        ax,
+        target,
         minor_edge_startpoints,
         minor_edge_endpoints,
         minor_edge_colors,
@@ -455,7 +478,7 @@ function render_plot!(
         minor_edge_tipwidths = fill(0.0, length(minor_edge_widths))
     end
     minor_edge_tips = _render_arrow_tip_layer!(
-        ax,
+        target,
         minor_edge_startpoints,
         minor_edge_endpoints,
         minor_edge_colors,
@@ -468,7 +491,7 @@ function render_plot!(
     leaf_rows = findall(node_table.lea)
     internal_rows = findall(.!node_table.lea)
     tip_labels = spec.visibility.showtiplabel ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(node_table, leaf_rows, :name),
         _table_positions(node_table, leaf_rows, spec.layout.tipoffset),
         _repeat_color(_resolve_color("black"), length(leaf_rows)),
@@ -477,7 +500,7 @@ function render_plot!(
         font=:italic,
     ) : _empty_text_layer((:left, :center))
     internal_node_names = spec.visibility.shownodelabel ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(node_table, internal_rows, :name),
         _table_positions(node_table, internal_rows),
         _repeat_color(_resolve_color("black"), length(internal_rows)),
@@ -487,7 +510,7 @@ function render_plot!(
     ) : _empty_text_layer((0.5, 0.0))
     node_number_align = _adj_to_align(1)
     node_numbers = spec.visibility.shownodenumber ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(node_table, axes(node_table, 1), :num),
         _table_positions(node_table, axes(node_table, 1)),
         _repeat_color(_resolve_color("black"), size(node_table, 1)),
@@ -496,7 +519,7 @@ function render_plot!(
     ) : _empty_text_layer(node_number_align)
     node_annotation_align = _adj_to_align(spec.annotations.nodelabeladj)
     node_annotations = layout.annotations.labelnodes ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(node_table, axes(node_table, 1), :lab),
         _table_positions(node_table, axes(node_table, 1)),
         _repeat_color(_resolve_color(spec.colors.nodelabelcolor), size(node_table, 1)),
@@ -505,7 +528,7 @@ function render_plot!(
     ) : _empty_text_layer(node_annotation_align)
     edge_annotation_align = _adj_to_align(spec.annotations.edgelabeladj)
     edge_annotations = layout.annotations.labeledges ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(edge_table, axes(edge_table, 1), :lab),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color(spec.colors.edgelabelcolor), size(edge_table, 1)),
@@ -513,7 +536,7 @@ function render_plot!(
         edge_annotation_align,
     ) : _empty_text_layer(edge_annotation_align)
     edge_lengths = spec.visibility.showedgelength ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(edge_table, axes(edge_table, 1), :len),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color("black"), size(edge_table, 1)),
@@ -524,7 +547,7 @@ function render_plot!(
     minor_gamma_rows = findall(edge_table.hyb .& edge_table.min)
     major_gamma_rows = findall(edge_table.hyb .& .!edge_table.min)
     minor_gamma_labels = spec.visibility.showgamma ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(edge_table, minor_gamma_rows, :gam),
         _table_positions(edge_table, minor_gamma_rows),
         _repeat_color(
@@ -535,7 +558,7 @@ function render_plot!(
         (0.5, 1.0),
     ) : _empty_text_layer((0.5, 1.0))
     major_gamma_labels = spec.visibility.showgamma ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(edge_table, major_gamma_rows, :gam),
         _table_positions(edge_table, major_gamma_rows),
         _repeat_color(
@@ -546,7 +569,7 @@ function render_plot!(
         (0.5, 1.0),
     ) : _empty_text_layer((0.5, 1.0))
     edge_numbers = spec.visibility.showedgenumber ? _render_text_layer!(
-        ax,
+        target,
         _table_strings(edge_table, axes(edge_table, 1), :num),
         _table_positions(edge_table, axes(edge_table, 1)),
         _repeat_color(_resolve_color(spec.colors.edgenumbercolor), size(edge_table, 1)),
@@ -555,8 +578,7 @@ function render_plot!(
     ) : _empty_text_layer((0.5, 0.0))
 
     x_limits, y_limits = _resolve_limits(spec, layout.bounds)
-    Makie.xlims!(ax, x_limits...)
-    Makie.ylims!(ax, y_limits...)
+    _apply_plot_limits!(target, x_limits, y_limits)
 
     return PlotRenderLayers(
         edge_segments,

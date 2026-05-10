@@ -8,39 +8,42 @@ CurrentModule = PhyloMakie
 user surface on a Makie-native stack.
 
 This repository snapshot now contains the tranche-1 verification foundation,
-the tranche-2 keyword owner, the tranche-3 layout and annotation owners, and
-the tranche-4 Makie render owner. The package owns a thin module shell with a
-minimal `Makie` import, source-backed verification metadata, a repo-owned
-fixture corpus, a Makie-independent `PlotLayout` payload, one internal
-`render_plot!(ax, net, spec, layout)::PlotRenderLayers` owner, and direct
-regression suites for helper behavior and CairoMakie-backed render proof. It
-still does not implement `phyloplot`, `phyloplot!`, or Makie `plot(net)`
-dispatch.
+the tranche-2 compatibility keyword owner, the tranche-3 layout and annotation
+owners, the tranche-4 Makie render owner, and the tranche-5 Makie-native
+public recipe owner. The package now exposes one public Makie recipe path that
+drives:
+
+- `plot(net)`
+- `plot!(ax, net)`
+- `phyloplot(net)`
+- `phyloplot!(ax, net)`
 
 ## What the current snapshot establishes
 
 - a thin `PhyloMakie` module shell with a minimal `Makie` import
-- a canonical keyword owner in `src/keyword_contract.jl` and `src/keyword_normalization.jl`
+- a canonical tranche-5 public attribute owner in `src/public_attribute_model.jl`
+- a tightly local compatibility bridge in `src/keyword_contract.jl` and `src/keyword_normalization.jl`
 - canonical tranche-3 helper owners in `src/layout_engine.jl` and `src/annotation_data.jl`
 - a canonical tranche-4 render owner in `src/render_adapter.jl`
+- a canonical tranche-5 public recipe owner in `src/public_plot_owner.jl`
 - a canonical source-side verification owner in `VERIFICATION_FOUNDATION`
 - a canonical test-side fixture corpus and direct local regression suites for helper behavior
-- a repo-owned tranche-4 Makie source-set note and live render-verification docs
+- a repo-owned tranche-4 Makie source-set note and live public/render verification docs
 
-## Deferred proof boundary
+## Public surface
 
-All 3 target public surfaces remain recorded as target APIs with
-`implemented = false`:
+The tranche-5 public attribute surface is the exact snake_case set recorded in
+`VERIFICATION_FOUNDATION.public_attribute_owner.supported_public_attributes`.
+Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
+rejected at the recipe boundary.
 
-- `phyloplot`
-- `phyloplot!`
-- `plot(net)`
-
-Tranche 4 closes the shared internal render owner only. Direct public
-entry-surface proof, including public `xlim` and `ylim` error paths and
-Makie public-surface integration, remains deferred to tranche 5.
+The public owner deep-copies the caller-owned `HybridNetwork`, computes one
+`PlotLayout`, bridges locally into `PlotKeywordSpec`, and reuses the internal
+`render_plot!` owner directly. The returned `PhyloPlot` stores `resolved_layout`,
+`render_layers`, and `data_limits` as live artifacts.
 
 ## Verification pages
 
+- [Public API](public-api.md)
 - [Verification foundation](verification-foundation.md)
 - [Render verification](render-verification.md)

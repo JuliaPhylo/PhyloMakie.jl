@@ -4,12 +4,13 @@ CurrentModule = PhyloMakie
 
 # Render verification
 
-Tranche 4 closes the internal render owner
-`render_plot!(ax, net, spec, layout)::PlotRenderLayers`. The artifacts below
-are rendered from live CairoMakie code and the repo-owned fixture corpus. The
-direct public proofs for `phyloplot`, `phyloplot!`, `PhyloPlot`,
-`Makie.plottype(::PhyloNetworks.HybridNetwork)`, and Makie `plot(net)`
-dispatch remain deferred to tranche 5.
+Tranche 4 closed the internal render owner
+`render_plot!(target, net, spec, layout)::PlotRenderLayers`, and tranche 5 now
+reuses that same owner directly from the Makie-native public recipe layer.
+The artifacts below still exercise the internal compatibility, helper, and
+render owners directly from live CairoMakie code and the repo-owned fixture
+corpus. The public entry surfaces themselves are documented on
+[Public API](public-api.md).
 
 ## Render owner summary
 

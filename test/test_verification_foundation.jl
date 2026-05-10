@@ -6,9 +6,11 @@
     @test propertynames(foundation) == (
         :target_public_surfaces,
         :lock_items,
-        :keyword_owner,
+        :public_attribute_owner,
+        :compatibility_keyword_bridge,
         :layout_annotation_owner,
         :render_owner,
+        :public_plot_owner,
         :accepted_design_scenarios,
         :upstream_helper_regressions,
         :green_state_gates,
@@ -17,50 +19,75 @@
     )
 
     @testset "Target public surfaces" begin
-        @test length(foundation.target_public_surfaces) == 3
+        @test length(foundation.target_public_surfaces) == 4
         @test [surface.public_name for surface in foundation.target_public_surfaces] == [
             "phyloplot",
             "phyloplot!",
             "plot(net)",
+            "plot!(ax, net)",
         ]
 
         for surface in foundation.target_public_surfaces
-            @test surface.implemented === false
-            @test surface.direct_proof_deferred === true
+            @test surface.implemented === true
+            @test surface.direct_proof_deferred === false
             @test surface.direct_proof_owner == 5
-            @test surface.docs_visibility == :target_not_yet_implemented
         end
+
+        @test foundation.target_public_surfaces[1].docs_visibility ==
+            :documented_convenience_surface
+        @test foundation.target_public_surfaces[3].docs_visibility ==
+            :documented_primary_surface
     end
 
     @testset "Lock items" begin
         @test length(foundation.lock_items) == 7
         @test [item.number for item in foundation.lock_items] == collect(1:7)
         @test [item.title for item in foundation.lock_items] == [
-            "Entry surfaces and return contract",
-            "Public keyword-surface parity",
-            "Layout-owner parity",
-            "Style distinction and hybrid-edge rendering",
-            "Annotation and DataFrame validation parity",
-            "Composable Makie plotting",
-            "Honest verification surface",
+            "Makie-native public plot owner",
+            "Makie-native public attribute surface",
+            "Compatibility-first owner demotion",
+            "Layout/render owner reuse",
+            "Public mutation/composability boundary",
+            "Multi-surface direct public proof",
+            "Honest verification/docs truth surface",
         ]
     end
 
-    @testset "Keyword owner" begin
-        owner = foundation.keyword_owner
+    @testset "Public attribute owner" begin
+        owner = foundation.public_attribute_owner
+
+        @test owner.source_files == ("src/public_attribute_model.jl",)
+        @test owner.canonical_payload == "PhyloPlotAttributes"
+        @test owner.supported_public_attributes == EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES
+        @test owner.recipe_attribute_surface == "Makie.attribute_names(PhyloPlot)"
+        @test owner.bridge_target ==
+            "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec"
+        @test owner.legacy_rejection.source ==
+            "Makie.deprecated_attributes(::Type{<:PhyloPlot})"
+        @test owner.legacy_rejection.rejected_spellings ==
+            EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES
+        @test occursin("omits separate controls", owner.omitted_control_note)
+        @test owner.reviewer_gate.clear isa String
+        @test owner.reviewer_gate.reject isa String
+    end
+
+    @testset "Compatibility bridge" begin
+        owner = foundation.compatibility_keyword_bridge
 
         @test owner.source_files == (
-            "src/keyword_contract.jl",
+            "src/public_attribute_model.jl",
             "src/keyword_normalization.jl",
+            "src/keyword_contract.jl",
         )
-        @test owner.supported_plot_keywords == EXPECTED_SUPPORTED_PLOT_KEYWORDS
-        @test owner.target_public_surfaces == (
-            "phyloplot",
-            "phyloplot!",
-            "plot(net)",
+        @test owner.public_semantic_center === false
+        @test owner.canonical_bridge ==
+            "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec"
+        @test owner.retained_internal_payload == "PlotKeywordSpec"
+        @test owner.retained_for == (
+            "prepare_plot_layout(net, spec)::PlotLayout",
+            "render_plot!(target, net, spec, layout)::PlotRenderLayers",
         )
-        @test [contract.id for contract in owner.deferred_contracts] ==
-            collect(EXPECTED_DEFERRED_PLOT_CONTRACT_IDS)
+        @test occursin("preorder=true", owner.internal_preorder_policy)
         @test owner.reviewer_gate.clear isa String
         @test owner.reviewer_gate.reject isa String
     end
@@ -99,9 +126,11 @@
         )
         @test owner.render_consumer.owner_tranche == 4
         @test owner.render_consumer.owner ==
-            "render_plot!(ax, net, spec, layout)::PlotRenderLayers"
+            "render_plot!(target, net, spec, layout)::PlotRenderLayers"
         @test owner.render_consumer.source_file == "src/render_adapter.jl"
-        @test owner.deferred_public_surface_proof.owner_tranche == 5
+        @test owner.public_surface_consumer.owner_tranche == 5
+        @test owner.public_surface_consumer.owner == "Makie.plot!(plot::PhyloPlot)"
+        @test owner.public_surface_consumer.source_file == "src/public_plot_owner.jl"
         @test owner.reviewer_gate.clear isa String
         @test owner.reviewer_gate.reject isa String
     end
@@ -121,16 +150,16 @@
             "test/support/render_test_helpers.jl",
             "test/test_render_adapter.jl",
         )
-        @test endswith(
-            owner.source_set_note,
-            "04-01_tranche-04--makie-source-set.md",
-        )
+        @test endswith(owner.source_set_note, "04-01_tranche-04--makie-source-set.md")
         @test owner.primitive_entrypoints == (
             "linesegments!",
             "arrows2d!",
             "text!",
             "Makie.colorbuffer",
         )
+        @test owner.public_owner_reuse.owner_tranche == 5
+        @test owner.public_owner_reuse.owner == "Makie.plot!(plot::PhyloPlot)"
+        @test occursin("Axis and Plot targets", owner.public_owner_reuse.contract)
         @test any(endswith("src/recipes.jl"), owner.makie_source_files)
         @test any(endswith("src/figureplotting.jl"), owner.makie_source_files)
         @test any(endswith("src/basic_recipes/arrows.jl"), owner.makie_source_files)
@@ -158,6 +187,42 @@
         @test owner.reviewer_gate.reject isa String
     end
 
+    @testset "Public plot owner" begin
+        owner = foundation.public_plot_owner
+
+        @test owner.source_files == ("src/public_plot_owner.jl",)
+        @test owner.public_recipe == "Makie.@recipe PhyloPlot (net,) begin ... end"
+        @test owner.makie_dispatch == (
+            "Makie.plottype(::PhyloNetworks.HybridNetwork) = PhyloPlot",
+            "Makie.plot!(plot::PhyloPlot)",
+        )
+        @test owner.supported_surfaces == (
+            "plot(net)",
+            "plot!(ax, net)",
+            "phyloplot",
+            "phyloplot!",
+        )
+        @test owner.stored_artifacts == (
+            "resolved_layout",
+            "render_layers",
+            "data_limits",
+        )
+        @test owner.direct_proof_suites == (
+            "test/test_PhyloMakie.jl",
+            "test/test_public_attribute_model.jl",
+            "test/test_public_plot_owner.jl",
+        )
+        @test owner.docs_surface == (
+            "docs/src/index.md",
+            "docs/src/public-api.md",
+            "docs/src/verification-foundation.md",
+        )
+        @test owner.caller_owned_network_boundary ==
+            "deepcopy(Makie.to_value(plot[:net]))"
+        @test owner.reviewer_gate.clear isa String
+        @test owner.reviewer_gate.reject isa String
+    end
+
     @testset "Scenario inventories" begin
         @test propertynames(foundation.accepted_design_scenarios) == (
             :simple_tree_no_hybrid,
@@ -175,7 +240,7 @@
             :closed_render_owner
         @test foundation.accepted_design_scenarios.composable_dual_axes.direct_proof_owner == 5
         @test foundation.accepted_design_scenarios.composable_dual_axes.closure_status ==
-            :deferred_public_surface_proof
+            :closed_public_surface_proof
         @test propertynames(foundation.upstream_helper_regressions) == (
             :edgenode_coords_with_lengths_fulltree,
             :edgenode_coords_with_lengths_majortree,
@@ -234,19 +299,28 @@
         @test [state.id for state in foundation.current_status] == [
             :dependency_activation_closed,
             :render_owner_closed,
-            :render_verification_closed,
-            :target_surfaces_still_deferred,
+            :public_attribute_owner_closed,
+            :public_plot_owner_closed,
+            :direct_public_surface_proof_closed,
+            :docs_truth_surface_closed,
         ]
-        @test foundation.current_status[end].status == :intentional_current_state
+        @test [state.status for state in foundation.current_status] == [
+            :closed_in_tranche_4,
+            :closed_in_tranche_4,
+            :closed_in_tranche_5,
+            :closed_in_tranche_5,
+            :closed_in_tranche_5,
+            :closed_in_tranche_5,
+        ]
     end
 
     @testset "Stop conditions" begin
         @test [stop_condition.id for stop_condition in foundation.stop_conditions] == [
-            :would_require_public_entry_surface,
-            :helper_owner_regression,
-            :source_set_drift_from_ratified_note,
-            :docs_truth_boundary_violation,
-            :render_proof_degenerates_to_text_policing,
+            :single_recipe_owner_breaks_down,
+            :legacy_public_spellings_reappear,
+            :caller_owned_mutation_returns,
+            :compatibility_bridge_recenters,
+            :proof_collapses_to_text_policing,
         ]
     end
 end

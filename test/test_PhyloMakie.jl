@@ -3,14 +3,15 @@ using PhyloNetworks: HybridNetwork, readnewick
 
 @testset "Shell owner" begin
     @test isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
+    @test isdefined(PhyloMakie, :PhyloPlotAttributes)
     @test isdefined(PhyloMakie, :PlotGeometry)
     @test isdefined(PhyloMakie, :PlotBounds)
     @test isdefined(PhyloMakie, :PlotLayout)
     @test isdefined(PhyloMakie, :render_plot!)
     @test isdefined(PhyloMakie, :PlotRenderLayers)
-    @test !isdefined(PhyloMakie, :phyloplot)
-    @test !isdefined(PhyloMakie, Symbol("phyloplot!"))
-    @test !isdefined(PhyloMakie, :PhyloPlot)
+    @test isdefined(PhyloMakie, :phyloplot)
+    @test isdefined(PhyloMakie, Symbol("phyloplot!"))
+    @test isdefined(PhyloMakie, :PhyloPlot)
 
     module_file = joinpath(dirname(pathof(PhyloMakie)), "PhyloMakie.jl")
     module_source = read(module_file, String)
@@ -27,7 +28,7 @@ using PhyloNetworks: HybridNetwork, readnewick
     @test module_body.head == :block
 
     top_level_forms = [form for form in module_body.args if !(form isa LineNumberNode)]
-    @test length(top_level_forms) == 7
+    @test length(top_level_forms) == 9
 
     @test top_level_forms[1] isa Expr
     @test top_level_forms[1].head == :import
@@ -45,21 +46,15 @@ using PhyloNetworks: HybridNetwork, readnewick
     @test include_paths == [
         "keyword_contract.jl",
         "keyword_normalization.jl",
+        "public_attribute_model.jl",
         "layout_engine.jl",
         "annotation_data.jl",
         "render_adapter.jl",
+        "public_plot_owner.jl",
         "verification_foundation.jl",
     ]
 
     net = readnewick("(A,B);")
-    @test which(Makie.plottype, (HybridNetwork,)) == which(Makie.plottype, (Any,))
-
-    plot_error = try
-        Makie.plot(net)
-        nothing
-    catch err
-        err
-    end
-    @test plot_error isa ErrorException
-    @test occursin("No recipe for plot with args: Tuple{HybridNetwork}", sprint(showerror, plot_error))
+    @test which(Makie.plottype, (HybridNetwork,)) != which(Makie.plottype, (Any,))
+    @test Makie.plottype(net) == getfield(PhyloMakie, :PhyloPlot)
 end
