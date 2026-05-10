@@ -2,7 +2,7 @@
 date-created: 2026-05-09T21:51:31
 workflow-instrument: Tasking plan
 workflow-status: Proposed
-workflow-id: 202605090307_phylomakie-makie-rebuild
+workflow-production-id: 202605090307_phylomakie-makie-rebuild
 workflow-agent-thread-id: codex/20260509-phylomakie-tranche-03-tasking-1
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-prd: .workflow-docs/202605090307_phylomakie-makie-rebuild/01_prd.md
@@ -47,7 +47,7 @@ workflow-tranche: .workflow-docs/202605090307_phylomakie-makie-rebuild/02_tranch
 - `docs/src/index.md` still describes a tranche-1-only snapshot even though
   tranche 2 is implemented. Any tranche-3 docs work must correct that truth
   boundary rather than preserve stale wording.
-- The workflow chain now carries shared `workflow-id` and
+- The workflow chain now carries shared `workflow-production-id` and
   `workflow-location` frontmatter fields on the PRD, tranche plan, and tranche
   tasking files. Treat those fields as the lineage anchors for this workflow
   chain.
