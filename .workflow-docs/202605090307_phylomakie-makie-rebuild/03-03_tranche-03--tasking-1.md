@@ -2,9 +2,9 @@
 date-created: 2026-05-09T21:51:31
 workflow-instrument: Tasking plan
 workflow-status: Proposed
+workflow-id: 202605090307_phylomakie-makie-rebuild
 workflow-agent-thread-id: codex/20260509-phylomakie-tranche-03-tasking-1
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
-workflow-production-id: phylomakie-makie-rebuild
 workflow-prd: .workflow-docs/202605090307_phylomakie-makie-rebuild/01_prd.md
 workflow-tranche: .workflow-docs/202605090307_phylomakie-makie-rebuild/02_tranches.md
 ---
@@ -47,11 +47,10 @@ workflow-tranche: .workflow-docs/202605090307_phylomakie-makie-rebuild/02_tranch
 - `docs/src/index.md` still describes a tranche-1-only snapshot even though
   tranche 2 is implemented. Any tranche-3 docs work must correct that truth
   boundary rather than preserve stale wording.
-- The parent PRD and tranche file do not currently carry
-  `workflow-location` or `workflow-production-id` frontmatter fields. This
-  draft records the current repo root path explicitly and proposes
-  `phylomakie-makie-rebuild` as the production id, matching the existing
-  workflow directory name. Ratify or revise those values during review.
+- The workflow chain now carries shared `workflow-id` and
+  `workflow-location` frontmatter fields on the PRD, tranche plan, and tranche
+  tasking files. Treat those fields as the lineage anchors for this workflow
+  chain.
 - Revalidation against `PhyloPlots.jl/src/plotRCall.jl` shows that exact
   public `xlim` / `ylim` error-path parity cannot honestly be marked closed in
   tranche 3 while `phyloplot` and `plot(net)` remain unimplemented and the

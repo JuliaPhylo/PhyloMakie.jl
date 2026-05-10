@@ -4,6 +4,8 @@ date-updated: 2026-05-09T20:16:02
 parent-prd: 01_prd.md
 workflow-instrument: Tranche plan
 workflow-status: Approved
+workflow-id: 202605090307_phylomakie-makie-rebuild
+workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 ---
 
 # Tranches for Makie-native HybridNetwork plotting in PhyloMakie
