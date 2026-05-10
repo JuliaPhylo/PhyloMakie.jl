@@ -3,7 +3,7 @@ date-created: 2026-05-09T03:07:47
 date-updated: 2026-05-09T14:40:00
 parent-tranche: 02_tranches.md
 parent-prd: 01_prd.md
-workflow-instrument: Tasking
+workflow-instrument: Tasking plan
 workflow-status: Implemented
 ---
 
