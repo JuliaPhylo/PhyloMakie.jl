@@ -1,7 +1,7 @@
 ---
 date-created: 2026-05-10T02:11:11-07:00
 workflow-instrument: Tasking Plan
-workflow-status: Proposed
+workflow-status: Approved
 workflow-agent-thread-id: codex/019e111c-1e5e-70e2-9d5c-b6dea7b0ac91
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: 202605090307_phylomakie-makie-rebuild
@@ -13,10 +13,12 @@ workflow-tranche: .workflow-docs/202605090307_phylomakie-makie-rebuild/02_tranch
 
 ## Approval state
 
-- This file is proposed planning output derived from proposed tranche 4 in
+- This file is approved tasking output for approved tranche 4 in
   `02_tranches.md`.
-- Downstream `Tasks -> Execute` work remains blocked until the project owner
-  sets `workflow-status: Approved` in this file's frontmatter.
+- Project-owner approval for both Tranche 4 in `02_tranches.md` and this
+  tasking file was recorded on 2026-05-10 via explicit tasking approval.
+- This file is ready for a downstream `Tasks -> Execute` run, but it is not
+  itself an execution request.
 
 ## Settled user decisions and environment baseline
 
@@ -243,12 +245,17 @@ Local inference boundary that must be reviewed explicitly:
   application are re-derived through ad hoc render-time geometry instead of
   consuming `PlotLayout`, `PlotBounds`, and the normalized plot spec.
 - The direct red-state repro is the current repository state:
-  `prepare_plot_layout` already owns midpoint and bounds ingredients, but no
-  render owner exists to prove that those owners are actually consumed.
+  `prepare_plot_layout` already owns midpoint and bounds ingredients, and
+  `PlotLayout.annotations.node_data` / `edge_data` already expose separate
+  `:name`, `:num`, `:len`, `:gam`, and `:lab` text channels, but no render
+  owner exists to prove that those owners are actually consumed.
 - The tasks that close this are task 3 and task 4.
-- The verification artifact is a render-owner suite that compares text anchors
-  and limits against `PlotLayout.annotations` and `PlotBounds` and fails any
-  render-time midpoint, offset, or bounds anti-fix.
+- The verification artifact is a render-owner suite that compares tip-label,
+  internal-node-name, node-number, edge-label, edge-length, gamma-text, and
+  edge-number anchors plus rendered strings against `PlotLayout.annotations`
+  and compares final limits against `PlotBounds`. The suite must fail any
+  render-time midpoint, offset, or bounds anti-fix and must fail if one of the
+  named text layers disappears while the others still render.
 
 ### Lock item 6: Source-backed render proof and honest tranche-5 handoff
 
@@ -425,6 +432,10 @@ Positive runtime and usability checks required for honest render closure:
   network
 - a CairoMakie-backed gamma and edge-color artifact proving the two color
   policies simultaneously
+- a CairoMakie-backed text-layer artifact proving internal node names, node
+  numbers, edge numbers, and edge lengths render from the existing
+  `PlotLayout.annotations` owner channels rather than from fresh geometry
+  recomputation
 - a docs page that renders those artifacts from live code rather than from
   static screenshots or prose-only claims
 
@@ -579,11 +590,22 @@ the gamma scenario;
 the edge-color-dict fallback scenario;
 the annotation-label scenario; and
 the explicit-limit application path.
+It must also add explicit text-layer scenarios for:
+internal node-name rendering driven by `shownodelabel=true`;
+node-number rendering driven by `shownodenumber=true`; and
+edge-number plus edge-length rendering driven by
+`showedgenumber=true, showedgelength=true`.
+The text-layer scenarios may share the same fixture network, but the test suite
+must keep separate assertions per text channel so that `shownodelabel`,
+`shownodenumber`, `showedgenumber`, and `showedgelength` cannot silently drift
+behind one generic "text exists" proof.
 It must inspect `PlotRenderLayers` directly for color and width policy, and it
 must also use a CairoMakie-backed render artifact or `Makie.colorbuffer` to
 prove that the two styles do not collapse visually. The tests must assert that
-text anchors come from `PlotLayout.annotations`, that final limits come from
-the normalized spec plus `PlotBounds`, and that gamma text keeps its major and
+tip-label, internal-node-name, node-number, edge-label, edge-length,
+gamma-text, and edge-number anchors and strings come from the corresponding
+`PlotLayout.annotations` owner channels, that final limits come from the
+normalized spec plus `PlotBounds`, and that gamma text keeps its major and
 minor hybrid colors even when edge segments use dict-driven colors. Keep
 direct proof for `composable_dual_axes` deferred to tranche 5, but do not
 allow module-global or hidden-axis state to regrow in the render owner.
@@ -610,6 +632,18 @@ render-owner proof.
 - `julia --project=test test/runtests.jl`
 - Direct checks that fail if the full-tree and major-tree colorbuffers are
   identical for the accepted style-comparison scenario.
+- Direct checks that fail if internal node names from
+  `PlotLayout.annotations.node_data.name` do not render when
+  `shownodelabel=true`.
+- Direct checks that fail if node numbers from
+  `PlotLayout.annotations.node_data.num` do not render when
+  `shownodenumber=true`.
+- Direct checks that fail if edge numbers from
+  `PlotLayout.annotations.edge_data.num` do not render when
+  `showedgenumber=true`.
+- Direct checks that fail if edge lengths from
+  `PlotLayout.annotations.edge_data.len` do not render at the existing edge
+  anchors when `showedgelength=true`.
 - Direct checks that fail if gamma text colors follow dict edge colors.
 - Direct checks that fail if text anchors or axis limits diverge from
   `PlotLayout.annotations` and `PlotBounds`.

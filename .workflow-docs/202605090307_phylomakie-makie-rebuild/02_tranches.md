@@ -16,14 +16,16 @@ workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/202
 
 ## Approval state
 
-- This tranche plan remains proposed planning output for Tranches 3 through 6.
+- This tranche plan remains proposed planning output for Tranches 5 through 6.
 - Project-owner approval for Tranche 1 and its tranche-1 tasking file was
   recorded on 2026-05-09 via the explicit execution request for tranche-1
   implementation.
 - Project-owner approval for Tranche 2 and its tranche-2 tasking file was
   recorded on 2026-05-09 via the explicit execution request for tranche-2
   implementation.
-- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 3
+- Project-owner approval for Tranche 4 and its tranche-4 tasking file was
+  recorded on 2026-05-10 via explicit tasking approval.
+- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 5
   through 6 until the project owner explicitly approves them.
 
 ## Active authorities
@@ -109,7 +111,7 @@ Inference boundary note:
 | 1 | Verification and module shell foundation | Completed |
 | 2 | Public keyword normalization owner | Completed |
 | 3 | Layout and annotation data owner | Completed |
-| 4 | Makie render adapter and style parity closure | Proposed |
+| 4 | Makie render adapter and style parity closure | Approved |
 | 5 | Recipe and entry surface integration | Proposed |
 | 6 | Stabilization, docs, and cross-surface parity sweep | Proposed |
 
@@ -634,6 +636,8 @@ Negative verification for the known bad shape:
 
 **Type**: HITL
 **Blocked by**: Tranche 3
+**Approval record**: Project-owner approval for Tranche 4 and its tranche-4
+tasking file was recorded on 2026-05-10 via explicit tasking approval.
 
 ### Parent PRD
 
