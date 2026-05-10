@@ -106,9 +106,9 @@ Inference boundary note:
 
 | Tranch id | Title | Status |
 | --- | --- | --- |
-| 1 | Verification and module shell foundation | Approved and implemented |
-| 2 | Public keyword normalization owner | Approved and implemented |
-| 3 | Layout and annotation data owner | Proposed |
+| 1 | Verification and module shell foundation | Completed |
+| 2 | Public keyword normalization owner | Completed |
+| 3 | Layout and annotation data owner | Completed |
 | 4 | Makie render adapter and style parity closure | Proposed |
 | 5 | Recipe and entry surface integration | Proposed |
 | 6 | Stabilization, docs, and cross-surface parity sweep | Proposed |
