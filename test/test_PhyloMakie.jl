@@ -19,12 +19,19 @@
     @test module_body.head == :block
 
     top_level_forms = [form for form in module_body.args if !(form isa LineNumberNode)]
-    @test length(top_level_forms) == 1
+    @test length(top_level_forms) == 3
 
-    include_expr = only(top_level_forms)
-    @test include_expr isa Expr
-    @test include_expr.head == :call
-    @test length(include_expr.args) == 2
-    @test include_expr.args[1] == :include
-    @test include_expr.args[2] == "verification_foundation.jl"
+    include_paths = String[]
+    for include_expr in top_level_forms
+        @test include_expr isa Expr
+        @test include_expr.head == :call
+        @test length(include_expr.args) == 2
+        @test include_expr.args[1] == :include
+        push!(include_paths, include_expr.args[2])
+    end
+    @test include_paths == [
+        "keyword_contract.jl",
+        "keyword_normalization.jl",
+        "verification_foundation.jl",
+    ]
 end

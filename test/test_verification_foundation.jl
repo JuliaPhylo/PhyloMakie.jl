@@ -6,6 +6,7 @@
     @test propertynames(foundation) == (
         :target_public_surfaces,
         :lock_items,
+        :keyword_owner,
         :accepted_design_scenarios,
         :upstream_helper_regressions,
         :green_state_gates,
@@ -41,6 +42,25 @@
             "Composable Makie plotting",
             "Honest verification surface",
         ]
+    end
+
+    @testset "Keyword owner" begin
+        owner = foundation.keyword_owner
+
+        @test owner.source_files == (
+            "src/keyword_contract.jl",
+            "src/keyword_normalization.jl",
+        )
+        @test owner.supported_plot_keywords == EXPECTED_SUPPORTED_PLOT_KEYWORDS
+        @test owner.target_public_surfaces == (
+            "phyloplot",
+            "phyloplot!",
+            "plot(net)",
+        )
+        @test [contract.id for contract in owner.deferred_contracts] ==
+            collect(EXPECTED_DEFERRED_PLOT_CONTRACT_IDS)
+        @test owner.reviewer_gate.clear isa String
+        @test owner.reviewer_gate.reject isa String
     end
 
     @testset "Scenario inventories" begin

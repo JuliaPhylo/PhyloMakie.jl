@@ -1,0 +1,47 @@
+const EXPECTED_SUPPORTED_PLOT_KEYWORDS = (
+    :useedgelength,
+    :showtiplabel,
+    :shownodenumber,
+    :showedgelength,
+    :showgamma,
+    :edgecolor,
+    :majorhybridedgecolor,
+    :minorhybridedgecolor,
+    :defaultedgecolor,
+    :showedgenumber,
+    :shownodelabel,
+    :edgelabel,
+    :nodelabel,
+    :xlim,
+    :ylim,
+    :tipoffset,
+    :tipcex,
+    :nodecex,
+    :edgecex,
+    :style,
+    :arrowlen,
+    :minorlinetype,
+    :edgewidth,
+    :edgenumbercolor,
+    :edgelabelcolor,
+    :nodelabelcolor,
+    :edgelabeladj,
+    :nodelabeladj,
+    :preorder,
+)
+
+const EXPECTED_PLOT_KEYWORD_SPEC_FIELDS = (
+    :layout,
+    :visibility,
+    :annotations,
+    :colors,
+    :strokes,
+    :deferred_contracts,
+)
+
+const EXPECTED_DEFERRED_PLOT_CONTRACT_IDS = (
+    :nodelabel_validation,
+    :edgelabel_validation,
+    :xlim_exact_message_parity,
+    :ylim_exact_message_parity,
+)

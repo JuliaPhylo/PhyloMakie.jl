@@ -40,6 +40,23 @@ const VERIFICATION_FOUNDATION = (
         (number = 6, title = "Composable Makie plotting"),
         (number = 7, title = "Honest verification surface"),
     ),
+    keyword_owner = (
+        source_files = (
+            "src/keyword_contract.jl",
+            "src/keyword_normalization.jl",
+        ),
+        supported_plot_keywords = SUPPORTED_PLOT_KEYWORDS,
+        target_public_surfaces = (
+            "phyloplot",
+            "phyloplot!",
+            "plot(net)",
+        ),
+        deferred_contracts = DEFERRED_PLOT_KEYWORD_CONTRACTS,
+        reviewer_gate = (
+            clear = "the canonical keyword owner exists, direct keyword regressions pass, malformed explicit xlim and ylim overrides are rejected structurally at the keyword-owner boundary, and the deferred DataFrame-validation and exact limit-message contracts remain explicit in source, tests, and docs.",
+            reject = "it partially reimplements DataFrame validation parity or exact xlim and ylim message parity, falsely marks those contracts closed, or leaves the deferred-owner boundary implicit.",
+        ),
+    ),
     accepted_design_scenarios = (
         simple_tree_no_hybrid = (
             source = "design/prod01-vision-supplement.md",

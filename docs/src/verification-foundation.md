@@ -49,6 +49,78 @@ end
 Markdown.parse(join(rows, "\n"))
 ```
 
+## Keyword owner
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+owner = foundation.keyword_owner
+source_files = join(["`$(file)`" for file in owner.source_files], ", ")
+target_public_surfaces = join(["`$(surface)`" for surface in owner.target_public_surfaces], ", ")
+rows = [
+    "| Source files | Target public surfaces |",
+    "| --- | --- |",
+    "| $(source_files) | $(target_public_surfaces) |",
+]
+Markdown.parse(join(rows, "\n"))
+```
+
+## Supported plot keywords
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+rows = [
+    "| Keyword |",
+    "| --- |",
+]
+for keyword in foundation.keyword_owner.supported_plot_keywords
+    push!(rows, "| `$(keyword)` |")
+end
+Markdown.parse(join(rows, "\n"))
+```
+
+## Deferred contracts
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+rows = [
+    "| Deferred contract | Keyword | Owner tranche | Closure status |",
+    "| --- | --- | --- | --- |",
+]
+for contract in foundation.keyword_owner.deferred_contracts
+    push!(
+        rows,
+        "| `$(contract.id)` | `$(contract.keyword)` | `$(contract.owner_tranche)` | `$(contract.closure_status)` |",
+    )
+end
+Markdown.parse(join(rows, "\n"))
+```
+
+## Reviewer gate
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+Markdown.parse(
+    string(
+        "Clear tranche 2 when ",
+        foundation.keyword_owner.reviewer_gate.clear,
+        "\n\nReject tranche 2 if ",
+        foundation.keyword_owner.reviewer_gate.reject,
+    ),
+)
+```
+
 ## Accepted design scenarios
 
 ```@eval

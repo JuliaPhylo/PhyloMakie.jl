@@ -1,12 +1,16 @@
 using Aqua
+using DataFrames: DataFrame
 using JET
 using PhyloMakie
 using Test
 
 include("support/fixture_corpus.jl")
+include("support/keyword_surface_cases.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
+    include("test_keyword_contract.jl")
+    include("test_keyword_normalization.jl")
     include("test_verification_foundation.jl")
 
     @testset "Code quality (Aqua.jl)" begin
