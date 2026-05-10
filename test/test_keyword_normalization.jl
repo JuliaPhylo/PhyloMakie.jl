@@ -62,6 +62,16 @@ using Logging: Warn
             @test unknown_style_spec.strokes.arrowlen == 0.1
             @test unknown_style_spec.strokes.minorlinetype == "longdash"
         end
+
+        xlim_error = @test_logs min_level=Warn try
+            normalize_plot_keywords(style=:weird, xlim=[1.0, 2.0, 3.0])
+            nothing
+        catch err
+            err
+        end
+        @test xlim_error isa ErrorException
+        @test occursin("xlim", xlim_error.msg)
+        @test occursin("exactly 2 values", xlim_error.msg)
     end
 
     @testset "Color and width policy" begin
@@ -105,6 +115,15 @@ using Logging: Warn
         end
         @test error isa ErrorException
         @test error.msg == "edgewidth should be numerical"
+
+        unknown_style_error = @test_logs min_level=Warn try
+            normalize_plot_keywords(style=:weird, edgewidth=Dict(1 => "wide"))
+            nothing
+        catch err
+            err
+        end
+        @test unknown_style_error isa ErrorException
+        @test unknown_style_error.msg == "edgewidth should be numerical"
     end
 
     @testset "Explicit limit validation" begin

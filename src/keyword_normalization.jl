@@ -128,7 +128,6 @@ function normalize_plot_keywords(;
     resolved_arrowlen = arrowlen
     resolved_minorlinetype =
         isnothing(minorlinetype) ? (style == :majortree ? "solid" : "longdash") : minorlinetype
-    resolved_style = _normalize_style(style)
     resolved_xlim = _validate_explicit_limit(xlim, :xlim)
     resolved_ylim = _validate_explicit_limit(ylim, :ylim)
     resolved_edgelabel = _normalize_dataframe(edgelabel)
@@ -153,6 +152,7 @@ function normalize_plot_keywords(;
             ),
         )
     end
+    resolved_style = _normalize_style(style)
 
     layout = PlotKeywordLayout(
         useedgelength,

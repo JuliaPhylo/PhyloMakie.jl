@@ -1,10 +1,10 @@
 ---
 date-created: 2026-05-09T14:51:14
-date-updated: 2026-05-09T15:03:00
+date-updated: 2026-05-09T20:16:02
 parent-tranche: 02_tranches.md
 parent-prd: 01_prd.md
 workflow-instrument: Tasking plan
-workflow-status: Approved
+workflow-status: Implemented
 ---
 
 # Tasks for tranche 2: Public keyword normalization owner
@@ -14,9 +14,13 @@ Parent PRD: `01_prd.md`
 
 ## Approval state
 
-- This tasking file records proposed tranche-2 tasking output derived from a still-proposed parent tranche.
-- The parent tranche file still records Tranche 2 as Proposed, so downstream `Tasks -> Execute` work remains blocked until the project owner explicitly approves Tranche 2 in the active workflow record.
-- This file is not itself an execution request and must not be treated as tranche approval provenance on its own.
+- This tasking file was proposed planning output derived from a proposed tranche
+  plan and is now the execution record for the implemented tranche-2 snapshot.
+- Project-owner approval for both Tranche 2 in `02_tranches.md` and this
+  tasking file was recorded on 2026-05-09 via the explicit execution request
+  for tranche-2 implementation.
+- This file is ratified for the completed tranche-2 `Tasks -> Execute` run
+  only.
 
 ## Settled user decisions and environment baseline
 
@@ -141,7 +145,10 @@ Read-only git and shell commands may be used freely. Mutating git operations suc
 
 ## Handoff packet
 
-- Approval state: proposed tranche-2 tasking output as of 2026-05-09; the parent tranche remains Proposed and no tranche-2 execution approval is recorded yet.
+- Approval state: approved and executed; project-owner approval for both
+  Tranche 2 in `02_tranches.md` and this tasking file was recorded on
+  2026-05-09 via the explicit execution request for tranche-2
+  implementation.
 - Active authorities: `CONTRIBUTING.md`; all repo-local root `STYLE*.md` files; `STYLE-vocabulary.md`; `STYLE-workflow-vocabulary.md`; `design/prod01-vision.md`; `design/prod01-vision-supplement.md`; `01_prd.md`; `02_tranches.md`.
 - Parent documents: `01_prd.md`; `02_tranches.md`; `design/prod01-vision.md`; `design/prod01-vision-supplement.md`.
 - Settled decisions and non-negotiables: preserve the `PhyloPlots.plot` public behavior target; preserve the exact accepted keyword names; preserve upstream keyword signature order for the local contract; keep `phyloplot`, `phyloplot!`, and `plot(net)` as the target public surfaces; keep `HybridNetwork` as the only supported public input type; keep R interop out of scope; preserve the root / `test/` / `docs/` project split and path overrides; use public `Pkg` operations for dependency curation.

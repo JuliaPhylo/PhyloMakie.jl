@@ -1,6 +1,6 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-09T14:40:00
+date-updated: 2026-05-09T20:16:02
 parent-prd: 01_prd.md
 workflow-instrument: Tranche plan
 workflow-status: Approved
@@ -14,11 +14,14 @@ workflow-status: Approved
 
 ## Approval state
 
-- This tranche plan remains proposed planning output for Tranches 2 through 6.
+- This tranche plan remains proposed planning output for Tranches 3 through 6.
 - Project-owner approval for Tranche 1 and its tranche-1 tasking file was
   recorded on 2026-05-09 via the explicit execution request for tranche-1
   implementation.
-- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 2
+- Project-owner approval for Tranche 2 and its tranche-2 tasking file was
+  recorded on 2026-05-09 via the explicit execution request for tranche-2
+  implementation.
+- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 3
   through 6 until the project owner explicitly approves them.
 
 ## Active authorities
@@ -102,7 +105,7 @@ Inference boundary note:
 | Tranch id | Title | Status |
 | --- | --- | --- |
 | 1 | Verification and module shell foundation | Approved and implemented |
-| 2 | Public keyword normalization owner | Proposed |
+| 2 | Public keyword normalization owner | Approved and implemented |
 | 3 | Layout and annotation data owner | Proposed |
 | 4 | Makie render adapter and style parity closure | Proposed |
 | 5 | Recipe and entry surface integration | Proposed |
@@ -274,6 +277,8 @@ Negative verification for the known bad shape:
 
 **Type**: AFK
 **Blocked by**: Tranche 1
+**Approval record**: Project-owner approval was recorded on 2026-05-09 via the
+explicit execution request for tranche-2 implementation.
 
 ### Parent PRD
 
