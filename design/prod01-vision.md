@@ -1,63 +1,61 @@
 ## PhyloMakie.jl
 
-A ground-up reimplementation of "PhyloPlots.jl" in a full native Julia stack, using Makie for its visualization framework.
+PhyloMakie is a Makie-native plotting package for phylogenetic trees and
+networks represented as `PhyloNetworks.HybridNetwork`.
 
----
+It is a ground-up Julia and Makie design. It is not a compatibility shell
+around `PhyloPlots.jl`, and it does not need to make users feel that they are
+calling the same package through a different backend.
 
-PhyloPlots.jl currently calls base R. 
-This needs to be swapped out for Makie. 
-Its sophisticated layout and other busniess layer logic adapted to plot onto Makie surfaces with Makie abstractions rather than R.
-The internal API and architecture can be designed from the ground up for idiomatic Makie conventions or program design to support the new build, but full visualization capacity and layout objectives and correctness of the key user surface plotting function in PhyloPlots, `PhyloPlots.plot`, should be replicated completely by the key visualization function/recipes of PhyloMakie.
+The package must preserve the plotting capabilities that make
+`PhyloPlots.plot` useful:
 
-The main function from PhyloMakie that we are redelivering here is: `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)`.
-(The remainder of the public user surface consists of R interoperability functions `PhyloPlots.sexp` and `PhyloPlots.rexport`, and as *NO* R interoperability support will be required or retained, these can be ignored as out of scope for this production run).
+- tree and network layout for `HybridNetwork`
+- full-tree and major-tree render styles
+- major and minor hybrid edge rendering
+- edge-length scaling, annotation placement, and gamma display
+- text, color, width, and linestyle control
+- plotting into new or existing Makie figures and axes
+- pure Julia implementation with no R dependency
 
-The function PhyloMakie will provide as the Makie-based counter-part to `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)` is `phyloplot`, which takes one positional argument of type `PhyloNetworks.HybridNetwork` and returns the result as a `Makie.FigureAxisPlot` object.
+The package may redesign the public API when a Makie-native surface is
+clearer, more composable, or more idiomatic. Legacy keyword names, defaults,
+warnings, and wrapper structure are reference material. They are not the
+product goal.
+
+The primary user experience must feel native to Makie:
+
+- a real Makie plot type or recipe
+- support for `plot(net)` and plotting into existing axes
+- package-specific helper entrypoints only as thin convenience surfaces
+- documentation and examples that teach Makie-native usage first
+
+The current internal layout and render owners may be reused when they fit this
+goal. Compatibility-first structures may be reduced, split, or retired when
+they prevent the correct public architecture.
+
+A user-facing sketch:
 
 ```julia
-PhyloMakie.phyloplot(::PhyloNetworks.HybridNetwork; ...)::Makie.FigureAxisPlot
-```
-
-A user-facing MWE:
-
-```julia
+using CairoMakie
 using PhyloNetworks: readnewick
-using CairoMakie                  # or GLMakie / WGLMakie
-using PhyloMakie: phyloplot
+using PhyloMakie
 
-# 4-taxon reticulate network with one hybrid node (H1).
-# Extended Newick field order: branch-length :: gamma :: is-major-edge
-net  = readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+net = readnewick(
+    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+)
 
-# A second reticulate network for the composable example below.
-net2 = readnewick("(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);")
-
-# --- standalone figure (returns Figure, Axis, plot object) ---
-fig, ax, plt = phyloplot(net)
-
-# --- same thing via Makie.plottype dispatch ---
-fig, ax, plt = plot(net)
-
-# --- composable: two networks side by side in one Figure ---
 fig = Figure()
-phyloplot!(Axis(fig[1, 1], title = "net"),  net)
-phyloplot!(Axis(fig[1, 2], title = "net2"), net2)
+ax = Axis(fig[1, 1], title = "Makie-native phylogenetic network")
+plot!(ax, net; style = :fulltree, show_tip_labels = true)
 fig
 ```
 
-Sketch of Makie scaffold:
-
+Package-specific convenience entrypoints may also exist:
 
 ```julia
-@recipe(PhyloPlot, net) do scene
-    Attributes(useedgelength=false, showtiplabel=true, style=:fulltree, ...)
-end
-
-function Makie.plot!(p::PhyloPlot)
-    net = p[:net][]
-    #....
-end
-
-Makie.plottype(::HybridNetwork) = PhyloPlot
-
+fig, ax, plt = phyloplot(net; style = :majortree)
 ```
+
+but the package should still read as Makie-native rather than as a wrapped
+legacy surface.

@@ -1,118 +1,147 @@
-## Supplement to `prod01-vision.md`: Resolved gaps for PRD authoring
+## Supplement to `prod01-vision.md`: Makie-native scope decisions
 
-This document closes four gaps identified in `prod01-vision.md` that would otherwise require a PRD agent to make undocumented decisions.
-
----
-
-### 1. Full keyword argument surface
-
-The target function is `PhyloPlots.plot(net::HybridNetwork; ...)`. Its complete keyword surface, grouped by role, is the authoritative specification for `phyloplot`. The PRD should replicate all behaviors below. Kwarg *names* may be renamed for Makie idiom at the PRD author's discretion; behaviors are non-negotiable.
-
-**Layout / geometry**
-
-| Kwarg | Type | Default | Behavior |
-|---|---|---|---|
-| `useedgelength` | `Bool` | `false` | Draw edges proportional to stored lengths; missing lengths rendered as 1.0 |
-| `style` | `Symbol` | `:fulltree` | `:fulltree` — minor hybrid edges as separate branches (IcyTree-style); `:majortree` — minor edges overlaid on major tree |
-| `arrowlen` | `Real` | `0.1` (`:fulltree`), `0` (`:majortree`) | Arrow tip length for minor hybrid edge rendering |
-| `minorlinetype` | any | `nothing` | Line style for minor hybrid arrows; defaults to `"longdash"` in `:fulltree`, `"solid"` in `:majortree` |
-| `edgewidth` | `Number` or `Dict{Int,Number}` | `1` | Uniform width, or per-edge width keyed by edge number; unmapped edges default to 1 |
-| `xlim` | 2-element array or `nothing` | `nothing` | Override computed x-axis limits |
-| `ylim` | 2-element array or `nothing` | `nothing` | Override computed y-axis limits |
-| `tipoffset` | any | `0` | Extra x-offset applied to tip label positions |
-| `preorder` | `Bool` | `true` | If true, calls `directedges!` and `preorder!` on the network (mutates input — see §4) |
-
-**Visibility toggles**
-
-| Kwarg | Type | Default | Shows |
-|---|---|---|---|
-| `showtiplabel` | `Bool` | `true` | Taxon names at leaves |
-| `shownodelabel` | `Bool` | `false` | Internal node names (e.g. `"H1"`) |
-| `shownodenumber` | `Bool` | `false` | Internal node numbers |
-| `showedgelength` | `Bool` | `false` | Edge lengths as text |
-| `showgamma` | `Bool` | `false` | γ (inheritance probability) on hybrid edges |
-| `showedgenumber` | `Bool` | `false` | Edge internal numbers as text |
-
-**Custom annotations (DataFrame-based)**
-
-| Kwarg | Type | Default | Behavior |
-|---|---|---|---|
-| `edgelabel` | `AbstractDataFrame` | `DataFrame()` | Col 1: edge numbers (Int); Col 2: labels. Annotates matching edges. |
-| `nodelabel` | `AbstractDataFrame` | `DataFrame()` | Col 1: node numbers (Int); Col 2: labels. Annotates matching nodes. |
-
-Validation rules (must be preserved): minimum 2 columns; col 1 must be integer-typed; rows with missing col-1 values are silently dropped; unmatched numbers produce a warning, not an error.
-
-**Text sizing**
-
-These are R `cex` (character expansion) scalars — multiplicative size factors.
-
-| Kwarg | Default | Applies to |
-|---|---|---|
-| `tipcex` | `1` | Tip labels and `shownodelabel` text |
-| `nodecex` | `1` | `nodelabel` DataFrame annotation text |
-| `edgecex` | `1` | `edgelabel` DataFrame annotation text |
-
-**Colors**
-
-| Kwarg | Type | Default | Behavior |
-|---|---|---|---|
-| `edgecolor` | `String` or `Dict{Int,String}` | `"black"` | Uniform color, or per-edge color keyed by edge number. If Dict: `majorhybridedgecolor` and `minorhybridedgecolor` are ignored |
-| `majorhybridedgecolor` | `AbstractString` | `"deepskyblue4"` | Major hybrid edge color (when `edgecolor` is not a Dict) |
-| `minorhybridedgecolor` | `AbstractString` | `"deepskyblue"` | Minor hybrid edge color (when `edgecolor` is not a Dict) |
-| `defaultedgecolor` | any | `nothing` | Fallback for edges not in `edgecolor` Dict; defaults to `"black"` (Dict case) or `edgecolor` (scalar case) |
-| `edgenumbercolor` | any | `"grey"` | Color for edge number annotations |
-| `edgelabelcolor` | any | `"black"` | Color for `edgelabel` DataFrame annotation text |
-| `nodelabelcolor` | any | `"black"` | Color for `nodelabel` DataFrame annotation text |
-
-**Label placement**
-
-| Kwarg | Default | Semantics |
-|---|---|---|
-| `edgelabeladj` | `[0.5, 0]` | [x, y] anchor adjustment for edge annotation text |
-| `nodelabeladj` | `1` | Anchor adjustment for node annotation text |
+This document resolves the planning questions that changed after the first
+compatibility-first workflow pass. It is the design supplement that the PRD
+and tranche plan must follow for the remaining work.
 
 ---
 
-### 2. Acceptance criteria
+### 1. Capability parity is required. API mimicry is not.
 
-The implementation is done when all of the following pass:
+The target product is a Makie-native plotting package with the same core
+plotting functionality as `PhyloPlots.plot`. The target product is not a
+drop-in recreation of the same user-facing keyword shell.
 
-| # | Input | Required output |
-|---|---|---|
-| 1 | Simple tree, no hybrids: `"(A,((B,C),(D,E)));"` | Renders without error; no hybrid-edge drawing code is invoked |
-| 2 | One reticulation, γ present: `"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"` | Major and minor hybrid edges visible in distinct colors; arrow tip rendered on minor edge |
-| 3 | Same network, `style=:majortree` vs `:fulltree` | Visually distinct layouts; `:majortree` draws minor edges as diagonal overlays, `:fulltree` as separate branches with spacing |
-| 4 | `useedgelength=true` on a network with branch lengths | Node x-positions scaled to edge lengths; missing lengths rendered as 1.0 |
-| 5 | `edgelabel` and `nodelabel` DataFrames with valid data | Labels appear at the midpoint of the correct edges/nodes |
-| 6 | `showgamma=true` on a hybrid network | γ values appear: minor edge gets `minorhybridedgecolor`, major edge gets `majorhybridedgecolor` |
-| 7 | `edgecolor` as a `Dict{Int,String}` | Mapped edges get their specified color; unmapped edges get `defaultedgecolor` |
-| 8 | `phyloplot!(Axis(fig[1,1]), net1)` and `phyloplot!(Axis(fig[1,2]), net2)` | Both render in their respective panels with no coordinate bleed-through |
+For this production run, the following stay non-negotiable:
+
+- support `PhyloNetworks.HybridNetwork`
+- support full-tree and major-tree layout modes
+- support major and minor hybrid edge rendering
+- support edge-length-driven x placement
+- support tip labels, internal node names, node numbers, edge numbers, edge
+  lengths, gamma labels, and user-supplied annotations
+- support edge, text, and annotation styling
+- support plotting into new and existing Makie figures and axes
+- remove all R dependencies from the plotting path
+
+The following are explicitly authorized to change when a better Makie-native
+surface results:
+
+- public keyword names
+- public keyword grouping
+- defaults that only existed to mirror R graphics behavior
+- warning text and validation ownership
+- the wrapper structure around the plotting owner
+
+The design standard for these changes is simple: users should feel they are
+using a Makie package that covers the same problem space, not the old package
+with a backend swap.
 
 ---
 
-### 3. Recipe naming convention
+### 2. Public plotting direction
 
-The Makie `@recipe` macro uses a PascalCase *type* name and generates a lowercase function automatically:
+The public plotting owner should be a real Makie plot type or recipe.
 
-```julia
-@recipe(PhyloPlot, net) do scene    # defines type PhyloPlot
-    Attributes(...)
-end
-# macro generates: phyloplot(args...; kwargs...) and phyloplot!(args...; kwargs...)
+The preferred direction for the remaining work is:
 
-Makie.plottype(::HybridNetwork) = PhyloPlot   # enables plot(net) dispatch
-```
+- Makie `plot(net; attrs...)` support through a package-owned recipe
+- plotting into an existing axis through Makie mutating semantics
+- optional package-specific helper entrypoints such as `phyloplot` and
+  `phyloplot!`, but only as thin convenience wrappers over the same public
+  owner
 
-The public-facing names are `phyloplot` / `phyloplot!`. The type `PhyloPlot` is an implementation detail. The PRD should treat `phyloplot` as the canonical user-facing name.
+Do not make `phyloplot` or a legacy-keyword wrapper the semantic owner if the
+recipe already exists.
+
+Do not require users to learn or preserve legacy `PhyloPlots.plot` keyword
+spelling in order to access the package correctly.
 
 ---
 
-### 4. Layout engine ownership
+### 3. Reuse policy for completed internal work
 
-**Decision: port the existing Julia layout engine as internal helpers.**
+Tranches 1 through 4 closed useful internal foundations. Treat them as
+reusable current-state assets, not as proof that the old public architecture
+was correct.
 
-`edgenode_coordinates`, `check_nodedataframe`, `prepare_nodedataframe`, and `prepare_edgedataframe` in `PhyloPlots.jl/src/phylonetworksPlots.jl` are already pure Julia — no R dependency. They contain the tree layout algorithm (cladewise y-assignment, preorder x-assignment, hybrid edge coordinate resolution). This logic is correct, battle-tested, and should be ported rather than rewritten.
+The following are considered good candidates for reuse:
 
-These functions become private helpers in PhyloMakie — not exported, not part of the public API. The PRD should plan to adapt their signatures to remove any implicit R/RCall assumptions and fit them cleanly into the `Makie.plot!` implementation.
+- `layout_engine.jl`
+- `annotation_data.jl`
+- `render_adapter.jl`
+- the Makie dependency baseline and render-proof scaffolding
+- the accepted render regression corpus and helper-level regression suite
 
-**Input mutation policy:** The current code mutates the network by calling `directedges!` and `preorder!`. PhyloMakie preserves this behavior, controlled by the `preorder` kwarg (default `true`). This must be documented in the `phyloplot` docstring.
+The following are considered transitional or suspect and may be retired,
+reduced, or split apart:
+
+- `keyword_normalization.jl`
+- `keyword_contract.jl`
+- any verification metadata that treats legacy keyword parity as the primary
+  product definition
+- any docs phrasing that presents PhyloMakie as "the same package with Makie
+  underneath"
+
+If a compatibility adapter survives, it must be explicit, thin, and secondary.
+It must not remain the package's architectural center.
+
+---
+
+### 4. Public semantics that must survive the rewrite
+
+The remaining work must preserve the following visible plotting semantics even
+if the API names or ownership change:
+
+| Capability | Required outcome |
+| --- | --- |
+| Full-tree style | Minor hybrid edges render as separate branches with their own visual path |
+| Major-tree style | Minor hybrid edges render as overlays on the major tree |
+| Edge-length scaling | Node x positions respect stored lengths, with coherent missing-length handling |
+| Hybrid-edge labels | Gamma values render with distinct major and minor hybrid color policy |
+| Internal labels | Tip labels, node names, node numbers, edge numbers, and edge lengths can all be shown |
+| User annotations | User-supplied node and edge annotations render at the correct anchors |
+| Styling | Colors, widths, linestyles, and text sizes can be controlled through the new surface |
+| Composition | Two networks can render into separate axes in one figure without state bleed-through |
+
+Use `PhyloPlots.jl` as a capability reference for these behaviors. Do not use
+it as the authority for the final user-facing API shape.
+
+---
+
+### 5. Input mutation policy is reopened
+
+The earlier compatibility-first plan preserved the legacy `preorder` behavior
+and the associated input mutation by default.
+
+That is no longer a fixed requirement.
+
+The remaining work may:
+
+- preserve the behavior if it is still the best Makie-native choice
+- hide it behind internal copying or preparation
+- expose it differently if public mutation control is genuinely useful
+
+The important requirement is clarity:
+
+- do not mutate input implicitly unless the public contract says so
+- do not preserve a legacy mutation switch merely because it existed before
+
+---
+
+### 6. Documentation and migration standard
+
+Documentation must teach the Makie-native package first.
+
+Required documentation outcomes:
+
+- primary examples use the Makie-native public API
+- migration material maps legacy PhyloPlots capabilities to the new PhyloMakie
+  surface
+- migration material explains differences honestly instead of pretending the
+  APIs are the same
+- no primary docs page teaches the legacy keyword surface as the package's
+  canonical interface
+
+Compatibility notes may exist, but they must read as migration support, not as
+the product definition.
