@@ -6,6 +6,7 @@ using Test
 
 include("support/fixture_corpus.jl")
 include("support/keyword_surface_cases.jl")
+include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
@@ -13,6 +14,7 @@ include("support/keyword_surface_cases.jl")
     include("test_keyword_normalization.jl")
     include("test_layout_engine.jl")
     include("test_annotation_data.jl")
+    include("test_render_adapter.jl")
     include("test_verification_foundation.jl")
 
     @testset "Code quality (Aqua.jl)" begin

@@ -92,6 +92,37 @@ const FIXTURE_CORPUS = (
             showgamma = true,
         ),
     ),
+    render_regression_cases = (
+        style_fulltree = (
+            newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+            keyword_args = (useedgelength = true, style = :fulltree),
+        ),
+        style_majortree = (
+            newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+            keyword_args = (useedgelength = true, style = :majortree),
+        ),
+        gamma_and_edgecolor = (
+            newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+            edgecolor_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
+            edgewidth_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
+            defaultedgecolor = "black",
+            keyword_args = (useedgelength = true, style = :fulltree, showgamma = true),
+        ),
+        annotation_and_limits = (
+            newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
+            xlim = (0.0, 6.5),
+            ylim = (0.0, 5.5),
+            keyword_args = (
+                useedgelength = true,
+                style = :majortree,
+                shownodelabel = true,
+                shownodenumber = true,
+                showedgenumber = true,
+                showedgelength = true,
+                showgamma = true,
+            ),
+        ),
+    ),
     layout_regression_cases = (
         with_lengths_fulltree = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",

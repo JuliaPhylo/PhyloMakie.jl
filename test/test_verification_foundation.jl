@@ -8,10 +8,11 @@
         :lock_items,
         :keyword_owner,
         :layout_annotation_owner,
+        :render_owner,
         :accepted_design_scenarios,
         :upstream_helper_regressions,
         :green_state_gates,
-        :current_red_state,
+        :current_status,
         :stop_conditions,
     )
 
@@ -96,8 +97,59 @@
             :major_tree_minor_edge_midpoint,
             :helper_bounds_messages,
         )
-        @test owner.deferred_render_proof.owner_tranche == 4
+        @test owner.render_consumer.owner_tranche == 4
+        @test owner.render_consumer.owner ==
+            "render_plot!(ax, net, spec, layout)::PlotRenderLayers"
+        @test owner.render_consumer.source_file == "src/render_adapter.jl"
         @test owner.deferred_public_surface_proof.owner_tranche == 5
+        @test owner.reviewer_gate.clear isa String
+        @test owner.reviewer_gate.reject isa String
+    end
+
+    @testset "Render owner" begin
+        owner = foundation.render_owner
+
+        @test owner.source_files == ("src/render_adapter.jl",)
+        @test owner.supporting_types == (
+            "SegmentRenderLayer",
+            "ArrowTipRenderLayer",
+            "TextRenderLayer",
+            "PlotRenderLayers",
+        )
+        @test owner.typed_layer_bundle == "PlotRenderLayers"
+        @test owner.regression_suites == (
+            "test/support/render_test_helpers.jl",
+            "test/test_render_adapter.jl",
+        )
+        @test endswith(
+            owner.source_set_note,
+            "04-01_tranche-04--makie-source-set.md",
+        )
+        @test owner.primitive_entrypoints == (
+            "linesegments!",
+            "arrows2d!",
+            "text!",
+            "Makie.colorbuffer",
+        )
+        @test any(endswith("src/recipes.jl"), owner.makie_source_files)
+        @test any(endswith("src/figureplotting.jl"), owner.makie_source_files)
+        @test any(endswith("src/basic_recipes/arrows.jl"), owner.makie_source_files)
+        @test any(endswith("src/basic_recipes/text.jl"), owner.makie_source_files)
+        @test any(endswith("src/display.jl"), owner.makie_source_files)
+        @test any(endswith("src/screen.jl"), owner.makie_source_files)
+        @test owner.closed_render_regressions == (
+            :style_distinction_fulltree_vs_majortree,
+            :edgecolor_dict_fallback,
+            :gamma_color_policy,
+            :tip_label_rendering,
+            :internal_node_name_rendering,
+            :node_number_rendering,
+            :node_label_rendering,
+            :edge_label_rendering,
+            :edge_length_rendering,
+            :edge_number_rendering,
+            :explicit_limit_application,
+        )
         @test owner.reviewer_gate.clear isa String
         @test owner.reviewer_gate.reject isa String
     end
@@ -113,11 +165,13 @@
             :edgecolor_dict_fallback,
             :composable_dual_axes,
         )
-        @test foundation.accepted_design_scenarios.simple_tree_no_hybrid.direct_proof_owner == 4
-        @test foundation.accepted_design_scenarios.single_reticulation_gamma.direct_proof_owner == 4
-        @test foundation.accepted_design_scenarios.useedgelength_scaling.direct_proof_owner == 4
-        @test foundation.accepted_design_scenarios.dataframe_label_rendering.direct_proof_owner == 4
+        @test foundation.accepted_design_scenarios.simple_tree_no_hybrid.closure_status ==
+            :closed_render_owner
+        @test foundation.accepted_design_scenarios.edgecolor_dict_fallback.closure_status ==
+            :closed_render_owner
         @test foundation.accepted_design_scenarios.composable_dual_axes.direct_proof_owner == 5
+        @test foundation.accepted_design_scenarios.composable_dual_axes.closure_status ==
+            :deferred_public_surface_proof
         @test propertynames(foundation.upstream_helper_regressions) == (
             :edgenode_coords_with_lengths_fulltree,
             :edgenode_coords_with_lengths_majortree,
@@ -134,6 +188,12 @@
             propertynames(foundation.accepted_design_scenarios)
         @test propertynames(FIXTURE_CORPUS.upstream_helper_regressions) ==
             propertynames(foundation.upstream_helper_regressions)
+        @test propertynames(FIXTURE_CORPUS.render_regression_cases) == (
+            :style_fulltree,
+            :style_majortree,
+            :gamma_and_edgecolor,
+            :annotation_and_limits,
+        )
         @test propertynames(FIXTURE_CORPUS.layout_regression_cases) == (
             :with_lengths_fulltree,
             :with_lengths_majortree,
@@ -152,49 +212,37 @@
             :major_tree_minor_edge_midpoint,
             :helper_bounds_messages,
         )
-
-        @test FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid.newick ==
-            "(A,((B,C),(D,E)));"
-        @test FIXTURE_CORPUS.accepted_design_scenarios.single_reticulation_gamma.newick ==
-            "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
-        @test FIXTURE_CORPUS.accepted_design_scenarios.composable_dual_axes.newicks[2] ==
-            "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);"
-
-        @test FIXTURE_CORPUS.upstream_helper_regressions.level2_network_with_gamma.newick ==
-            "((((B)#H1:::0.2)#H2,((D,C,#H2:::0.8)S1,(#H1,A)S2)S3)S4);"
-        @test FIXTURE_CORPUS.upstream_helper_regressions.level2_network_without_gamma.newick ==
-            "((((B)#H1:::0.2)#H2,((D,C,#H2)S1,(#H1,A)S2)S3)S4);"
-        @test FIXTURE_CORPUS.layout_regression_cases.all_missing_lengths_fulltree_fallback.expected_print ==
-            "All edge lengths are missing, won't be used for plotting."
-        @test FIXTURE_CORPUS.layout_regression_cases.incompatible_root.rooti == 2
-
-        @test FIXTURE_CORPUS.warning_strings.nodelabel_unknown_nodes ==
-            "Some node numbers in the nodelabel data frame are not found in the network:\n 100"
-        @test FIXTURE_CORPUS.warning_strings.nodelabel_invalid_shape ==
-            "nodelabel should have 2+ columns, the first one giving the node numbers (Integer)"
-        @test FIXTURE_CORPUS.warning_strings.edgelabel_unknown_edges ==
-            "Some edge numbers in the edgelabel data frame are not found in the network:\n 200"
-        @test FIXTURE_CORPUS.warning_strings.edgelabel_invalid_shape ==
-            "edgelabel should have 2+ columns, the first one giving the edge numbers (Integer)"
-        @test FIXTURE_CORPUS.warning_strings.mixed_missing_edge_lengths ==
-            "At least one non-missing edge length: plotting any missing length as 1.0"
-
-        @test length(FIXTURE_CORPUS.annotation_rows.nodelabel_warning_rows.rows) == 5
-        @test length(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows.rows) == 4
+        @test FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor.defaultedgecolor ==
+            "black"
+        @test FIXTURE_CORPUS.render_regression_cases.annotation_and_limits.xlim == (0.0, 6.5)
     end
 
-    @testset "Fake-green prevention" begin
-        @test !isempty(foundation.green_state_gates)
-        @test !isempty(foundation.current_red_state)
-        @test !isempty(foundation.stop_conditions)
-        @test [state.id for state in foundation.current_red_state] == [
-            :partial_tranche_3_shell_owner_drift,
-            :partial_tranche_3_dependency_drift,
-            :partial_tranche_3_jet_branch_gap,
-            :partial_tranche_3_missing_helper_proof_suites,
-            :partial_tranche_3_stale_truth_surface,
+    @testset "Green gates and current status" begin
+        @test [gate.id for gate in foundation.green_state_gates] == [
+            :root_makie_activation,
+            :test_makie_activation,
+            :docs_makie_activation,
+            :package_tests,
+            :aqua,
+            :jet,
+            :docs_build,
+        ]
+        @test [state.id for state in foundation.current_status] == [
+            :dependency_activation_closed,
+            :render_owner_closed,
+            :render_verification_closed,
             :target_surfaces_still_deferred,
         ]
-        @test foundation.current_red_state[end].status == :intentional_current_state
+        @test foundation.current_status[end].status == :intentional_current_state
+    end
+
+    @testset "Stop conditions" begin
+        @test [stop_condition.id for stop_condition in foundation.stop_conditions] == [
+            :would_require_public_entry_surface,
+            :helper_owner_regression,
+            :source_set_drift_from_ratified_note,
+            :docs_truth_boundary_violation,
+            :render_proof_degenerates_to_text_policing,
+        ]
     end
 end

@@ -53,7 +53,7 @@ const VERIFICATION_FOUNDATION = (
         ),
         deferred_contracts = DEFERRED_PLOT_KEYWORD_CONTRACTS,
         reviewer_gate = (
-            clear = "the canonical keyword owner exists, direct keyword regressions pass, malformed explicit xlim and ylim overrides are rejected structurally at the keyword-owner boundary, helper-level annotation validation and bounds-message contracts are closed in the layout and annotation owners, and the remaining direct public entry-surface proofs stay explicit in source, tests, and docs.",
+            clear = "the canonical keyword owner exists, direct keyword regressions pass, malformed explicit xlim and ylim overrides are rejected structurally at the keyword-owner boundary, helper-level annotation validation and bounds-message contracts are still closed in the layout and annotation owners, and the remaining direct public entry-surface proofs stay explicit in source, tests, and docs.",
             reject = "it reopens helper-level annotation or bounds ownership in the keyword layer, falsely marks tranche-5 direct public proof closed, or leaves the deferred direct-public boundary implicit.",
         ),
     ),
@@ -87,11 +87,13 @@ const VERIFICATION_FOUNDATION = (
             :major_tree_minor_edge_midpoint,
             :helper_bounds_messages,
         ),
-        deferred_render_proof = (
+        render_consumer = (
             owner_tranche = 4,
+            owner = "render_plot!(ax, net, spec, layout)::PlotRenderLayers",
+            source_file = "src/render_adapter.jl",
             contracts = (
-                "Render-level style distinction, hybrid-edge visibility, gamma text, and color semantics via the Makie render adapter.",
-                "Render-time proof that plotted annotations consume PlotLayout without geometry or midpoint recomputation.",
+                "Render-time proof consumes PlotLayout geometry, bounds, and annotation tables without local geometry recomputation.",
+                "Render-time proof applies explicit xlim and ylim overrides only at the render owner boundary.",
             ),
         ),
         deferred_public_surface_proof = (
@@ -104,49 +106,105 @@ const VERIFICATION_FOUNDATION = (
             ),
         ),
         reviewer_gate = (
-            clear = "src/layout_engine.jl and src/annotation_data.jl remain the only helper owners, exact geometry and annotation regressions pass locally, PlotLayout remains the canonical helper payload, and render-level plus direct public-surface proof stays deferred explicitly to tranches 4 and 5.",
-            reject = "it reimplements geometry, midpoint, or helper-bounds semantics in render-facing code, leaves the canonical helper payload implicit, or falsely marks render or direct public entry-surface proof closed.",
+            clear = "src/layout_engine.jl and src/annotation_data.jl remain the only helper owners, PlotLayout remains the canonical helper payload, render-level proof now consumes that payload directly, and direct public entry-surface proof stays deferred explicitly to tranche 5.",
+            reject = "it reimplements geometry, midpoint, or helper-bounds semantics in render-facing code, leaves PlotLayout implicit, or falsely marks direct public entry-surface proof closed.",
+        ),
+    ),
+    render_owner = (
+        source_files = ("src/render_adapter.jl",),
+        supporting_types = (
+            "SegmentRenderLayer",
+            "ArrowTipRenderLayer",
+            "TextRenderLayer",
+            "PlotRenderLayers",
+        ),
+        typed_layer_bundle = "PlotRenderLayers",
+        regression_suites = (
+            "test/support/render_test_helpers.jl",
+            "test/test_render_adapter.jl",
+        ),
+        source_set_note = ".workflow-docs/202605090307_phylomakie-makie-rebuild/04-01_tranche-04--makie-source-set.md",
+        makie_source_files = (
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/recipes.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/figureplotting.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/Makie.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/basic_plots.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/basic_recipes/arrows.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/basic_recipes/text.jl",
+            "/home/jeetsukumaran/.julia/packages/Makie/p9K7f/src/display.jl",
+            "/home/jeetsukumaran/.julia/packages/CairoMakie/hql6v/src/screen.jl",
+        ),
+        primitive_entrypoints = (
+            "linesegments!",
+            "arrows2d!",
+            "text!",
+            "Makie.colorbuffer",
+        ),
+        closed_render_regressions = (
+            :style_distinction_fulltree_vs_majortree,
+            :edgecolor_dict_fallback,
+            :gamma_color_policy,
+            :tip_label_rendering,
+            :internal_node_name_rendering,
+            :node_number_rendering,
+            :node_label_rendering,
+            :edge_label_rendering,
+            :edge_length_rendering,
+            :edge_number_rendering,
+            :explicit_limit_application,
+        ),
+        reviewer_gate = (
+            clear = "render_plot! is the only internal render owner, PlotRenderLayers exposes the direct owner proof surface, linesegments!, arrows2d!, text!, and Makie.colorbuffer are recorded as the ratified primitive path, and all tranche-5 public surfaces remain absent and explicitly deferred.",
+            reject = "it adds a public plotting surface, reintroduces hidden current-axis state, lets gamma text inherit dict-driven edge colors, or lets render proof collapse to docs-only or source-text checks.",
         ),
     ),
     accepted_design_scenarios = (
         simple_tree_no_hybrid = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Renders without error; no hybrid-edge drawing code is invoked.",
         ),
         single_reticulation_gamma = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Major and minor hybrid edges are visible in distinct colors, and the minor edge has an arrow tip.",
         ),
         style_distinction_fulltree_vs_majortree = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "The full-tree style and major-tree style remain visually distinct.",
         ),
         useedgelength_scaling = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Node x positions follow edge lengths, and missing lengths render as 1.0.",
         ),
         dataframe_label_rendering = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Node and edge labels render at the correct midpoint anchors after validation.",
         ),
         showgamma_rendering = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Hybrid-edge gamma text renders with the correct major and minor color semantics.",
         ),
         edgecolor_dict_fallback = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 4,
+            closure_status = :closed_render_owner,
             required_output = "Mapped edges use the provided colors and unmapped edges fall back to the default edge color.",
         ),
         composable_dual_axes = (
             source = "design/prod01-vision-supplement.md",
             direct_proof_owner = 5,
+            closure_status = :deferred_public_surface_proof,
             required_output = "Two networks render into separate axes without coordinate bleed-through.",
         ),
     ),
@@ -189,18 +247,28 @@ const VERIFICATION_FOUNDATION = (
     ),
     green_state_gates = (
         (
-            id = :test_project_runnable,
-            artifact = "Repo-local test project resolves the direct PhyloMakie dependency and executes test/runtests.jl.",
-            command = "julia --project=test test/runtests.jl",
+            id = :root_makie_activation,
+            artifact = "The repo-local root environment loads Makie from a repo-owned dependency declaration.",
+            command = "julia --project=. -e 'using Makie'",
+        ),
+        (
+            id = :test_makie_activation,
+            artifact = "The repo-local test environment loads CairoMakie and Makie for render verification.",
+            command = "julia --project=test -e 'using CairoMakie; using Makie'",
+        ),
+        (
+            id = :docs_makie_activation,
+            artifact = "The repo-local docs environment loads CairoMakie and Makie for render docs.",
+            command = "julia --project=docs -e 'using CairoMakie; using Makie'",
         ),
         (
             id = :package_tests,
-            artifact = "Shell-owner, keyword-owner, layout-owner, annotation-owner, and verification-owner tests pass together under the repo-local test project.",
+            artifact = "Shell-owner, keyword-owner, layout-owner, annotation-owner, render-owner, and verification-owner tests pass together under the repo-local test project.",
             command = "julia --project=test test/runtests.jl",
         ),
         (
             id = :aqua,
-            artifact = "Aqua remains supplemental proof inside the test suite.",
+            artifact = "Aqua remains supplemental proof inside the test suite and now accepts the package-side Makie dependency as live.",
             command = "Aqua.test_all(PhyloMakie)",
         ),
         (
@@ -210,62 +278,52 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :docs_build,
-            artifact = "Documenter renders the source-backed verification-foundation page, including the tranche-3 layout and annotation owner block and the deferred proof boundary.",
+            artifact = "Documenter renders the source-backed verification-foundation page and the render-verification page from live CairoMakie code.",
             command = "julia --project=docs docs/make.jl",
         ),
     ),
-    current_red_state = (
+    current_status = (
         (
-            id = :partial_tranche_3_shell_owner_drift,
-            status = :remediation_start_repro,
-            fact = "On 2026-05-10, `test/test_PhyloMakie.jl` still expected the old three-include module shell and failed once the tranche-3 owners landed in `src/`.",
+            id = :dependency_activation_closed,
+            status = :closed_in_tranche_4,
+            fact = "On 2026-05-10, the root, test, and docs projects all resolved and loaded the Makie-family dependencies through repo-owned environments.",
         ),
         (
-            id = :partial_tranche_3_dependency_drift,
-            status = :remediation_start_repro,
-            fact = "On 2026-05-10, Aqua reported a missing `PhyloNetworks` compat entry and the docs build failed until the repo-local dependency state was re-resolved.",
+            id = :render_owner_closed,
+            status = :closed_in_tranche_4,
+            fact = "On 2026-05-10, src/render_adapter.jl landed render_plot!(ax, net, spec, layout)::PlotRenderLayers as the only internal render owner, and the package shell acknowledged Makie without exposing public plotting entry surfaces.",
         ),
         (
-            id = :partial_tranche_3_jet_branch_gap,
-            status = :remediation_start_repro,
-            fact = "On 2026-05-10, JET reported that `child_y` might be undefined in the `usedirecthybridline` branch of `src/layout_engine.jl`.",
-        ),
-        (
-            id = :partial_tranche_3_missing_helper_proof_suites,
-            status = :remediation_start_repro,
-            fact = "At remediation start, no local layout or annotation regression suites owned exact geometry tuples, fallback warnings, midpoint placement, or helper-level bounds messages.",
-        ),
-        (
-            id = :partial_tranche_3_stale_truth_surface,
-            status = :remediation_start_repro,
-            fact = "At remediation start, `src/keyword_contract.jl`, `src/verification_foundation.jl`, `docs/src/verification-foundation.md`, and `docs/src/index.md` still described the repository as a tranche-1 or tranche-2 state instead of a tranche-3 helper-owner closeout.",
+            id = :render_verification_closed,
+            status = :closed_in_tranche_4,
+            fact = "On 2026-05-10, CairoMakie-backed render regressions and render-verification docs closed the tranche-4 style, color, width, text-anchor, and explicit-limit proof surface.",
         ),
         (
             id = :target_surfaces_still_deferred,
             status = :intentional_current_state,
-            fact = "The plotting entry surfaces remain intentionally unimplemented after tranche 3; render-level proof is deferred to tranche 4 and direct public entry-surface proof remains deferred to tranche 5.",
+            fact = "The plotting entry surfaces remain intentionally unimplemented after tranche 4; phyloplot, phyloplot!, PhyloPlot, Makie.plottype(::HybridNetwork), and plot(net) public proof remain deferred to tranche 5.",
         ),
     ),
     stop_conditions = (
         (
-            id = :would_require_plotting_logic,
-            condition = "Stop if tranche-3 closeout would require implementing public plotting entrypoints, recipe code, or render adapter logic.",
+            id = :would_require_public_entry_surface,
+            condition = "Stop if tranche-4 work would require implementing phyloplot, phyloplot!, PhyloPlot, Makie.plottype(::HybridNetwork), or plot(net) dispatch.",
         ),
         (
-            id = :fixture_corpus_requires_r_behavior,
-            condition = "Stop if the fixture corpus cannot be encoded as dependency-light Julia literals without importing out-of-scope R behavior.",
+            id = :helper_owner_regression,
+            condition = "Stop if layout_engine or annotation_data semantics would need to move back out of PlotLayout and into render code.",
         ),
         (
-            id = :target_surface_drift_from_prose_only,
-            condition = "Stop if later tranches would still need to infer target public surfaces or scenario identifiers from workflow prose alone.",
+            id = :source_set_drift_from_ratified_note,
+            condition = "Stop if the resolved Makie dependency tree or primitive-source files drift materially from the ratified source-set note before tranche 5 updates it.",
         ),
         (
             id = :docs_truth_boundary_violation,
-            condition = "Stop if the docs would need to claim implemented plotting behavior to stay green.",
+            condition = "Stop if docs would need to claim direct public entry-surface closure to stay green.",
         ),
         (
-            id = :approval_gate_unrecorded,
-            condition = "Stop if project-owner approval to execute the tranche-3 remediation is absent from the current run context.",
+            id = :render_proof_degenerates_to_text_policing,
+            condition = "Stop if the only available proof surface collapses to SVG, Markdown, YAML, or source-text inspection instead of live CairoMakie-backed artifacts.",
         ),
     ),
 )
