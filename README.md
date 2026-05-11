@@ -18,19 +18,28 @@ surface instead of keeping the legacy keyword shell as the package contract.
 - edge-length scaling, gamma display, annotations, colors, widths, and axis composition
 - a pure Julia plotting path with no R dependency
 
+## Supported entry surfaces
+
+| Surface | Return contract | Notes |
+| --- | --- | --- |
+| `plot(net)` | `Makie.FigureAxisPlot` | Primary non-mutating Makie surface |
+| `plot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Primary mutating Makie surface |
+| `phyloplot(net)` | `Makie.FigureAxisPlot` | Thin convenience surface over the same owner |
+| `phyloplot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Thin convenience surface over the same owner |
+
 ## Installation
 
 PhyloMakie is currently documented through GitHub-based installation. This
-repository does not currently claim General-registry installation. 
+repository does not currently claim General-registry installation.
 
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
 ```
 
-The
-quickstart example below uses CairoMakie as the backend and needs PhyloNetworks for the types and data parser, so install these in the
-same environment before running that example.
+The quickstart example below uses CairoMakie as the backend and needs
+PhyloNetworks for the types and data parser, so install these in the same
+environment before running that example.
 
 ```julia
 Pkg.add([
@@ -73,4 +82,3 @@ current package surface.
 - [Public API](docs/src/public-api.md)
 - [Migration guide](docs/src/migration-guide.md)
 - [Render verification](docs/src/render-verification.md)
-- [Verification foundation](docs/src/verification-foundation.md)

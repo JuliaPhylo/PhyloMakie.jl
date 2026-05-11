@@ -111,9 +111,6 @@ function Makie.plot!(plot::PhyloPlot)
         validated_x_limits,
         validated_y_limits,
     )
-    layers = render_plot!(plot, net, resolved_attributes, layout)
-    plot[:resolved_attributes] = resolved_attributes
-    plot[:resolved_layout] = layout
-    plot[:render_layers] = layers
+    render_plot!(plot, net, resolved_attributes, layout)
     return plot
 end

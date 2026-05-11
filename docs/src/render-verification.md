@@ -4,31 +4,10 @@ CurrentModule = PhyloMakie
 
 # Render verification
 
-Tranche 4 closed the internal render owner
-`render_plot!(target, net, attributes, layout)::PlotRenderLayers`, and tranche
-6 now feeds that owner directly from the Makie-native runtime carrier
-`PhyloPlotAttributes`. The artifacts below exercise the layout, render, and
-public owners directly from live CairoMakie code and the repo-owned fixture
-corpus. The public entry surfaces themselves are documented on
-[Public API](public-api.md).
-
-## Render owner summary
-
-```@eval
-using Markdown
-using PhyloMakie
-
-foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
-owner = foundation.render_owner
-rows = [
-    "| Field | Live value |",
-    "| --- | --- |",
-    "| Typed layer bundle | `$(owner.typed_layer_bundle)` |",
-    "| Primitive entrypoints | $(join(["`$(primitive)`" for primitive in owner.primitive_entrypoints], ", ")) |",
-    "| Regression suites | $(join(["`$(suite)`" for suite in owner.regression_suites], ", ")) |",
-]
-Markdown.parse(join(rows, "\n"))
-```
+The artifacts below exercise the live CairoMakie rendering path used by
+PhyloMakie. They render directly from package code and docs-local case data so
+the page stays live without depending on test support files. The public entry
+surfaces themselves are documented on [Public API](public-api.md).
 
 ```@setup render_docs
 using CairoMakie
@@ -38,10 +17,61 @@ using PhyloMakie
 
 CairoMakie.activate!()
 
-const DataFrames = getfield(PhyloMakie, :DataFrames)
-const PhyloNetworks = getfield(PhyloMakie, :PhyloNetworks)
+const DataFrames = PhyloMakie.DataFrames
+const PhyloNetworks = PhyloMakie.PhyloNetworks
 
-include(joinpath(dirname(pathof(PhyloMakie)), "..", "test", "support", "fixture_corpus.jl"))
+const RENDER_CASES = (
+    style_fulltree = (
+        newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+        attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+    ),
+    style_majortree = (
+        newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+        attribute_kwargs = (use_edge_lengths = true, style = :majortree),
+    ),
+    gamma_and_edgecolor = (
+        newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+        edge_color_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
+        edge_width_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
+        default_edge_color = "black",
+        attribute_kwargs = (use_edge_lengths = true, style = :fulltree, show_gamma = true),
+    ),
+    annotation_and_limits = (
+        newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
+        x_limits = (0.0, 6.5),
+        y_limits = (0.0, 5.5),
+        attribute_kwargs = (
+            use_edge_lengths = true,
+            style = :majortree,
+            show_internal_node_names = true,
+            show_node_numbers = true,
+            show_edge_numbers = true,
+            show_edge_lengths = true,
+            show_gamma = true,
+        ),
+    ),
+)
+
+const ANNOTATION_ROWS = (
+    nodelabel_render_rows = (
+        columns = (:node, :bs),
+        rows = (
+            (node = -5, bs = "90"),
+            (node = -3, bs = "95"),
+            (node = -4, bs = "99"),
+            (node = 5, bs = "mytips"),
+        ),
+    ),
+    edgelabel_filtered_rows = (
+        columns = (:edge, :bs),
+        rows = (
+            (edge = 8, bs = missing),
+            (edge = 9, bs = "95"),
+            (edge = 4, bs = "99"),
+            (edge = 6, bs = "mytips"),
+        ),
+    ),
+)
 
 function render_fixture_dataframe(table_fixture)
     return DataFrames.DataFrame(
@@ -88,7 +118,7 @@ This live artifact renders the accepted reticulate network through the same
 internal owner under the governed `:fulltree` and `:majortree` style branches.
 
 ```@example render_docs
-style_fixture = FIXTURE_CORPUS.render_regression_cases # hide
+style_fixture = RENDER_CASES # hide
 style_figure = Figure(size=(900, 360)) # hide
 fulltree_axis = Axis(style_figure[1, 1], title="Full-tree style") # hide
 hidedecorations!(fulltree_axis) # hide
@@ -127,7 +157,7 @@ major/minor hybrid colors, scalar-versus-dict width handling, and gamma text
 color independence in one live render.
 
 ```@example render_docs
-color_fixture = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor # hide
+color_fixture = RENDER_CASES.gamma_and_edgecolor # hide
 color_case = build_render_case( # hide
     color_fixture.newick; # hide
     color_fixture.attribute_kwargs..., # hide
@@ -160,9 +190,9 @@ This artifact proves that text layers and final limits are consumed from
 render owner.
 
 ```@example render_docs
-annotation_fixture = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits # hide
-node_labels = render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows) # hide
-edge_labels = render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows) # hide
+annotation_fixture = RENDER_CASES.annotation_and_limits # hide
+node_labels = render_fixture_dataframe(ANNOTATION_ROWS.nodelabel_render_rows) # hide
+edge_labels = render_fixture_dataframe(ANNOTATION_ROWS.edgelabel_filtered_rows) # hide
 annotation_case = build_render_case( # hide
     annotation_fixture.newick; # hide
     annotation_fixture.attribute_kwargs..., # hide

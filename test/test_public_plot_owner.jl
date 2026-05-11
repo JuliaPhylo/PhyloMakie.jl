@@ -36,50 +36,10 @@ function _plot_colorbuffer(figure)
     return Makie.colorbuffer(figure; backend=CairoMakie)
 end
 
-function _resolved_layout(plot)
-    return Makie.to_value(plot[:resolved_layout])
-end
-
-function _render_layers(plot)
-    return Makie.to_value(plot[:render_layers])
-end
-
-function _resolved_attributes(plot)
-    return Makie.to_value(plot[:resolved_attributes])
-end
-
-function _geometry_tuple(geometry)
-    return (
-        geometry.edge_x_lo,
-        geometry.edge_x_hi,
-        geometry.edge_y_lo,
-        geometry.edge_y_hi,
-        geometry.node_x,
-        geometry.node_y,
-        geometry.node_y_lo,
-        geometry.node_y_hi,
-        geometry.arrow_x_lo,
-        geometry.arrow_x_hi,
-        geometry.arrow_y_lo,
-        geometry.arrow_y_hi,
-        geometry.xmin,
-        geometry.xmax,
-        geometry.ymin,
-        geometry.ymax,
-    )
-end
-
-function _rgba(value)
-    return convert(Makie.RGBAf, Makie.to_color(value))
-end
-
 @testset "Public plot owner" begin
     CairoMakie.activate!()
 
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
-    PhyloPlotAttributes = getfield(PhyloMakie, :PhyloPlotAttributes)
-    PlotLayout = getfield(PhyloMakie, :PlotLayout)
-    PlotRenderLayers = getfield(PhyloMakie, :PlotRenderLayers)
 
     render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
     render_kwargs = (
@@ -99,17 +59,17 @@ end
         @test convenience_surface isa Makie.FigureAxisPlot
         @test plot_surface.plot isa PhyloPlot
         @test convenience_surface.plot isa PhyloPlot
-        @test _resolved_attributes(plot_surface.plot) isa PhyloPlotAttributes
-        @test _resolved_attributes(convenience_surface.plot) isa PhyloPlotAttributes
-        @test _resolved_layout(plot_surface.plot) isa PlotLayout
-        @test _resolved_layout(convenience_surface.plot) isa PlotLayout
-        @test _render_layers(plot_surface.plot) isa PlotRenderLayers
-        @test _render_layers(convenience_surface.plot) isa PlotRenderLayers
+        @test :resolved_attributes ∉ propertynames(plot_surface.plot.attributes)
+        @test :resolved_layout ∉ propertynames(plot_surface.plot.attributes)
+        @test :render_layers ∉ propertynames(plot_surface.plot.attributes)
+        @test :resolved_attributes ∉ propertynames(convenience_surface.plot.attributes)
+        @test :resolved_layout ∉ propertynames(convenience_surface.plot.attributes)
+        @test :render_layers ∉ propertynames(convenience_surface.plot.attributes)
         @test _plot_colorbuffer(plot_surface.figure) ==
             _plot_colorbuffer(convenience_surface.figure)
     end
 
-    @testset "Mutating parity and stored artifacts" begin
+    @testset "Mutating parity and public-surface cleanliness" begin
         plot_figure = Figure(size=(640, 400))
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
@@ -120,16 +80,20 @@ end
         convenience_axis = Axis(convenience_figure[1, 1])
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
-        convenience_surface = phyloplot!(convenience_axis, readnewick(render_case.newick); render_kwargs...)
+        convenience_surface = phyloplot!(
+            convenience_axis,
+            readnewick(render_case.newick);
+            render_kwargs...,
+        )
 
         @test plot_surface isa PhyloPlot
         @test convenience_surface isa PhyloPlot
-        @test _resolved_attributes(plot_surface) isa PhyloPlotAttributes
-        @test _resolved_attributes(convenience_surface) isa PhyloPlotAttributes
-        @test _resolved_layout(plot_surface) isa PlotLayout
-        @test _resolved_layout(convenience_surface) isa PlotLayout
-        @test _render_layers(plot_surface) isa PlotRenderLayers
-        @test _render_layers(convenience_surface) isa PlotRenderLayers
+        @test :resolved_attributes ∉ propertynames(plot_surface.attributes)
+        @test :resolved_layout ∉ propertynames(plot_surface.attributes)
+        @test :render_layers ∉ propertynames(plot_surface.attributes)
+        @test :resolved_attributes ∉ propertynames(convenience_surface.attributes)
+        @test :resolved_layout ∉ propertynames(convenience_surface.attributes)
+        @test :render_layers ∉ propertynames(convenience_surface.attributes)
         @test _plot_colorbuffer(plot_figure) == _plot_colorbuffer(convenience_figure)
     end
 
@@ -177,11 +141,10 @@ end
             y_limits=annotation_case.y_limits,
             style=:majortree,
         )
-        @test _resolved_attributes(limit_surface.plot).x_limits == annotation_case.x_limits
-        @test _resolved_attributes(limit_surface.plot).y_limits == annotation_case.y_limits
-        layers = _render_layers(limit_surface.plot)
-        @test layers.applied_x_limits == annotation_case.x_limits
-        @test layers.applied_y_limits == annotation_case.y_limits
+
+        @test _plot_data_limits(limit_surface.plot)[1] == annotation_case.x_limits
+        @test _plot_data_limits(limit_surface.plot)[2] == annotation_case.y_limits
+        @test !isempty(_plot_colorbuffer(limit_surface.figure))
 
         x_limit_error = try
             Makie.plot(readnewick(annotation_case.newick); x_limits=[1.0, 2.0, 3.0])
@@ -242,12 +205,8 @@ end
         @testset ":simple_tree_no_hybrid" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
             surface = Makie.plot(readnewick(scenario.newick); style=:fulltree)
-            layers = _render_layers(surface.plot)
 
-            @test layers.minor_edge_shafts.plot === nothing
-            @test isempty(layers.minor_edge_tips.plots)
-            @test isempty(layers.minor_gamma_labels.strings)
-            @test isempty(layers.major_gamma_labels.strings)
+            @test surface isa Makie.FigureAxisPlot
             @test !isempty(_plot_colorbuffer(surface.figure))
         end
 
@@ -259,38 +218,20 @@ end
                 show_gamma=true,
                 style=:fulltree,
             )
-            layers = _render_layers(surface.plot)
-            attributes = _resolved_attributes(surface.plot)
 
-            @test layers.minor_edge_shafts.plot !== nothing
-            @test !isempty(layers.minor_edge_tips.plots)
-            @test !isempty(layers.minor_gamma_labels.strings)
-            @test !isempty(layers.major_gamma_labels.strings)
-            @test layers.minor_gamma_labels.colors ==
-                fill(_rgba(attributes.minor_hybrid_edge_color), length(layers.minor_gamma_labels.strings))
-            @test layers.major_gamma_labels.colors ==
-                fill(_rgba(attributes.major_hybrid_edge_color), length(layers.major_gamma_labels.strings))
+            @test surface isa Makie.FigureAxisPlot
+            @test !isempty(_plot_colorbuffer(surface.figure))
         end
 
         @testset ":style_distinction_fulltree_vs_majortree" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.style_distinction_fulltree_vs_majortree
-            fulltree_surface = Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:fulltree)
-            majortree_surface = Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:majortree)
-            fulltree_layers = _render_layers(fulltree_surface.plot)
-            majortree_layers = _render_layers(majortree_surface.plot)
+            fulltree_surface =
+                Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:fulltree)
+            majortree_surface =
+                Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:majortree)
 
-            @test fulltree_layers.resolved_style == :fulltree
-            @test majortree_layers.resolved_style == :majortree
-            @test fulltree_layers.minor_edge_shafts.linestyle == :dash
-            @test majortree_layers.minor_edge_shafts.linestyle == :solid
-            @test _plot_colorbuffer(fulltree_surface.figure) != _plot_colorbuffer(majortree_surface.figure)
-        end
-
-        @testset ":useedgelength_scaling" begin
-            layout_case = FIXTURE_CORPUS.layout_regression_cases.with_lengths_fulltree
-            surface = Makie.plot(readnewick(layout_case.newick); layout_case.attribute_kwargs...)
-
-            @test _geometry_tuple(_resolved_layout(surface.plot).geometry) == layout_case.expected
+            @test _plot_colorbuffer(fulltree_surface.figure) !=
+                _plot_colorbuffer(majortree_surface.figure)
         end
 
         @testset ":dataframe_label_rendering" begin
@@ -307,45 +248,10 @@ end
                 x_limits=annotation_case.x_limits,
                 y_limits=annotation_case.y_limits,
             )
-            layout = _resolved_layout(surface.plot)
-            layers = _render_layers(surface.plot)
-            node_data = layout.annotations.node_data
-            edge_data = layout.annotations.edge_data
 
-            @test layers.node_annotations.strings == String.(node_data[!, :lab])
-            @test layers.node_annotations.positions ==
-                _node_channel_positions(layout, axes(node_data, 1))
-            @test layers.edge_annotations.strings == String.(edge_data[!, :lab])
-            @test layers.edge_annotations.positions ==
-                _edge_channel_positions(layout, axes(edge_data, 1))
-        end
-
-        @testset ":edgecolor_dict_fallback" begin
-            scenario = FIXTURE_CORPUS.accepted_design_scenarios.edgecolor_dict_fallback
-            render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
-            edge_color = Dict(scenario.edge_color_overrides)
-            edge_width = Dict(render_case.edge_width_overrides)
-            surface = Makie.plot(
-                readnewick(scenario.newick);
-                use_edge_lengths=true,
-                show_gamma=true,
-                edge_color=edge_color,
-                default_edge_color=scenario.default_edge_color,
-                edge_width=edge_width,
-                style=:fulltree,
-            )
-            layers = _render_layers(surface.plot)
-            expected_minor_widths = Float64[]
-            for edge in readnewick(scenario.newick).edge
-                if !edge.ismajor
-                    push!(expected_minor_widths, Float64(get(edge_width, edge.number, 1.0)))
-                end
-            end
-
-            @test length(unique(layers.edge_segments.colors)) > 1
-            @test layers.node_bars.colors ==
-                fill(_rgba(scenario.default_edge_color), length(layers.node_bars.colors))
-            @test layers.minor_edge_shafts.linewidths == expected_minor_widths
+            @test _plot_data_limits(surface.plot)[1] == annotation_case.x_limits
+            @test _plot_data_limits(surface.plot)[2] == annotation_case.y_limits
+            @test !isempty(_plot_colorbuffer(surface.figure))
         end
     end
 
@@ -377,13 +283,7 @@ end
 
         left_limits = _plot_data_limits(left_plot)
         right_limits = _plot_data_limits(right_plot)
-        left_layers = _render_layers(left_plot)
-        right_layers = _render_layers(right_plot)
 
-        @test left_limits[1] == left_layers.applied_x_limits
-        @test left_limits[2] == left_layers.applied_y_limits
-        @test right_limits[1] == right_layers.applied_x_limits
-        @test right_limits[2] == right_layers.applied_y_limits
         @test left_plot.parent !== right_plot.parent
         @test left_limits != right_limits
         @test !isempty(_plot_colorbuffer(figure))

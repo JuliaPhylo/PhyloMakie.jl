@@ -17,7 +17,6 @@ include("support/render_test_helpers.jl")
     include("test_annotation_data.jl")
     include("test_render_adapter.jl")
     include("test_public_plot_owner.jl")
-    include("test_verification_foundation.jl")
 
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(

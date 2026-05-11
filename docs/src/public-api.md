@@ -11,32 +11,21 @@ generated convenience surfaces over the same owner.
 
 Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
 rejected at the recipe boundary. Internally, the public owner resolves one
-`PhyloPlotAttributes` payload, passes it directly to the helper and render
-owners, and stores it on the returned plot as `resolved_attributes`. The live
-supported attribute set is rendered below from `VERIFICATION_FOUNDATION`.
+`PhyloPlotAttributes` payload and passes it directly to the helper and render
+owners. The supported attribute set below is rendered from the live package
+constant `SUPPORTED_PHYLOPLOT_ATTRIBUTES`.
 
 Use the [Migration guide](migration-guide.md) if you are mapping older
 `PhyloPlots` tasks to the Makie-native surface.
 
 ## Supported entry surfaces
 
-```@eval
-using Markdown
-using PhyloMakie
-
-foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
-rows = [
-    "| Surface | Return contract | Docs visibility |",
-    "| --- | --- | --- |",
-]
-for surface in foundation.target_public_surfaces
-    push!(
-        rows,
-        "| `$(surface.public_name)` | `$(surface.return_contract)` | `$(surface.docs_visibility)` |",
-    )
-end
-Markdown.parse(join(rows, "\n"))
-```
+| Surface | Return contract | Notes |
+| --- | --- | --- |
+| `plot(net)` | `Makie.FigureAxisPlot` | Primary non-mutating Makie surface |
+| `plot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Primary mutating Makie surface |
+| `phyloplot(net)` | `Makie.FigureAxisPlot` | Thin convenience surface over the same owner |
+| `phyloplot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Thin convenience surface over the same owner |
 
 ## Live public attribute set
 
@@ -44,12 +33,11 @@ Markdown.parse(join(rows, "\n"))
 using Markdown
 using PhyloMakie
 
-foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 rows = [
     "| Public attribute |",
     "| --- |",
 ]
-for keyword in foundation.public_attribute_owner.supported_public_attributes
+for keyword in PhyloMakie.SUPPORTED_PHYLOPLOT_ATTRIBUTES
     push!(rows, "| `$(keyword)` |")
 end
 Markdown.parse(join(rows, "\n"))
@@ -69,8 +57,8 @@ using PhyloMakie
 
 CairoMakie.activate!()
 
-const DataFrames = getfield(PhyloMakie, :DataFrames)
-const PhyloNetworks = getfield(PhyloMakie, :PhyloNetworks)
+const DataFrames = PhyloMakie.DataFrames
+const PhyloNetworks = PhyloMakie.PhyloNetworks
 ```
 
 ## `plot(net)` pure-tree example
