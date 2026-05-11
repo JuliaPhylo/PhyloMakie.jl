@@ -73,9 +73,27 @@ const DataFrames = getfield(PhyloMakie, :DataFrames)
 const PhyloNetworks = getfield(PhyloMakie, :PhyloNetworks)
 ```
 
-## `plot(net)` example
+## `plot(net)` pure-tree example
 
-This is the primary non-mutating Makie entry surface.
+This is the primary non-mutating Makie entry surface on a tree-only network.
+
+```@example public_api
+tree_net = PhyloNetworks.readnewick(
+    "((A:0.3,B:0.25):0.2,(C:0.18,D:0.22):0.35);",
+)
+
+plot(
+    tree_net;
+    use_edge_lengths = true,
+    show_tip_labels = true,
+    style = :fulltree,
+)
+```
+
+## `plot(net)` reticulate example
+
+This is the same primary non-mutating Makie entry surface on a network with a
+hybrid edge.
 
 ```@example public_api
 net = PhyloNetworks.readnewick(

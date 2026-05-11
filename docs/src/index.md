@@ -26,11 +26,14 @@ entry surfaces first:
 ## Installation
 
 This repository currently documents GitHub-based installation only. It does
-not claim General-registry installation.
+not claim General-registry installation. The first plot example below uses
+CairoMakie as the backend, so install it in the same environment before
+running that example.
 
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
+Pkg.add("CairoMakie")
 ```
 
 ## First plot

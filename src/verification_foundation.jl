@@ -247,6 +247,7 @@ const VERIFICATION_FOUNDATION = (
             proof_owner = :test_public_plot_owner,
             proof_artifact = "test/test_public_plot_owner.jl",
             docs_proof_surface = "docs/src/public-api.md",
+            docs_proof_heading = "`plot(net)` pure-tree example",
             migration_guidance = "Use `plot(net)` or `phyloplot(net)` directly for tree-only inputs. No legacy wrapper is required.",
             required_output = "Renders without error; no hybrid-edge drawing code is invoked.",
         ),
@@ -409,7 +410,7 @@ const VERIFICATION_FOUNDATION = (
         (
             id = :package_tests_green,
             status = :verified_on_2026_05_10,
-            fact = "On 2026-05-10, julia --project=test test/runtests.jl passed 372/372 tests.",
+            fact = "On 2026-05-10, julia --project=test test/runtests.jl passed on the then-current full package test suite.",
         ),
         (
             id = :docs_build_green,

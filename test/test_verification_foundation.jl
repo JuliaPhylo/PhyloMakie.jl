@@ -1,3 +1,23 @@
+const REPO_ROOT = normpath(joinpath(@__DIR__, ".."))
+
+function _read_repo_text(path::AbstractString)::String
+    return read(joinpath(REPO_ROOT, path), String)
+end
+
+function _first_match_start(pattern::Regex, text::AbstractString)::Int
+    match_range = findfirst(pattern, text)
+    match_range === nothing && error("Pattern not found: $(pattern.pattern)")
+    return first(match_range)
+end
+
+function _markdown_section(text::AbstractString, heading::AbstractString)::String
+    start_range = findfirst(heading, text)
+    start_range === nothing && error("Heading not found: $heading")
+    next_heading = findnext("\n## ", text, last(start_range) + 1)
+    stop_index = next_heading === nothing ? lastindex(text) : prevind(text, first(next_heading))
+    return text[first(start_range):stop_index]
+end
+
 @testset "Verification foundation" begin
     foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 
@@ -215,6 +235,18 @@
             "docs/src/verification-foundation.md",
             "docs/src/render-verification.md",
         ]
+        for surface in foundation.package_truth_surfaces
+            @test isfile(joinpath(REPO_ROOT, surface.path))
+        end
+    end
+
+    @testset "Landing surface first-use truth" begin
+        for path in ("README.md", "docs/src/index.md")
+            text = _read_repo_text(path)
+            backend_install = _first_match_start(r"Pkg\.add\(\s*\"CairoMakie\"\s*\)", text)
+            first_cairo_example = _first_match_start(r"using CairoMakie", text)
+            @test backend_install < first_cairo_example
+        end
     end
 
     @testset "Scenario inventories" begin
@@ -239,6 +271,8 @@
             @test scenario.public_surface isa String
             @test scenario.migration_guidance isa String
         end
+        @test foundation.accepted_design_scenarios.simple_tree_no_hybrid.docs_proof_heading ==
+            "`plot(net)` pure-tree example"
         @test propertynames(foundation.upstream_helper_regressions) == (
             :edgenode_coords_with_lengths_fulltree,
             :edgenode_coords_with_lengths_majortree,
@@ -248,6 +282,17 @@
             :level2_network_with_gamma,
             :level2_network_without_gamma,
         )
+    end
+
+    @testset "Docs proof artifacts" begin
+        public_api_text = _read_repo_text("docs/src/public-api.md")
+        simple_tree = foundation.accepted_design_scenarios.simple_tree_no_hybrid
+        section = _markdown_section(public_api_text, "## $(simple_tree.docs_proof_heading)")
+
+        @test simple_tree.docs_proof_surface == "docs/src/public-api.md"
+        @test occursin("tree_net = PhyloNetworks.readnewick", section)
+        @test occursin("plot(", section)
+        @test !occursin("#H", section)
     end
 
     @testset "Fixture corpus" begin
@@ -311,6 +356,17 @@
             :closed_in_tranche_7,
             :closed_in_tranche_7,
         ]
+        @test [state.fact for state in foundation.current_status] == [
+            "On 2026-05-10, plot(net), plot!(ax, net), phyloplot, and phyloplot! were all live and aligned on one Makie-native public plot owner.",
+            "On 2026-05-10, PhyloPlotAttributes remained the sole accepted runtime semantic carrier across the public owner, layout owner, annotation owner, and render owner.",
+            "On 2026-05-10, julia --project=test test/runtests.jl passed on the then-current full package test suite.",
+            "On 2026-05-10, julia --project=docs docs/make.jl passed with only the known Documenter example-size PNG fallback warnings on public-api.md and render-verification.md.",
+            "The package truth surface now teaches PhyloMakie as a Makie-native package first, includes a migration guide, and keeps legacy capability mapping in documentation rather than in a runtime compatibility shell.",
+            "VERIFICATION_FOUNDATION now records the final package truth surface, the tranche-7 lock items, the accepted capability scenarios, and the live proof owners that keep those claims honest.",
+        ]
+        for state in foundation.current_status
+            @test !occursin(r"\b\d+/\d+\b", state.fact)
+        end
     end
 
     @testset "Stop conditions" begin
