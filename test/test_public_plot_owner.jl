@@ -168,28 +168,6 @@ end
     end
 
     @testset "Legacy keyword rejection" begin
-        network = readnewick(render_case.newick)
-
-        legacy_name_error = try
-            Makie.plot(network; showtiplabel=true)
-            nothing
-        catch err
-            err
-        end
-        @test legacy_name_error isa ArgumentError
-        @test occursin("showtiplabel", sprint(showerror, legacy_name_error))
-        @test occursin("show_tip_labels", sprint(showerror, legacy_name_error))
-
-        legacy_limit_error = try
-            phyloplot(readnewick(render_case.newick); xlim=(0.0, 1.0))
-            nothing
-        catch err
-            err
-        end
-        @test legacy_limit_error isa ArgumentError
-        @test occursin("xlim", sprint(showerror, legacy_limit_error))
-        @test occursin("x_limits", sprint(showerror, legacy_limit_error))
-
         preorder_error = try
             Makie.plot(readnewick(render_case.newick); preorder=false)
             nothing

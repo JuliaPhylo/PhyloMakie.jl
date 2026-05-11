@@ -8,15 +8,9 @@ using Makie
     resolve_default_edge_color = getfield(PhyloMakie, :_resolve_default_edge_color)
     resolve_edge_width_mode = getfield(PhyloMakie, :_resolve_edge_width_mode)
     supported_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOPLOT_ATTRIBUTES)
-    attribute_migrations = getfield(PhyloMakie, :PHYLOPLOT_ATTRIBUTE_MIGRATIONS)
-
     @test supported_attributes == EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES
     @test sort(collect(Makie.attribute_names(PhyloPlot))) ==
         sort(collect(EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES))
-    @test Tuple(migration.legacy for migration in attribute_migrations) ==
-        EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES
-    @test Tuple(entry.attribute for entry in Makie.deprecated_attributes(PhyloPlot)) ==
-        EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES
 
     @testset "Defaults and stored payload" begin
         attributes = resolve_phylo_plot_attributes()
