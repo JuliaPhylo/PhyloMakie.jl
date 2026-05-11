@@ -31,8 +31,8 @@ The primary user experience must feel native to Makie:
 - documentation and examples that teach Makie-native usage first
 
 The current internal layout and render owners may be reused when they fit this
-goal. Compatibility-first structures may be reduced, split, or retired when
-they prevent the correct public architecture.
+goal. Compatibility-first structures are transitional only and must not remain
+part of the accepted end-state runtime architecture.
 
 A user-facing sketch:
 

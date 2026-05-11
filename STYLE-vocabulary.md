@@ -1,6 +1,6 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-09T03:07:47
+date-updated: 2026-05-10T16:48:24-07:00
 ---
 
 # Controlled vocabulary
@@ -27,9 +27,9 @@ keyword arguments, symbols, struct fields, or deliberate project terms.
 
 Examples:
 
-- Write "major hybrid edge" in prose; write `majorhybridedgecolor` only for
+- Write "major hybrid edge" in prose; write `major_hybrid_edge_color` only for
   the exact keyword name.
-- Write "tip label" in prose; write `showtiplabel` only for the exact keyword
+- Write "tip label" in prose; write `show_tip_labels` only for the exact keyword
   name.
 - Write "full-tree style" in prose; write `:fulltree` only for the exact style
   symbol.
@@ -40,7 +40,8 @@ Examples:
 
 An edge label is text annotation attached to an edge.
 This includes built-in edge annotations such as length, gamma, and edge
-number, plus user-supplied annotations from the `edgelabel` data frame.
+number, plus user-supplied annotations from the public edge-annotation
+surface.
 
 Use "edge label" as the default project term.
 Do not use "branch label" as the default term in project-owned code or docs
@@ -49,7 +50,8 @@ for this production run.
 ### FigureAxisPlot
 
 `Makie.FigureAxisPlot` is the canonical non-mutating return contract for
-`phyloplot(net; kwargs...)`.
+`plot(net; kwargs...)` and any equivalent non-mutating convenience wrapper
+provided by PhyloMakie.
 
 Use the exact type name when discussing the API contract.
 Do not replace it with vague phrases such as "plot tuple" when the return-type
@@ -83,15 +85,26 @@ Do not generalize planning language to arbitrary graphs, arbitrary trees, or
 arbitrary network types when the contract being discussed is specific to
 `HybridNetwork`.
 
-### Keyword surface
+### Public attribute surface
 
-The keyword surface is the complete public keyword argument behavior inherited
-from `PhyloPlots.plot(net::HybridNetwork; ...)` for this production run.
+The public attribute surface is the Makie-native set of public plotting
+attributes accepted by PhyloMakie's supported plotting entrypoints for this
+production run.
 
-This includes keyword names, defaults, validation rules, warnings, and visible
-effects.
-Do not rename or reinterpret that public surface in this production run unless
-the project owner explicitly reopens a specific keyword contract.
+It includes public names, grouping, defaults, validation rules, warnings, and
+visible effects.
+Use legacy `PhyloPlots.plot` keywords only as migration and capability
+reference material.
+Do not treat the legacy keyword shell as the authoritative PhyloMakie public
+contract.
+
+### Legacy keyword surface
+
+The legacy keyword surface is the historical
+`PhyloPlots.plot(net::HybridNetwork; ...)` interface used as a capability and
+migration reference.
+
+It is not the canonical PhyloMakie public contract for this production run.
 
 ### Layout engine
 
@@ -116,22 +129,25 @@ Do not replace them with vague substitutes such as "primary edge",
 `PhyloPlot` is the Makie recipe type name produced by `@recipe(PhyloPlot, net)`.
 
 Treat `PhyloPlot` as an implementation-detail type.
-User-facing prose should prefer `phyloplot` and `phyloplot!`.
+User-facing prose should prefer `plot` and `plot!`, or `phyloplot` and
+`phyloplot!` only when discussing the optional convenience surfaces
+specifically.
 
 ### Phyloplot
 
-`phyloplot(net; kwargs...)` is the canonical non-mutating public plotting
-function in PhyloMakie.
+`phyloplot(net; kwargs...)` is an optional package-specific non-mutating
+convenience plotting function in PhyloMakie when it is present.
 
-It must return `Makie.FigureAxisPlot` and must follow the `PhyloPlots.plot`
-public behavior completely for this production run.
-Do not use `plot` as the primary user-facing PhyloMakie name when the package
-specific API is intended.
+It must remain a thin wrapper over the same Makie-native public plot owner used
+by `plot(net; kwargs...)`.
+Do not define package semantics here independently from the host-framework
+plotting surface.
 
 ### Phyloplot!
 
-`phyloplot!(ax, net; kwargs...)` is the canonical mutating public plotting
-function for plotting into an existing Makie axis-like owner.
+`phyloplot!(ax, net; kwargs...)` is an optional package-specific mutating
+convenience plotting function for plotting into an existing Makie axis-like
+owner when it is present.
 
 Preserve Makie's mutating semantics.
 Do not create a non-bang wrapper that silently mutates an existing axis.
@@ -142,16 +158,15 @@ The render adapter is the internal owner that translates resolved plot options
 and layout-engine outputs into Makie primitives, text, and recipe composition.
 
 Keep render concerns separate from layout calculation and keyword
-normalization.
+or public attribute resolution.
 
 ### Tip and leaf
 
-`tip` is the canonical public plotting term inherited from PhyloPlots for
-current user-facing keyword names such as `showtiplabel`, `tipoffset`, and
-`tipcex`.
+`tip` is the canonical public plotting term for user-facing attribute names
+such as `show_tip_labels`, `tip_label_offset`, and related tip-label controls.
 `leaf` is the graph-structural term used when discussing `PhyloNetworks` node
 properties or general tree and network structure.
 
-Do not rename existing public plotting keywords from `tip` to `leaf` in this
+Do not rename existing public plotting attributes from `tip` to `leaf` in this
 production run.
 Use `leaf` in internal design prose only when structural precision matters.

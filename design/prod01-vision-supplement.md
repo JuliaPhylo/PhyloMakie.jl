@@ -73,18 +73,21 @@ The following are considered good candidates for reuse:
 - the Makie dependency baseline and render-proof scaffolding
 - the accepted render regression corpus and helper-level regression suite
 
-The following are considered transitional or suspect and may be retired,
-reduced, or split apart:
+The following are considered transitional or suspect and are not allowed to
+survive as part of the accepted end-state runtime architecture:
 
 - `keyword_normalization.jl`
 - `keyword_contract.jl`
+- `PlotKeywordSpec` as a core runtime semantic carrier
 - any verification metadata that treats legacy keyword parity as the primary
   product definition
 - any docs phrasing that presents PhyloMakie as "the same package with Makie
   underneath"
 
-If a compatibility adapter survives, it must be explicit, thin, and secondary.
-It must not remain the package's architectural center.
+Do not preserve a runtime compatibility adapter as part of the accepted end
+state for this production run.
+Legacy capability mapping belongs in migration docs and examples, not in the
+core plotting architecture.
 
 ---
 
@@ -143,5 +146,5 @@ Required documentation outcomes:
 - no primary docs page teaches the legacy keyword surface as the package's
   canonical interface
 
-Compatibility notes may exist, but they must read as migration support, not as
-the product definition.
+Compatibility notes may exist in migration material, but they must not imply
+that the accepted end state includes a runtime compatibility shell.

@@ -1,6 +1,6 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-10T13:30:18
+date-updated: 2026-05-10T16:48:24-07:00
 parent-prd: 01_prd.md
 workflow-instrument: Tranche plan
 workflow-status: Proposed
@@ -52,16 +52,16 @@ Authority note:
   compatibility-first product framing.
 - User clarification on 2026-05-10 explicitly reopened public API design and
   invalidated the old "same keyword shell, new backend" assumption.
-- `STYLE-vocabulary.md` still governs general project terminology, but its
-  earlier API-specific compatibility assumptions are no longer treated as fixed
-  product requirements when they conflict with the revised PRD.
+- `STYLE-vocabulary.md` has been realigned to the revised PRD and remains the
+  terminology authority for the remaining work.
 
 ## Controlled vocabulary
 
 - Use `Makie-native public plot owner` for the recipe or plot type that owns
   public plotting semantics.
-- Use `compatibility adapter` only for explicit, secondary legacy bridging.
-  Do not call the package center a compatibility adapter.
+- Use `compatibility adapter` only for historical diagnosis or migration-note
+  discussion. Do not plan one as part of the accepted tranche-6 or tranche-7
+  end state.
 - Use `layout engine` and `render adapter` for the completed internal owners
   from Tranches 3 and 4.
 - Use `capability parity` for preserved plotting outcomes.
@@ -86,6 +86,8 @@ Authority note:
 - Capability loss is not authorized.
 - A compatibility-first public owner is not authorized as the final package
   architecture.
+- A runtime compatibility shell is not authorized as the tranche-6 or
+  tranche-7 end state.
 - R interoperability remains out of scope.
 - Every tranche must begin and end in a green, policy-compliant state.
 
@@ -147,8 +149,8 @@ future package.
 
 - Treat this tranche as a useful exploration and regression anchor.
 - Do not treat it as target-state architecture.
-- Later tranches are expected to retire, reduce, or explicitly demote this
-  owner so it cannot remain the public center of the package.
+- Later tranches are expected to remove this owner from the accepted runtime
+  architecture so it cannot survive as the package center under any name.
 
 ## Tranche 3: Layout and annotation data owner
 
@@ -234,13 +236,13 @@ Makie-native attribute surface and supports plotting into new and existing
 axes. If package-specific convenience surfaces such as `phyloplot` and
 `phyloplot!` survive, they must be thin wrappers over the same owner.
 
-This tranche may use a temporary bridge from the new public attribute model
-into the current `PlotKeywordSpec` path if that is the smallest honest route
-to public API proof. If such a bridge exists, keep it tightly local to the
-public owner and mark it transitional. Do not let it become the final semantic
-center of the package.
+This tranche may have tolerated a temporary bridge from the new public
+attribute model into the current `PlotKeywordSpec` path while the public owner
+was being established. Any such bridge is transitional debt only. If it
+survives tranche 5, tranche 6 must remove it from the accepted runtime
+architecture.
 
-### Legacy artifacts to retire or demote
+### Legacy artifacts under repair
 
 - `keyword_normalization.jl` as the package's public semantic owner
 - `keyword_contract.jl` as the package's public product definition
@@ -297,7 +299,7 @@ center of the package.
   - wrapper surfaces if retained
   - public docs examples and tests
 - **Exact files or surfaces out of scope**:
-  - final retirement of the compatibility owner
+  - final runtime eradication of the compatibility owner
   - migration guide completion
   - non-`HybridNetwork` public support
 - **Required upstream primary sources**:
@@ -344,7 +346,7 @@ Negative verification for the known bad shape:
 
 - User stories 1, 2, 3, 8, and 10 from the PRD
 
-## Tranche 6: Compatibility-owner retirement and internal public-path realignment
+## Tranche 6: Compatibility-shell eradication and internal public-path realignment
 
 **Type**: AFK
 **Blocked by**: Tranche 5
@@ -354,16 +356,16 @@ Negative verification for the known bad shape:
 - Mandated line-by-line reading of every document listed in `Active
   authorities` above before implementation starts.
 - Mandated revalidation of the tranche-5 public owner against the revised PRD.
-- Mandated reading of any surviving compatibility-owner code before deciding
-  whether it is retired or demoted.
+- Mandated reading of any surviving compatibility-owner code before removing it
+  from the accepted runtime path.
 
 ### Primary-goal lock
 
-- Close lock item 3: compatibility-first owner retirement.
+- Close lock item 3: compatibility-first runtime eradication.
 - Preserve lock items 1, 4, 5, and 7 while realigning internal public paths.
 - Non-completion condition: this tranche is not complete if the package still
-  needs `keyword_normalization.jl` or `keyword_contract.jl` on the default
-  public plotting path.
+  ships `keyword_normalization.jl`, `keyword_contract.jl`, or `PlotKeywordSpec`
+  as part of the default runtime or public plotting path.
 
 ### What to build
 
@@ -376,20 +378,24 @@ The remaining owner is the new public plot owner and its Makie-native
 attribute or plot-model representation. The retired shape is the
 compatibility-first keyword owner as the package center.
 
-This tranche may:
+This tranche must remove the compatibility-first runtime shell from the core
+package architecture.
 
-- delete `keyword_normalization.jl` and `keyword_contract.jl`
-- move them into an explicit compatibility namespace
-- or replace them with a smaller, clearly subordinate adapter
+It must:
 
-What it must not do is keep them in the default include path as the main route
-through which public plotting works.
+- remove `src/keyword_normalization.jl` from the main package runtime path
+- remove `src/keyword_contract.jl` from the main package runtime path
+- retire `PlotKeywordSpec` as a core runtime semantic carrier
 
-### Legacy artifacts to retire or demote
+If a future legacy-compatibility module is ever wanted, that requires a new
+explicitly approved roadmap after this production run. It is not part of this
+tranche's accepted end state.
+
+### Legacy artifacts to retire
 
 - `src/keyword_normalization.jl` in the default public path
 - `src/keyword_contract.jl` in the default public path
-- `PlotKeywordSpec` as the canonical public semantic carrier
+- `PlotKeywordSpec` as a core runtime semantic carrier
 - tests and metadata that define the package in terms of legacy keyword
   ownership
 
@@ -399,8 +405,9 @@ through which public plotting works.
   as parallel semantic centers
 - Moving the old owner unchanged under a new name and calling it architectural
   cleanup
-- Retaining compatibility code in the default module shell without explicit
-  justification
+- Moving the old owner into a compatibility namespace inside the main package
+  and calling that the accepted end state
+- Retaining compatibility code in the default module shell
 - Reopening helper or render invariants while trying to retire the keyword
   owner
 
@@ -421,10 +428,12 @@ through which public plotting works.
   - `design/prod01-vision-supplement.md`
 - **Settled decisions and non-negotiables**:
   - compatibility-first ownership is not the target architecture
+  - no runtime compatibility shell is allowed in the accepted end state
   - completed layout and render owners remain valid
   - public API work from Tranche 5 remains the center
 - **Authorization boundary**:
-  - retire or demote compatibility-first structures as needed
+  - remove compatibility-first runtime structures from the accepted package
+    architecture
   - do not lose accepted plotting capabilities
 - **Current-state diagnosis**:
   - Tranche 5 created the correct public owner
@@ -446,15 +455,15 @@ through which public plotting works.
 - **Exact files or surfaces out of scope**:
   - final docs and migration closure
 - **Required upstream primary sources**:
-  - the same sources as Tranche 5, plus any compatibility reference kept for an
-    explicit opt-in adapter
+  - the same sources as Tranche 5, plus any historical compatibility reference
+    needed to delete the obsolete path safely
 - **Green-state gates**:
   - `julia --project=test test/runtests.jl`
   - `julia --project=docs docs/make.jl`
   - public plotting proof remains green
 - **Stop conditions**:
-  - stop if compatibility retirement would require throwing away proven layout
-    or render owners instead of simply rewiring their consumer
+  - stop if compatibility-shell eradication would require throwing away proven
+    layout or render owners instead of simply rewiring their consumer
 
 ### How to verify
 
@@ -468,20 +477,20 @@ through which public plotting works.
 
 Negative verification for the known bad shape:
 
-- The tranche must fail if the default public plotting path still routes
-  through the compatibility-first owner as anything more than an explicit,
-  opt-in bridge.
+- The tranche must fail if the default public plotting path or core runtime
+  module still loads `keyword_normalization.jl`, `keyword_contract.jl`, or
+  `PlotKeywordSpec`.
 
 ### Acceptance criteria
 
 - [ ] Given the tranche-5 public owner, when this tranche completes, then the
   default public plotting path no longer depends on the compatibility-first
-  owner as the package center.
+  owner at all.
 - [ ] Given the completed layout and render foundations, when this tranche
   completes, then they remain reusable and green.
 - [ ] Given the old default include path, when verification is run, then the
-  tranche fails if the old compatibility-first owner still sits at the center
-  of public plotting.
+  tranche fails if `keyword_normalization.jl`, `keyword_contract.jl`, or
+  `PlotKeywordSpec` still survives in the accepted runtime architecture.
 
 ### User stories addressed
 
@@ -508,7 +517,8 @@ Negative verification for the known bad shape:
   final public owner and the completed internal invariants.
 - Non-completion condition: this tranche is not complete if users still have
   to infer the new package from legacy docs, stale metadata, or implementation
-  details.
+  details, or if the project-owned truth surface still describes a deleted
+  compatibility runtime as if it were live architecture.
 
 ### What to build
 
@@ -524,12 +534,15 @@ It must:
 - update verification metadata so it describes the final public architecture
   honestly
 - close direct public composition and capability proofs
+- close the repo-owned narrative around the cleaned runtime architecture
 
-### Legacy artifacts to retire or demote
+### Legacy artifacts to retire
 
 - docs that teach the old keyword shell as canonical
 - metadata that defines the package in compatibility-first terms
 - README or example text that makes the package read like a backend swap
+- any project-owned narrative that presents `keyword_normalization.jl`,
+  `keyword_contract.jl`, or `PlotKeywordSpec` as live target-state architecture
 
 ### Forbidden regressions
 
@@ -538,6 +551,7 @@ It must:
 - Leaving source-backed verification metadata anchored to the pre-rewrite
   target architecture
 - Replacing direct public proof with helper-only green suites
+- Reintroducing the deleted compatibility runtime through docs or metadata
 
 ### Environment and dependency baseline
 
@@ -558,11 +572,13 @@ It must:
   - teach the Makie-native package first
   - map old capabilities honestly
   - do not redefine the package around the old shell
+  - do not present a runtime compatibility layer as part of the final product
 - **Authorization boundary**:
   - rewrite docs and verification truth aggressively where needed
   - do not reopen public API design without project-owner direction
 - **Current-state diagnosis**:
   - internal foundations and public owner are complete
+  - tranche 6 removed the compatibility runtime from the accepted architecture
   - public-facing truth and verification metadata still need final closure
 - **Primary-goal lock**:
   - lock items 2, 5, 6, and 7
@@ -570,6 +586,8 @@ It must:
   - docs teach the wrong mental model
   - verification metadata describes the wrong public product
   - public composition proof is still incomplete
+  - repo-owned narrative may still reference deleted compatibility-runtime
+    structures
 - **Owner and invariant being repaired or relied on**:
   - repair public truth surfaces
   - rely on completed internal and public code owners
@@ -603,7 +621,9 @@ It must:
 Negative verification for the known bad shape:
 
 - The tranche must fail if the package can still be described honestly only as
-  a compatibility shell or a backend swap.
+  a compatibility shell or a backend swap, or if the final docs and metadata
+  still need the deleted compatibility-runtime architecture to explain the
+  package.
 
 ### Acceptance criteria
 
@@ -612,6 +632,10 @@ Negative verification for the known bad shape:
 - [ ] Given a user familiar with PhyloPlots capabilities, when they read the
   migration material, then they can map old tasks to the new surface without
   being told the APIs are the same.
+- [ ] Given the tranche-6 runtime cleanup, when this tranche completes, then
+  repo-owned docs, README text, and verification metadata describe the cleaned
+  Makie-native architecture directly without reference to a surviving
+  compatibility-runtime shell.
 - [ ] Given the old verification metadata and docs truth, when verification is
   run, then the tranche fails if those stale descriptions survive.
 

@@ -1,6 +1,6 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-10T13:30:18
+date-updated: 2026-05-10T16:48:24-07:00
 workflow-instrument: PRD
 workflow-status: Approved
 workflow-production-id: 202605090307_phylomakie-makie-rebuild
@@ -62,8 +62,8 @@ The real problem now is architectural:
 This PRD therefore resets the target architecture without reopening the value
 of completed internal work. Tranches 1 through 4 become current-state assets.
 The remaining work must build the correct Makie-native public product on top
-of them, and retire or demote the compatibility-first structures that no
-longer fit the authorized direction.
+of them, and remove the compatibility-first runtime structures that no longer
+fit the authorized direction.
 
 ## Target outcome
 
@@ -89,7 +89,8 @@ The public product is not allowed to:
 
 - lose accepted plotting capabilities
 - require the user to think in terms of the old package's keyword shell
-- make a compatibility adapter the semantic owner of the package
+- ship a runtime compatibility shell as part of the accepted end-state package
+  architecture
 - fake Makie integration through wrappers that own behavior independently from
   the recipe
 
@@ -126,18 +127,19 @@ The likely public surface matrix is:
 - The verification artifact must include scenario-level proof for the accepted
   plotting capabilities plus docs that teach the Makie-native surface first.
 
-### Lock item 3: Compatibility-first owner retirement
+### Lock item 3: Compatibility-first runtime eradication
 
 - The work is not complete if `keyword_normalization.jl` or
-  `keyword_contract.jl` remains the canonical public semantic owner for
-  plotting.
+  `keyword_contract.jl` remains on the default runtime path, or if
+  `PlotKeywordSpec` remains part of the accepted core plotting architecture.
 - The direct red-state repro is the current code path:
   `normalize_plot_keywords` produces `PlotKeywordSpec`, and layout and render
   code consume that compatibility-first owner directly.
 - The owners expected to close this are the public API reset tranche and the
-  compatibility-retirement tranche.
-- The verification artifact must fail if public plotting still depends on the
-  compatibility-first owner as more than an explicit, secondary bridge.
+  compatibility-eradication tranche.
+- The verification artifact must fail if public plotting or the core runtime
+  path still depends on `keyword_normalization.jl`, `keyword_contract.jl`, or
+  `PlotKeywordSpec`.
 
 ### Lock item 4: Proven layout and annotation invariants survive
 
@@ -181,7 +183,7 @@ The likely public surface matrix is:
 - The direct red-state repro is the current verification metadata, which still
   inventories the wrong target architecture even though the internal baseline
   has advanced.
-- The owners expected to close this are the compatibility-retirement tranche
+- The owners expected to close this are the compatibility-eradication tranche
   and the docs and migration tranche.
 - The verification artifact must include source-backed metadata, public API
   tests, helper and render regressions, and docs examples that fail the wrong
@@ -217,14 +219,14 @@ The likely public surface matrix is:
   API and architectural center of gravity for a Makie-native design.
 - Internal redesign forbidden: no remaining tranche may preserve the wrong
   public owner merely because it already exists. Reuse completed work where it
-  helps. Retire or demote it where it hurts.
+  helps. Remove obsolete compatibility-runtime structures where they hurt.
 - External API changes allowed: yes. Legacy keyword names, defaults, warning
   text, and wrapper structure may change.
 - Required migration obligations:
   - teach the Makie-native API first in docs and examples
   - provide capability mapping from PhyloPlots tasks to PhyloMakie tasks
-  - make any compatibility adapter explicit and secondary if it survives at
-    all
+  - keep migration support in docs and examples rather than in a runtime
+    compatibility shell
 - Non-negotiable protections:
   - preserve the accepted plotting capability envelope
   - preserve Makie host-framework semantics
@@ -268,10 +270,10 @@ The likely public surface matrix is:
     owner
   - public layers consume it; they do not fork rendering semantics per entry
     surface
-- Compatibility owner:
-  - optional only
-  - explicit, thin, and secondary
-  - never the canonical public semantic owner
+- Legacy capability mapping:
+  - documentation-owned only
+  - used for migration and capability reference
+  - not part of the accepted end-state runtime architecture
 - Verification owner:
   - source-backed metadata, public API tests, helper regressions, render
     regressions, and docs examples all align with the Makie-native target
@@ -283,8 +285,8 @@ The likely public surface matrix is:
   supported surfaces = `plot(net)`, plotting into an existing axis, optional
   package convenience wrappers
 - Legacy capability mapping:
-  owner = docs and optional explicit compatibility layer
-  supported surfaces = migration material and any opt-in compatibility support
+  owner = docs
+  supported surfaces = migration material and capability-reference examples
 - Geometry and annotation anchors:
   owner = layout and annotation modules
   supported surfaces = every plotting entry surface
@@ -303,10 +305,11 @@ Keep and reuse:
 - `test/support/render_test_helpers.jl`
 - the Makie source-set note from tranche 4, subject to normal revalidation
 
-Rewrite, demote, or retire:
+Retire from the core runtime architecture:
 
 - `keyword_normalization.jl`
 - `keyword_contract.jl`
+- `PlotKeywordSpec`
 - any tests that treat legacy keyword shape as the main product goal
 - `verification_foundation.jl`
 - docs that describe PhyloMakie as direct API mimicry
@@ -375,7 +378,7 @@ Likely new target-state owners:
   - same capability envelope, Makie-native API
   - real Makie public plot owner
   - optional wrappers stay thin
-  - compatibility-first keyword ownership is not the target architecture
+  - no runtime compatibility shell in the accepted end state
   - Tranches 1 through 4 remain completed baseline rather than reopened
     failures
 - **Authorization boundary**:
@@ -398,7 +401,7 @@ Likely new target-state owners:
   - public plot owner
   - public attribute model
   - wrappers if retained
-  - compatibility owner demotion or retirement
+  - compatibility runtime eradication
   - docs, tests, and verification metadata
 - **Exact files or surfaces out of scope**:
   - R interop
