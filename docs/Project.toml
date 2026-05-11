@@ -6,3 +6,6 @@ PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
 
 [sources]
 PhyloMakie = {path = ".."}
+
+[compat]
+Documenter = "1.17.0"
