@@ -56,21 +56,8 @@ plot(
 )
 ```
 
-## What changes for migrating PhyloPlots users
-
-PhyloMakie does not keep the legacy keyword shell as its public contract.
-Migration support lives in package-owned docs instead:
-
-- [Migration guide](migration-guide.md)
-- [Public API](public-api.md)
-
-The supported public attribute surface is the snake_case set listed on the
-[Public API](public-api.md) page. Legacy spellings such as `showtiplabel`,
-`xlim`, `ylim`, `nodelabel`, `edgelabel`, `edgecolor`, and `preorder` are
-rejected at the recipe boundary.
 
 ## Learn more
 
 - [Public API](public-api.md)
-- [Migration guide](migration-guide.md)
 - [Render verification](render-verification.md)

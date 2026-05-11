@@ -68,17 +68,9 @@ plot(
 )
 ```
 
-## Migration
-
-PhyloMakie does not present itself as a drop-in recreation of the old public
-keyword shell. Use the [Migration guide](docs/src/migration-guide.md) to map
-legacy `PhyloPlots` tasks to the supported Makie-native surfaces, and use the
-[Public API](docs/src/public-api.md) page for the live examples that define the
-current package surface.
 
 ## Documentation
 
 - [Home](docs/src/index.md)
 - [Public API](docs/src/public-api.md)
-- [Migration guide](docs/src/migration-guide.md)
 - [Render verification](docs/src/render-verification.md)

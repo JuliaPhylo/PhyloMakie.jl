@@ -32,36 +32,6 @@ const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :style,
 )
 
-const PHYLOPLOT_ATTRIBUTE_MIGRATIONS = (
-    (legacy = :useedgelength, public = :useedgelength),
-    (legacy = :showtiplabel, public = :showtiplabel),
-    (legacy = :shownodelabel, public = :shownodelabel),
-    (legacy = :shownodenumber, public = :shownodenumber),
-    (legacy = :showedgelength, public = :showedgelength),
-    (legacy = :showedgenumber, public = :showedgenumber),
-    (legacy = :showgamma, public = :showgamma),
-    (legacy = :edgecolor, public = :edgecolor),
-    (legacy = :defaultedgecolor, public = :defaultedgecolor),
-    (legacy = :majorhybridedgecolor, public = :majorhybridedgecolor),
-    (legacy = :minorhybridedgecolor, public = :minorhybridedgecolor),
-    (legacy = :edgewidth, public = :edgewidth),
-    (legacy = :minorlinetype, public = :minorlinetype),
-    (legacy = :arrowlen, public = :arrowlen),
-    (legacy = :nodelabel, public = :nodelabel),
-    (legacy = :edgelabel, public = :edgelabel),
-    (legacy = :nodecex, public = :nodecex),
-    (legacy = :edgecex, public = :edgecex),
-    (legacy = :nodelabelcolor, public = :nodelabelcolor),
-    (legacy = :edgelabelcolor, public = :edgelabelcolor),
-    (legacy = :nodelabeladj, public = :nodelabeladj),
-    (legacy = :edgelabeladj, public = :edgelabeladj),
-    (legacy = :tipoffset, public = :tipoffset),
-    (legacy = :tipcex, public = :tipcex),
-    (legacy = :xlim, public = :xlim),
-    (legacy = :ylim, public = :ylim),
-    (legacy = :edgenumbercolor, public = nothing),
-    (legacy = :preorder, public = nothing),
-)
 
 struct PhyloPlotAttributes{
     TXLimits,

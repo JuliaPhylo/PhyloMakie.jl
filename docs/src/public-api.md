@@ -15,8 +15,6 @@ rejected at the recipe boundary. Internally, the public owner resolves one
 owners. The supported attribute set below is rendered from the live package
 constant `SUPPORTED_PHYLOPLOT_ATTRIBUTES`.
 
-Use the [Migration guide](migration-guide.md) if you are mapping older
-`PhyloPlots` tasks to the Makie-native surface.
 
 ## Supported entry surfaces
 
@@ -158,7 +156,6 @@ figure
 
 ## Next steps
 
-- Use the [Migration guide](migration-guide.md) for capability mapping and intentional differences.
 - Use [Render verification](render-verification.md) for live CairoMakie-backed capability artifacts.
 
 ## API docs

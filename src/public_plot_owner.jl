@@ -1,14 +1,5 @@
 import PhyloNetworks
 
-function _deprecated_phylo_plot_attribute_message(legacy::Symbol, public_name)
-    if isnothing(public_name)
-        if legacy == :edgenumbercolor
-            return "The tranche-5 public surface does not expose a separate edge-number color control; `showedgenumber=true` uses the governed render-owner default `grey`."
-        end
-        return "`$(legacy)` is internal to the Makie recipe owner and is not accepted on the public surface."
-    end
-    return "Use `$(public_name)`."
-end
 
 function _validate_public_limits(limit, helper_message::String)
     if isnothing(limit)
@@ -52,18 +43,6 @@ end
 
 Makie.plottype(::PhyloNetworks.HybridNetwork) = PhyloPlot
 
-function Makie.deprecated_attributes(::Type{<:PhyloPlot})
-    return Tuple(
-        (
-            attribute = migration.legacy,
-            message = _deprecated_phylo_plot_attribute_message(
-                migration.legacy,
-                migration.public,
-            ),
-            error = true,
-        ) for migration in PHYLOPLOT_ATTRIBUTE_MIGRATIONS
-    )
-end
 
 function Makie.plot!(plot::PhyloPlot)
     attributes = resolve_phylo_plot_attributes(
