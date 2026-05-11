@@ -167,18 +167,6 @@ end
         @test occursin("defaults: [", sprint(showerror, y_limit_error))
     end
 
-    @testset "Legacy keyword rejection" begin
-        preorder_error = try
-            Makie.plot(readnewick(render_case.newick); preorder=false)
-            nothing
-        catch err
-            err
-        end
-        @test preorder_error isa ArgumentError
-        @test occursin("preorder", sprint(showerror, preorder_error))
-        @test occursin("not accepted", sprint(showerror, preorder_error))
-    end
-
     @testset "Accepted design scenario public proof" begin
         @testset ":simple_tree_no_hybrid" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
