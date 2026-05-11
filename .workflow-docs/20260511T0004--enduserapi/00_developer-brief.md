@@ -3,7 +3,7 @@ date-created: 2026-05-11T00:05:49
 workflow-instrument: Developer brief
 ---
 
-Refactor current API cleanly, with no legacy or migration support of any kind.
+Refactor current API cleanly, with no legacy, migration, or documentation support for previous API (old => new):
 
 
   use_edge_lengths          =>  useedgelength         
