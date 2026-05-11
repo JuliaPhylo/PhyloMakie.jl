@@ -7,7 +7,6 @@
         :target_public_surfaces,
         :lock_items,
         :public_attribute_owner,
-        :compatibility_keyword_bridge,
         :layout_annotation_owner,
         :render_owner,
         :public_plot_owner,
@@ -40,16 +39,15 @@
     end
 
     @testset "Lock items" begin
-        @test length(foundation.lock_items) == 7
-        @test [item.number for item in foundation.lock_items] == collect(1:7)
+        @test length(foundation.lock_items) == 6
+        @test [item.number for item in foundation.lock_items] == collect(1:6)
         @test [item.title for item in foundation.lock_items] == [
-            "Makie-native public plot owner",
-            "Makie-native public attribute surface",
-            "Compatibility-first owner demotion",
-            "Layout/render owner reuse",
-            "Public mutation/composability boundary",
-            "Multi-surface direct public proof",
-            "Honest verification/docs truth surface",
+            "Compatibility shell retirement",
+            "Single public-owner continuity during cleanup",
+            "Layout and annotation invariants survive the owner migration",
+            "Render invariants and Makie host semantics survive the owner migration",
+            "Verification metadata and shell tests reject compatibility-shell regrowth",
+            "Docs truth surfaces no longer teach or require the compatibility shell",
         ]
     end
 
@@ -60,34 +58,16 @@
         @test owner.canonical_payload == "PhyloPlotAttributes"
         @test owner.supported_public_attributes == EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES
         @test owner.recipe_attribute_surface == "Makie.attribute_names(PhyloPlot)"
-        @test owner.bridge_target ==
-            "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec"
+        @test owner.runtime_consumers == (
+            "prepare_plot_layout(net, attributes; preorder=true)::PlotLayout",
+            "render_plot!(target, net, attributes, layout)::PlotRenderLayers",
+            "Makie.plot!(plot::PhyloPlot)",
+        )
         @test owner.legacy_rejection.source ==
             "Makie.deprecated_attributes(::Type{<:PhyloPlot})"
         @test owner.legacy_rejection.rejected_spellings ==
             EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES
         @test occursin("omits separate controls", owner.omitted_control_note)
-        @test owner.reviewer_gate.clear isa String
-        @test owner.reviewer_gate.reject isa String
-    end
-
-    @testset "Compatibility bridge" begin
-        owner = foundation.compatibility_keyword_bridge
-
-        @test owner.source_files == (
-            "src/public_attribute_model.jl",
-            "src/keyword_normalization.jl",
-            "src/keyword_contract.jl",
-        )
-        @test owner.public_semantic_center === false
-        @test owner.canonical_bridge ==
-            "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec"
-        @test owner.retained_internal_payload == "PlotKeywordSpec"
-        @test owner.retained_for == (
-            "prepare_plot_layout(net, spec)::PlotLayout",
-            "render_plot!(target, net, spec, layout)::PlotRenderLayers",
-        )
-        @test occursin("preorder=true", owner.internal_preorder_policy)
         @test owner.reviewer_gate.clear isa String
         @test owner.reviewer_gate.reject isa String
     end
@@ -126,7 +106,7 @@
         )
         @test owner.render_consumer.owner_tranche == 4
         @test owner.render_consumer.owner ==
-            "render_plot!(target, net, spec, layout)::PlotRenderLayers"
+            "render_plot!(target, net, attributes, layout)::PlotRenderLayers"
         @test owner.render_consumer.source_file == "src/render_adapter.jl"
         @test owner.public_surface_consumer.owner_tranche == 5
         @test owner.public_surface_consumer.owner == "Makie.plot!(plot::PhyloPlot)"
@@ -168,8 +148,8 @@
         @test any(endswith("src/screen.jl"), owner.makie_source_files)
         @test owner.closed_render_regressions == (
             :style_distinction_fulltree_vs_majortree,
-            :minorlinetype_numeric_dotted_rendering,
-            :minorlinetype_blank_hides_minor_edges,
+            :minor_edge_linestyle_numeric_dotted_rendering,
+            :minor_edge_linestyle_blank_hides_minor_edges,
             :edgecolor_dict_fallback,
             :gamma_color_policy,
             :text_cex_scope_policy,
@@ -203,6 +183,7 @@
             "phyloplot!",
         )
         @test owner.stored_artifacts == (
+            "resolved_attributes",
             "resolved_layout",
             "render_layers",
             "data_limits",
@@ -234,8 +215,8 @@
             :edgecolor_dict_fallback,
             :composable_dual_axes,
         )
-        @test foundation.accepted_design_scenarios.simple_tree_no_hybrid.closure_status ==
-            :closed_render_owner
+        @test foundation.accepted_design_scenarios.useedgelength_scaling.closure_status ==
+            :closed_layout_annotation_owner
         @test foundation.accepted_design_scenarios.edgecolor_dict_fallback.closure_status ==
             :closed_render_owner
         @test foundation.accepted_design_scenarios.composable_dual_axes.direct_proof_owner == 5
@@ -281,9 +262,10 @@
             :major_tree_minor_edge_midpoint,
             :helper_bounds_messages,
         )
-        @test FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor.defaultedgecolor ==
+        @test FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor.default_edge_color ==
             "black"
-        @test FIXTURE_CORPUS.render_regression_cases.annotation_and_limits.xlim == (0.0, 6.5)
+        @test FIXTURE_CORPUS.render_regression_cases.annotation_and_limits.x_limits ==
+            (0.0, 6.5)
     end
 
     @testset "Green gates and current status" begin
@@ -299,18 +281,20 @@
         @test [state.id for state in foundation.current_status] == [
             :dependency_activation_closed,
             :render_owner_closed,
-            :public_attribute_owner_closed,
-            :public_plot_owner_closed,
-            :direct_public_surface_proof_closed,
-            :docs_truth_surface_closed,
+            :public_attribute_surface_established,
+            :public_plot_owner_established,
+            :runtime_carrier_realigned,
+            :compatibility_shell_retired,
+            :truth_surface_realigned,
         ]
         @test [state.status for state in foundation.current_status] == [
             :closed_in_tranche_4,
             :closed_in_tranche_4,
             :closed_in_tranche_5,
             :closed_in_tranche_5,
-            :closed_in_tranche_5,
-            :closed_in_tranche_5,
+            :closed_in_tranche_6,
+            :closed_in_tranche_6,
+            :closed_in_tranche_6,
         ]
     end
 
@@ -319,7 +303,7 @@
             :single_recipe_owner_breaks_down,
             :legacy_public_spellings_reappear,
             :caller_owned_mutation_returns,
-            :compatibility_bridge_recenters,
+            :shadow_runtime_carrier_returns,
             :proof_collapses_to_text_policing,
         ]
     end

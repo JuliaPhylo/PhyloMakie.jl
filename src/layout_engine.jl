@@ -57,10 +57,10 @@ end
 
 function _resolve_edge_lengths(
     net::PhyloNetworks.HybridNetwork,
-    useedgelength::Bool,
+    use_edge_lengths::Bool,
 )::Tuple{Bool, Vector{Float64}}
-    calculate_edge_lengths = !useedgelength
-    if useedgelength
+    calculate_edge_lengths = !use_edge_lengths
+    if use_edge_lengths
         all_edge_lengths_missing = true
         no_edge_lengths_missing = true
         for edge in net.edge
@@ -118,10 +118,11 @@ end
 
 function layout_plot_geometry(
     net::PhyloNetworks.HybridNetwork,
-    spec::PlotKeywordSpec,
+    attributes::PhyloPlotAttributes;
+    preorder::Bool=true,
 )::PlotGeometry
-    usedirecthybridline = spec.layout.style == :majortree
-    spec.layout.preorder && _prepare_traversal!(net)
+    usedirecthybridline = attributes.style == :majortree
+    preorder && _prepare_traversal!(net)
 
     ymin = 1.0
     ymax = Float64(net.numtaxa)
@@ -212,7 +213,7 @@ function layout_plot_geometry(
         end
     end
 
-    _, edge_lengths = _resolve_edge_lengths(net, spec.layout.useedgelength)
+    _, edge_lengths = _resolve_edge_lengths(net, attributes.use_edge_lengths)
 
     xmin = 1.0
     xmax = xmin
@@ -251,7 +252,11 @@ function layout_plot_geometry(
         edge_x_lo[edge_index] = node_x[parent_index]
         edge_x_hi[edge_index] = usedirecthybridline ?
             edge_x_lo[edge_index] :
-            (spec.layout.useedgelength ? edge_x_lo[edge_index] + edge_lengths[edge_index] : node_x[child_index])
+            (
+                attributes.use_edge_lengths ?
+                edge_x_lo[edge_index] + edge_lengths[edge_index] :
+                node_x[child_index]
+            )
 
         if usedirecthybridline
             edge_y_lo[edge_index] = node_y[parent_index]

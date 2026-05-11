@@ -37,7 +37,7 @@ function _capture_stdout(f::Function)
 end
 
 @testset "Layout engine" begin
-    normalize_plot_keywords = getfield(PhyloMakie, :normalize_plot_keywords)
+    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     layout_plot_geometry = getfield(PhyloMakie, :layout_plot_geometry)
     layout_cases = FIXTURE_CORPUS.layout_regression_cases
 
@@ -51,8 +51,8 @@ end
         )
             layout_case = getproperty(layout_cases, case_name)
             network = _read_network(layout_case.newick)
-            spec = normalize_plot_keywords(; layout_case.keyword_args...)
-            geometry = layout_plot_geometry(network, spec)
+            attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
+            geometry = layout_plot_geometry(network, attributes; preorder=true)
             @test _geometry_tuple(geometry) == layout_case.expected
         end
     end
@@ -65,8 +65,12 @@ end
             @test !isnothing(edge_index)
             network.edge[edge_index].length = -1.0
         end
-        spec = normalize_plot_keywords(; layout_case.keyword_args...)
-        geometry = @test_logs (:warn, layout_case.expected_warning) layout_plot_geometry(network, spec)
+        attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
+        geometry = @test_logs (:warn, layout_case.expected_warning) layout_plot_geometry(
+            network,
+            attributes;
+            preorder=true,
+        )
 
         comparison_network = _read_network(layout_case.newick)
         for edge_number in layout_case.missing_edge_numbers
@@ -74,22 +78,27 @@ end
             @test !isnothing(edge_index)
             comparison_network.edge[edge_index].length = 1.0
         end
-        comparison_geometry = layout_plot_geometry(comparison_network, spec)
+        comparison_geometry = layout_plot_geometry(comparison_network, attributes; preorder=true)
         @test _geometry_tuple(geometry) == _geometry_tuple(comparison_geometry)
     end
 
     @testset "All-missing fallback parity" begin
         layout_case = layout_cases.all_missing_lengths_fulltree_fallback
         network = _read_network(layout_case.newick)
-        spec = normalize_plot_keywords(; layout_case.keyword_args...)
+        attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
         geometry, stdout_text = _capture_stdout() do
-            layout_plot_geometry(network, spec)
+            layout_plot_geometry(network, attributes; preorder=true)
         end
         @test rstrip(stdout_text) == layout_case.expected_print
         @test _geometry_tuple(geometry) == layout_case.expected
 
-        no_lengths_spec = normalize_plot_keywords(useedgelength=false, style=:fulltree)
-        no_lengths_geometry = layout_plot_geometry(_read_network(layout_case.newick), no_lengths_spec)
+        no_lengths_attributes =
+            resolve_phylo_plot_attributes(use_edge_lengths=false, style=:fulltree)
+        no_lengths_geometry = layout_plot_geometry(
+            _read_network(layout_case.newick),
+            no_lengths_attributes;
+            preorder=true,
+        )
         @test _geometry_tuple(geometry) != _geometry_tuple(no_lengths_geometry)
     end
 
@@ -97,9 +106,9 @@ end
         layout_case = layout_cases.incompatible_root
         network = _read_network(layout_case.newick)
         network.rooti = layout_case.rooti
-        spec = normalize_plot_keywords(; layout_case.keyword_args...)
+        attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
         caught_error = try
-            layout_plot_geometry(network, spec)
+            layout_plot_geometry(network, attributes; preorder=true)
             nothing
         catch err
             err
@@ -111,9 +120,11 @@ end
     @testset "Preorder mutation boundary" begin
         layout_case = layout_cases.with_lengths_fulltree
         fresh_network = _read_network(layout_case.newick)
+        attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
         prepared_by_owner = layout_plot_geometry(
             fresh_network,
-            normalize_plot_keywords(; layout_case.keyword_args..., preorder=true),
+            attributes;
+            preorder=true,
         )
         @test fresh_network.isrooted === true
         @test !isempty(fresh_network.vec_node)
@@ -125,7 +136,8 @@ end
         original_edge_direction = [edge.ischild1 for edge in prepared_network.edge]
         geometry_without_repreorder = layout_plot_geometry(
             prepared_network,
-            normalize_plot_keywords(; layout_case.keyword_args..., preorder=false),
+            attributes;
+            preorder=false,
         )
         @test _geometry_tuple(prepared_by_owner) == _geometry_tuple(geometry_without_repreorder)
         @test [node.number for node in prepared_network.vec_node] == original_preorder

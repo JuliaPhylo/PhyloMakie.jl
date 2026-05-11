@@ -42,47 +42,31 @@ const VERIFICATION_FOUNDATION = (
         ),
     ),
     lock_items = (
-        (number = 1, title = "Makie-native public plot owner"),
-        (number = 2, title = "Makie-native public attribute surface"),
-        (number = 3, title = "Compatibility-first owner demotion"),
-        (number = 4, title = "Layout/render owner reuse"),
-        (number = 5, title = "Public mutation/composability boundary"),
-        (number = 6, title = "Multi-surface direct public proof"),
-        (number = 7, title = "Honest verification/docs truth surface"),
+        (number = 1, title = "Compatibility shell retirement"),
+        (number = 2, title = "Single public-owner continuity during cleanup"),
+        (number = 3, title = "Layout and annotation invariants survive the owner migration"),
+        (number = 4, title = "Render invariants and Makie host semantics survive the owner migration"),
+        (number = 5, title = "Verification metadata and shell tests reject compatibility-shell regrowth"),
+        (number = 6, title = "Docs truth surfaces no longer teach or require the compatibility shell"),
     ),
     public_attribute_owner = (
         source_files = ("src/public_attribute_model.jl",),
         canonical_payload = "PhyloPlotAttributes",
         supported_public_attributes = SUPPORTED_PHYLOPLOT_ATTRIBUTES,
         recipe_attribute_surface = "Makie.attribute_names(PhyloPlot)",
+        runtime_consumers = (
+            "prepare_plot_layout(net, attributes; preorder=true)::PlotLayout",
+            "render_plot!(target, net, attributes, layout)::PlotRenderLayers",
+            "Makie.plot!(plot::PhyloPlot)",
+        ),
         omitted_control_note = "The tranche-5 public surface intentionally omits separate controls for internal-node-name color, internal-node-name size, edge-length-label size, gamma-label size, and node-number size; the existing render-owner defaults remain authoritative for those groupings.",
-        bridge_target = "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec",
         legacy_rejection = (
             source = "Makie.deprecated_attributes(::Type{<:PhyloPlot})",
             rejected_spellings = Tuple(migration.legacy for migration in PHYLOPLOT_ATTRIBUTE_MIGRATIONS),
         ),
         reviewer_gate = (
-            clear = "the public snake_case surface is exactly the tranche-5 attribute set, style-dependent minor-edge defaults remain source-backed, DataFrame inputs are copied on entry, legacy public spellings are rejected at the recipe boundary, and PlotKeywordSpec survives only as the local bridge target.",
-            reject = "it lets legacy names or preorder back onto the public surface, re-centers compatibility structs as the public semantic owner, or reintroduces omitted styling controls as ad hoc new public knobs.",
-        ),
-    ),
-    compatibility_keyword_bridge = (
-        source_files = (
-            "src/public_attribute_model.jl",
-            "src/keyword_normalization.jl",
-            "src/keyword_contract.jl",
-        ),
-        public_semantic_center = false,
-        canonical_bridge = "bridge_phylo_plot_attributes(attributes; x_limits, y_limits)::PlotKeywordSpec",
-        retained_internal_payload = "PlotKeywordSpec",
-        retained_for = (
-            "prepare_plot_layout(net, spec)::PlotLayout",
-            "render_plot!(target, net, spec, layout)::PlotRenderLayers",
-        ),
-        internal_preorder_policy = "The bridge always sets preorder=true and only runs on a deepcopy-owned HybridNetwork inside the public plot owner.",
-        reviewer_gate = (
-            clear = "the compatibility layer is a tightly local bridge from the tranche-5 public attribute payload into PlotKeywordSpec, and it no longer owns public naming, public limits, or caller-owned network semantics.",
-            reject = "it remains the public semantic center, accepts the legacy public keyword surface directly, or owns caller-visible mutation and limit-validation policy.",
+            clear = "the public snake_case surface is exactly the tranche-5 attribute set, style-dependent minor-edge defaults remain source-backed, DataFrame inputs are copied on entry, legacy public spellings are rejected at the recipe boundary, and PhyloPlotAttributes is the sole accepted runtime semantic carrier.",
+            reject = "it lets legacy names or preorder back onto the public surface, reintroduces a second runtime payload, or reopens omitted styling controls as ad hoc public knobs.",
         ),
     ),
     layout_annotation_owner = (
@@ -117,11 +101,11 @@ const VERIFICATION_FOUNDATION = (
         ),
         render_consumer = (
             owner_tranche = 4,
-            owner = "render_plot!(target, net, spec, layout)::PlotRenderLayers",
+            owner = "render_plot!(target, net, attributes, layout)::PlotRenderLayers",
             source_file = "src/render_adapter.jl",
             contracts = (
                 "Render-time proof consumes PlotLayout geometry, bounds, and annotation tables without local geometry recomputation.",
-                "Render-time proof applies only the final x and y limits carried by the bridged PlotKeywordSpec.",
+                "Render-time proof applies only the final x_limits and y_limits carried by PhyloPlotAttributes.",
             ),
         ),
         public_surface_consumer = (
@@ -134,7 +118,7 @@ const VERIFICATION_FOUNDATION = (
             ),
         ),
         reviewer_gate = (
-            clear = "src/layout_engine.jl and src/annotation_data.jl remain the only helper owners, PlotLayout remains the canonical helper payload, render_plot! consumes that payload directly, and the tranche-5 public plot owner adds no duplicate helper math.",
+            clear = "src/layout_engine.jl and src/annotation_data.jl remain the only helper owners, PlotLayout remains the canonical helper payload, render_plot! consumes that payload directly, and the Makie-native public plot owner adds no duplicate helper math.",
             reject = "it reimplements geometry, midpoint, or bounds-message semantics in the public plot owner, leaves PlotLayout implicit, or pushes helper ownership back into render-facing code.",
         ),
     ),
@@ -171,12 +155,12 @@ const VERIFICATION_FOUNDATION = (
         public_owner_reuse = (
             owner_tranche = 5,
             owner = "Makie.plot!(plot::PhyloPlot)",
-            contract = "The public recipe owner reuses render_plot! directly for both Axis and Plot targets without duplicating primitive render logic.",
+            contract = "The public recipe owner reuses render_plot! directly for both Axis and Plot targets without duplicating primitive render logic or introducing a second runtime carrier.",
         ),
         closed_render_regressions = (
             :style_distinction_fulltree_vs_majortree,
-            :minorlinetype_numeric_dotted_rendering,
-            :minorlinetype_blank_hides_minor_edges,
+            :minor_edge_linestyle_numeric_dotted_rendering,
+            :minor_edge_linestyle_blank_hides_minor_edges,
             :edgecolor_dict_fallback,
             :gamma_color_policy,
             :text_cex_scope_policy,
@@ -191,7 +175,7 @@ const VERIFICATION_FOUNDATION = (
             :explicit_limit_application,
         ),
         reviewer_gate = (
-            clear = "render_plot! is the only internal render owner, PlotRenderLayers exposes the typed render proof surface, linesegments!, arrows2d!, text!, and Makie.colorbuffer remain the ratified primitive path, and the tranche-5 public recipe owner reuses the same owner directly.",
+            clear = "render_plot! is the only internal render owner, PlotRenderLayers exposes the typed render proof surface, linesegments!, arrows2d!, text!, and Makie.colorbuffer remain the ratified primitive path, and the Makie-native public owner reuses the same implementation directly.",
             reject = "it adds a second render owner, reintroduces hidden current-axis state, lets public-surface proof fork the primitive path, or lets proof collapse to docs-only or source-text checks.",
         ),
     ),
@@ -209,6 +193,7 @@ const VERIFICATION_FOUNDATION = (
             "phyloplot!",
         ),
         stored_artifacts = (
+            "resolved_attributes",
             "resolved_layout",
             "render_layers",
             "data_limits",
@@ -225,7 +210,7 @@ const VERIFICATION_FOUNDATION = (
         ),
         caller_owned_network_boundary = "deepcopy(Makie.to_value(plot[:net]))",
         reviewer_gate = (
-            clear = "a single Makie recipe owner drives plot(net), plot!(ax, net), phyloplot, and phyloplot!; the owner stores resolved_layout, render_layers, and data_limits on the returned plot; and caller-owned HybridNetwork inputs remain unchanged.",
+            clear = "a single Makie recipe owner drives plot(net), plot!(ax, net), phyloplot, and phyloplot!; the owner stores resolved_attributes, resolved_layout, render_layers, and data_limits on the returned plot; and caller-owned HybridNetwork inputs remain unchanged.",
             reject = "it forks surface semantics between plot and phyloplot, mutates the caller-owned network implicitly, or adds wrapper-owned render or layout logic outside the single Makie recipe owner.",
         ),
     ),
@@ -250,14 +235,14 @@ const VERIFICATION_FOUNDATION = (
         ),
         useedgelength_scaling = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 4,
-            closure_status = :closed_render_owner,
+            direct_proof_owner = 3,
+            closure_status = :closed_layout_annotation_owner,
             required_output = "Node x positions follow edge lengths, and missing lengths render as 1.0.",
         ),
         dataframe_label_rendering = (
             source = "design/prod01-vision-supplement.md",
-            direct_proof_owner = 4,
-            closure_status = :closed_render_owner,
+            direct_proof_owner = 3,
+            closure_status = :closed_layout_annotation_owner,
             required_output = "Node and edge labels render at the correct midpoint anchors after validation.",
         ),
         showgamma_rendering = (
@@ -334,7 +319,7 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :package_tests,
-            artifact = "Shell-owner, compatibility-owner, public-attribute-owner, helper-owner, render-owner, public-plot-owner, and verification-owner tests pass together under the repo-local test project.",
+            artifact = "Shell-owner, public-attribute-owner, helper-owner, render-owner, public-plot-owner, and verification-owner tests pass together under the repo-local test project with no compatibility-shell dependency.",
             command = "julia --project=test test/runtests.jl",
         ),
         (
@@ -362,27 +347,32 @@ const VERIFICATION_FOUNDATION = (
         (
             id = :render_owner_closed,
             status = :closed_in_tranche_4,
-            fact = "On 2026-05-10, src/render_adapter.jl landed render_plot!(target, net, spec, layout)::PlotRenderLayers as the only internal render owner.",
+            fact = "On 2026-05-10, src/render_adapter.jl landed render_plot!(target, net, attributes, layout)::PlotRenderLayers as the only internal render owner.",
         ),
         (
-            id = :public_attribute_owner_closed,
+            id = :public_attribute_surface_established,
             status = :closed_in_tranche_5,
-            fact = "On 2026-05-10, src/public_attribute_model.jl landed the exact tranche-5 snake_case attribute surface, legacy-name rejection, and the tightly local PlotKeywordSpec bridge.",
+            fact = "On 2026-05-10, src/public_attribute_model.jl established the tranche-5 snake_case public attribute surface and recipe-level legacy-name rejection.",
         ),
         (
-            id = :public_plot_owner_closed,
+            id = :public_plot_owner_established,
             status = :closed_in_tranche_5,
             fact = "On 2026-05-10, src/public_plot_owner.jl landed Makie.@recipe PhyloPlot as the single public owner for plot(net), plot!(ax, net), phyloplot, and phyloplot!.",
         ),
         (
-            id = :direct_public_surface_proof_closed,
-            status = :closed_in_tranche_5,
-            fact = "On 2026-05-10, direct CairoMakie-backed parity, mutation-boundary, public-limit, legacy-rejection, and dual-axis composition proof landed in test/test_public_plot_owner.jl.",
+            id = :runtime_carrier_realigned,
+            status = :closed_in_tranche_6,
+            fact = "On 2026-05-10, src/public_attribute_model.jl, src/layout_engine.jl, src/annotation_data.jl, src/render_adapter.jl, and src/public_plot_owner.jl were realigned so PhyloPlotAttributes is the only accepted runtime carrier.",
         ),
         (
-            id = :docs_truth_surface_closed,
-            status = :closed_in_tranche_5,
-            fact = "On 2026-05-10, the docs surface switched from deferred-public-owner language to the live Makie-native public API, with a dedicated public-api page and updated verification tables.",
+            id = :compatibility_shell_retired,
+            status = :closed_in_tranche_6,
+            fact = "On 2026-05-10, src/keyword_contract.jl, src/keyword_normalization.jl, PlotKeywordSpec, and normalize_plot_keywords were removed from the accepted runtime path, test suite, and docs truth surface.",
+        ),
+        (
+            id = :truth_surface_realigned,
+            status = :closed_in_tranche_6,
+            fact = "On 2026-05-10, VERIFICATION_FOUNDATION, the shell-owner tests, and the docs pages were rewritten to the final four-owner architecture and direct PhyloPlotAttributes runtime path.",
         ),
     ),
     stop_conditions = (
@@ -392,19 +382,19 @@ const VERIFICATION_FOUNDATION = (
         ),
         (
             id = :legacy_public_spellings_reappear,
-            condition = "Stop if the tranche-5 public surface would need to accept legacy public spellings or preorder to stay green.",
+            condition = "Stop if the public surface would need to accept legacy public spellings or preorder to stay green.",
         ),
         (
             id = :caller_owned_mutation_returns,
             condition = "Stop if plotting would need to mutate the caller-owned HybridNetwork implicitly instead of a deepcopy-owned internal copy.",
         ),
         (
-            id = :compatibility_bridge_recenters,
-            condition = "Stop if PlotKeywordSpec or normalize_plot_keywords would need to remain the public semantic center instead of a tightly local bridge.",
+            id = :shadow_runtime_carrier_returns,
+            condition = "Stop if helper, render, test, or docs proof would need a second semantic carrier or a shadow compatibility wrapper to stay green.",
         ),
         (
             id = :proof_collapses_to_text_policing,
-            condition = "Stop if the only available tranche-5 proof surface collapses to SVG, Markdown, YAML, or source-text inspection instead of live CairoMakie-backed artifacts.",
+            condition = "Stop if the only available proof surface collapses to SVG, Markdown, YAML, or source-text inspection instead of live CairoMakie-backed artifacts.",
         ),
     ),
 )

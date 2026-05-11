@@ -44,10 +44,15 @@ function _render_layers(plot)
     return Makie.to_value(plot[:render_layers])
 end
 
+function _resolved_attributes(plot)
+    return Makie.to_value(plot[:resolved_attributes])
+end
+
 @testset "Public plot owner" begin
     CairoMakie.activate!()
 
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
+    PhyloPlotAttributes = getfield(PhyloMakie, :PhyloPlotAttributes)
     PlotLayout = getfield(PhyloMakie, :PlotLayout)
     PlotRenderLayers = getfield(PhyloMakie, :PlotRenderLayers)
 
@@ -55,9 +60,9 @@ end
     render_kwargs = (
         use_edge_lengths=true,
         show_gamma=true,
-        edge_color=Dict(render_case.edgecolor_overrides),
-        default_edge_color=render_case.defaultedgecolor,
-        edge_width=Dict(render_case.edgewidth_overrides),
+        edge_color=Dict(render_case.edge_color_overrides),
+        default_edge_color=render_case.default_edge_color,
+        edge_width=Dict(render_case.edge_width_overrides),
         style=:fulltree,
     )
 
@@ -69,6 +74,8 @@ end
         @test convenience_surface isa Makie.FigureAxisPlot
         @test plot_surface.plot isa PhyloPlot
         @test convenience_surface.plot isa PhyloPlot
+        @test _resolved_attributes(plot_surface.plot) isa PhyloPlotAttributes
+        @test _resolved_attributes(convenience_surface.plot) isa PhyloPlotAttributes
         @test _resolved_layout(plot_surface.plot) isa PlotLayout
         @test _resolved_layout(convenience_surface.plot) isa PlotLayout
         @test _render_layers(plot_surface.plot) isa PlotRenderLayers
@@ -92,6 +99,8 @@ end
 
         @test plot_surface isa PhyloPlot
         @test convenience_surface isa PhyloPlot
+        @test _resolved_attributes(plot_surface) isa PhyloPlotAttributes
+        @test _resolved_attributes(convenience_surface) isa PhyloPlotAttributes
         @test _resolved_layout(plot_surface) isa PlotLayout
         @test _resolved_layout(convenience_surface) isa PlotLayout
         @test _render_layers(plot_surface) isa PlotRenderLayers
@@ -139,13 +148,15 @@ end
             show_gamma=true,
             node_annotations=node_annotations,
             edge_annotations=edge_annotations,
-            x_limits=annotation_case.xlim,
-            y_limits=annotation_case.ylim,
+            x_limits=annotation_case.x_limits,
+            y_limits=annotation_case.y_limits,
             style=:majortree,
         )
+        @test _resolved_attributes(limit_surface.plot).x_limits == annotation_case.x_limits
+        @test _resolved_attributes(limit_surface.plot).y_limits == annotation_case.y_limits
         layers = _render_layers(limit_surface.plot)
-        @test layers.applied_xlim == annotation_case.xlim
-        @test layers.applied_ylim == annotation_case.ylim
+        @test layers.applied_x_limits == annotation_case.x_limits
+        @test layers.applied_y_limits == annotation_case.y_limits
 
         x_limit_error = try
             Makie.plot(readnewick(annotation_case.newick); x_limits=[1.0, 2.0, 3.0])
@@ -233,10 +244,10 @@ end
         left_layers = _render_layers(left_plot)
         right_layers = _render_layers(right_plot)
 
-        @test left_limits[1] == left_layers.applied_xlim
-        @test left_limits[2] == left_layers.applied_ylim
-        @test right_limits[1] == right_layers.applied_xlim
-        @test right_limits[2] == right_layers.applied_ylim
+        @test left_limits[1] == left_layers.applied_x_limits
+        @test left_limits[2] == left_layers.applied_y_limits
+        @test right_limits[1] == right_layers.applied_x_limits
+        @test right_limits[2] == right_layers.applied_y_limits
         @test left_plot.parent !== right_plot.parent
         @test left_limits != right_limits
         @test !isempty(_plot_colorbuffer(figure))

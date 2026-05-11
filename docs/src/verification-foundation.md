@@ -4,9 +4,9 @@ CurrentModule = PhyloMakie
 
 # Verification foundation
 
-Tranche 5 closes the Makie-native public owner on top of the tranche-1
-verification foundation, the tranche-2 compatibility bridge, the tranche-3
-layout and annotation owners, and the tranche-4 render owner.
+Tranche 6 closes the compatibility-shell retirement on top of the tranche-1
+verification foundation, the tranche-3 layout and annotation owners, the
+tranche-4 render owner, and the tranche-5 Makie-native public owner.
 
 The tables below are rendered from `PhyloMakie.VERIFICATION_FOUNDATION`. If
 the source-side owner drifts or disappears, this page should fail to build
@@ -58,8 +58,6 @@ using PhyloMakie
 foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 public_attribute_files =
     join(["`$(file)`" for file in foundation.public_attribute_owner.source_files], ", ")
-compatibility_bridge_files =
-    join(["`$(file)`" for file in foundation.compatibility_keyword_bridge.source_files], ", ")
 layout_files =
     join(["`$(file)`" for file in foundation.layout_annotation_owner.source_files], ", ")
 render_files = join(["`$(file)`" for file in foundation.render_owner.source_files], ", ")
@@ -69,7 +67,6 @@ rows = [
     "| Owner | Canonical payload or entrypoint | Source files |",
     "| --- | --- | --- |",
     "| Public attribute owner | `$(foundation.public_attribute_owner.canonical_payload)` | $(public_attribute_files) |",
-    "| Compatibility bridge | `$(foundation.compatibility_keyword_bridge.canonical_bridge)` | $(compatibility_bridge_files) |",
     "| Layout and annotation owner | `$(foundation.layout_annotation_owner.canonical_payload)` | $(layout_files) |",
     "| Render owner | `$(foundation.render_owner.typed_layer_bundle)` | $(render_files) |",
     "| Public plot owner | `$(foundation.public_plot_owner.public_recipe)` | $(public_plot_files) |",
@@ -90,7 +87,7 @@ rows = [
     "| --- | --- |",
     "| Canonical payload | `$(owner.canonical_payload)` |",
     "| Recipe attribute surface | `$(owner.recipe_attribute_surface)` |",
-    "| Bridge target | `$(owner.bridge_target)` |",
+    "| Runtime consumers | $(join(["`$(consumer)`" for consumer in owner.runtime_consumers], ", ")) |",
     "| Legacy rejection source | `$(owner.legacy_rejection.source)` |",
 ]
 Markdown.parse(join(rows, "\n"))

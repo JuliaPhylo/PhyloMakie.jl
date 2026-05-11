@@ -12,7 +12,7 @@ function _read_annotation_network(newick::AbstractString)
 end
 
 @testset "Annotation data owner" begin
-    normalize_plot_keywords = getfield(PhyloMakie, :normalize_plot_keywords)
+    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
     validate_node_data = getfield(PhyloMakie, :_validate_node_data)
     table_expectations = FIXTURE_CORPUS.table_expectations
@@ -47,11 +47,12 @@ end
         node_labels = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
         layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
-            normalize_plot_keywords(
-                nodelabel=node_labels,
-                shownodenumber=true,
-                shownodelabel=true,
+            resolve_phylo_plot_attributes(
+                node_annotations=node_labels,
+                show_node_numbers=true,
+                show_internal_node_names=true,
             ),
+            preorder=true,
         )
         @test layout.annotations.labelnodes === true
         @test layout.annotations.node_data == _fixture_dataframe(table_expectations.prepared_node_table)
@@ -61,14 +62,16 @@ end
         warning_edges = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_warning_rows)
         layout_with_warning = @test_logs (:warn, warning_strings.edgelabel_unknown_edges) prepare_plot_layout(
             _read_annotation_network(base_newick),
-            normalize_plot_keywords(edgelabel=warning_edges, style=:majortree),
+            resolve_phylo_plot_attributes(edge_annotations=warning_edges, style=:majortree),
+            preorder=true,
         )
         @test layout_with_warning.annotations.labeledges === true
 
         invalid_edges = warning_edges[!, 2:2]
         invalid_layout = @test_logs (:warn, warning_strings.edgelabel_invalid_shape) prepare_plot_layout(
             _read_annotation_network(base_newick),
-            normalize_plot_keywords(edgelabel=invalid_edges, style=:majortree),
+            resolve_phylo_plot_attributes(edge_annotations=invalid_edges, style=:majortree),
+            preorder=true,
         )
         @test invalid_layout.annotations.labeledges === false
         @test all(invalid_layout.annotations.edge_data.lab .== "")
@@ -76,7 +79,11 @@ end
         filtered_edge_numbers = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_missing_number_rows)
         filtered_layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
-            normalize_plot_keywords(edgelabel=filtered_edge_numbers, style=:majortree),
+            resolve_phylo_plot_attributes(
+                edge_annotations=filtered_edge_numbers,
+                style=:majortree,
+            ),
+            preorder=true,
         )
         expected_filtered = _fixture_dataframe(table_expectations.edgelabel_filtered_result)
         for row_index in axes(expected_filtered, 1)
@@ -93,7 +100,8 @@ end
         edge_labels = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
-            normalize_plot_keywords(edgelabel=edge_labels, style=:majortree),
+            resolve_phylo_plot_attributes(edge_annotations=edge_labels, style=:majortree),
+            preorder=true,
         )
         @test layout.annotations.labeledges === true
         @test layout.annotations.edge_data == _fixture_dataframe(table_expectations.prepared_edge_table_majortree)
@@ -103,7 +111,9 @@ end
         @test layout.annotations.edge_data[midpoint_row, :x] == midpoint_expectation.x
         @test layout.annotations.edge_data[midpoint_row, :y] == midpoint_expectation.y
 
-        @test layout.bounds.xlim_error_message == table_expectations.helper_bounds_messages.xlim
-        @test layout.bounds.ylim_error_message == table_expectations.helper_bounds_messages.ylim
+        @test layout.bounds.x_limits_error_message ==
+            table_expectations.helper_bounds_messages.x_limits
+        @test layout.bounds.y_limits_error_message ==
+            table_expectations.helper_bounds_messages.y_limits
     end
 end

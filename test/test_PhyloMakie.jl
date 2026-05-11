@@ -12,6 +12,9 @@ using PhyloNetworks: HybridNetwork, readnewick
     @test isdefined(PhyloMakie, :phyloplot)
     @test isdefined(PhyloMakie, Symbol("phyloplot!"))
     @test isdefined(PhyloMakie, :PhyloPlot)
+    @test !isdefined(PhyloMakie, :PlotKeywordSpec)
+    @test !isdefined(PhyloMakie, :normalize_plot_keywords)
+    @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)
 
     module_file = joinpath(dirname(pathof(PhyloMakie)), "PhyloMakie.jl")
     module_source = read(module_file, String)
@@ -28,7 +31,7 @@ using PhyloNetworks: HybridNetwork, readnewick
     @test module_body.head == :block
 
     top_level_forms = [form for form in module_body.args if !(form isa LineNumberNode)]
-    @test length(top_level_forms) == 9
+    @test length(top_level_forms) == 7
 
     @test top_level_forms[1] isa Expr
     @test top_level_forms[1].head == :import
@@ -44,8 +47,6 @@ using PhyloNetworks: HybridNetwork, readnewick
         push!(include_paths, include_expr.args[2])
     end
     @test include_paths == [
-        "keyword_contract.jl",
-        "keyword_normalization.jl",
         "public_attribute_model.jl",
         "layout_engine.jl",
         "annotation_data.jl",

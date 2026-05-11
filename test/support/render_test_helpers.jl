@@ -15,19 +15,19 @@ function _render_case(
     kwargs...,
 )
     CairoMakie.activate!()
-    normalize_plot_keywords = getfield(PhyloMakie, :normalize_plot_keywords)
+    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
     render_plot! = getfield(PhyloMakie, :render_plot!)
 
     network = readnewick(newick)
-    spec = normalize_plot_keywords(; kwargs...)
-    layout = prepare_plot_layout(network, spec)
+    attributes = resolve_phylo_plot_attributes(; kwargs...)
+    layout = prepare_plot_layout(network, attributes; preorder=true)
     figure = Figure(size=figure_size)
     axis = Axis(figure[1, 1])
     hidedecorations!(axis)
     hidespines!(axis)
-    layers = render_plot!(axis, network, spec, layout)
-    return (; network, spec, layout, figure, axis, layers)
+    layers = render_plot!(axis, network, attributes, layout)
+    return (; network, attributes, layout, figure, axis, layers)
 end
 
 function _render_colorbuffer(figure)

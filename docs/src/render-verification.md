@@ -5,10 +5,10 @@ CurrentModule = PhyloMakie
 # Render verification
 
 Tranche 4 closed the internal render owner
-`render_plot!(target, net, spec, layout)::PlotRenderLayers`, and tranche 5 now
-reuses that same owner directly from the Makie-native public recipe layer.
-The artifacts below still exercise the internal compatibility, helper, and
-render owners directly from live CairoMakie code and the repo-owned fixture
+`render_plot!(target, net, attributes, layout)::PlotRenderLayers`, and tranche
+6 now feeds that owner directly from the Makie-native runtime carrier
+`PhyloPlotAttributes`. The artifacts below exercise the layout, render, and
+public owners directly from live CairoMakie code and the repo-owned fixture
 corpus. The public entry surfaces themselves are documented on
 [Public API](public-api.md).
 
@@ -54,31 +54,31 @@ function build_render_case(
     figure_size::Tuple{Int, Int}=(640, 400),
     kwargs...,
 )
-    normalize_plot_keywords = getfield(PhyloMakie, :normalize_plot_keywords)
+    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
     render_plot! = getfield(PhyloMakie, :render_plot!)
 
     network = PhyloNetworks.readnewick(newick)
-    spec = normalize_plot_keywords(; kwargs...)
-    layout = prepare_plot_layout(network, spec)
+    attributes = resolve_phylo_plot_attributes(; kwargs...)
+    layout = prepare_plot_layout(network, attributes; preorder=true)
     figure = Figure(size=figure_size)
     axis = Axis(figure[1, 1])
     hidedecorations!(axis)
     hidespines!(axis)
-    layers = render_plot!(axis, network, spec, layout)
-    return (; network, spec, layout, figure, axis, layers)
+    layers = render_plot!(axis, network, attributes, layout)
+    return (; network, attributes, layout, figure, axis, layers)
 end
 
 function render_into_axis!(axis, newick::AbstractString; kwargs...)
-    normalize_plot_keywords = getfield(PhyloMakie, :normalize_plot_keywords)
+    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
     render_plot! = getfield(PhyloMakie, :render_plot!)
 
     network = PhyloNetworks.readnewick(newick)
-    spec = normalize_plot_keywords(; kwargs...)
-    layout = prepare_plot_layout(network, spec)
-    layers = render_plot!(axis, network, spec, layout)
-    return (; network, spec, layout, layers)
+    attributes = resolve_phylo_plot_attributes(; kwargs...)
+    layout = prepare_plot_layout(network, attributes; preorder=true)
+    layers = render_plot!(axis, network, attributes, layout)
+    return (; network, attributes, layout, layers)
 end
 ```
 
@@ -96,7 +96,7 @@ hidespines!(fulltree_axis) # hide
 fulltree_case = render_into_axis!( # hide
     fulltree_axis, # hide
     style_fixture.style_fulltree.newick; # hide
-    style_fixture.style_fulltree.keyword_args..., # hide
+    style_fixture.style_fulltree.attribute_kwargs..., # hide
 ) # hide
 majortree_axis = Axis(style_figure[1, 2], title="Major-tree style") # hide
 hidedecorations!(majortree_axis) # hide
@@ -104,7 +104,7 @@ hidespines!(majortree_axis) # hide
 majortree_case = render_into_axis!( # hide
     majortree_axis, # hide
     style_fixture.style_majortree.newick; # hide
-    style_fixture.style_majortree.keyword_args..., # hide
+    style_fixture.style_majortree.attribute_kwargs..., # hide
 ) # hide
 style_figure
 ```
@@ -122,7 +122,7 @@ Markdown.parse(
 
 ## Edge-color, gamma-color, and width artifact
 
-This artifact exercises dict-driven `edgecolor`, `defaultedgecolor`,
+This artifact exercises dict-driven `edge_color`, `default_edge_color`,
 major/minor hybrid colors, scalar-versus-dict width handling, and gamma text
 color independence in one live render.
 
@@ -130,10 +130,10 @@ color independence in one live render.
 color_fixture = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor # hide
 color_case = build_render_case( # hide
     color_fixture.newick; # hide
-    color_fixture.keyword_args..., # hide
-    edgecolor=Dict(color_fixture.edgecolor_overrides), # hide
-    defaultedgecolor=color_fixture.defaultedgecolor, # hide
-    edgewidth=Dict(color_fixture.edgewidth_overrides), # hide
+    color_fixture.attribute_kwargs..., # hide
+    edge_color=Dict(color_fixture.edge_color_overrides), # hide
+    default_edge_color=color_fixture.default_edge_color, # hide
+    edge_width=Dict(color_fixture.edge_width_overrides), # hide
 ) # hide
 color_case.figure
 ```
@@ -143,7 +143,7 @@ Markdown.parse(
     """
     | Proof surface | Live value |
     | --- | --- |
-    | Dict override edges | `$(collect(keys(Dict(color_fixture.edgecolor_overrides))))` |
+    | Dict override edges | `$(collect(keys(Dict(color_fixture.edge_color_overrides))))` |
     | Default edge fallback | `$(unique(color_case.layers.node_bars.colors))` |
     | Minor edge colors | `$(unique(color_case.layers.minor_edge_shafts.colors))` |
     | Minor gamma text colors | `$(unique(color_case.layers.minor_gamma_labels.colors))` |
@@ -165,11 +165,11 @@ node_labels = render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_
 edge_labels = render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows) # hide
 annotation_case = build_render_case( # hide
     annotation_fixture.newick; # hide
-    annotation_fixture.keyword_args..., # hide
-    nodelabel=node_labels, # hide
-    edgelabel=edge_labels, # hide
-    xlim=annotation_fixture.xlim, # hide
-    ylim=annotation_fixture.ylim, # hide
+    annotation_fixture.attribute_kwargs..., # hide
+    node_annotations=node_labels, # hide
+    edge_annotations=edge_labels, # hide
+    x_limits=annotation_fixture.x_limits, # hide
+    y_limits=annotation_fixture.y_limits, # hide
 ) # hide
 annotation_case.figure
 ```
@@ -179,8 +179,8 @@ Markdown.parse(
     """
     | Proof surface | Live value |
     | --- | --- |
-    | Applied x limits | `$(annotation_case.layers.applied_xlim)` |
-    | Applied y limits | `$(annotation_case.layers.applied_ylim)` |
+    | Applied x limits | `$(annotation_case.layers.applied_x_limits)` |
+    | Applied y limits | `$(annotation_case.layers.applied_y_limits)` |
     | Tip labels | `$(annotation_case.layers.tip_labels.strings)` |
     | Internal node names | `$(annotation_case.layers.internal_node_names.strings)` |
     | Node numbers | `$(annotation_case.layers.node_numbers.strings)` |

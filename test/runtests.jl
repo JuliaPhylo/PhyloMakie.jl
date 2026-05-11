@@ -7,13 +7,11 @@ using PhyloNetworks
 using Test
 
 include("support/fixture_corpus.jl")
-include("support/keyword_surface_cases.jl")
+include("support/public_surface_cases.jl")
 include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
-    include("test_keyword_contract.jl")
-    include("test_keyword_normalization.jl")
     include("test_public_attribute_model.jl")
     include("test_layout_engine.jl")
     include("test_annotation_data.jl")

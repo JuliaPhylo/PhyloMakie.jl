@@ -1,3 +1,7 @@
+using DataFrames: AbstractDataFrame, DataFrame
+
+const SUPPORTED_STYLE_SYMBOLS = (:fulltree, :majortree)
+
 const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :use_edge_lengths,
     :show_tip_labels,
@@ -107,6 +111,18 @@ struct PhyloPlotAttributes{
     style::Symbol
 end
 
+function _normalize_dataframe(table::AbstractDataFrame)::DataFrame
+    return DataFrame(table; copycols=true)
+end
+
+function _normalize_style(style::Symbol)::Symbol
+    if style in SUPPORTED_STYLE_SYMBOLS
+        return style
+    end
+    @warn "Style $style is unknown. Defaulted to :fulltree."
+    return :fulltree
+end
+
 function _resolve_default_edge_color(edge_color, default_edge_color, edge_color_mode::Symbol)
     if edge_color_mode == :by_edge
         return isnothing(default_edge_color) ? "black" : string(default_edge_color)
@@ -118,12 +134,12 @@ function _resolve_edge_width_mode(edge_width)::Symbol
     if edge_width isa Number
         return :uniform
     elseif edge_width isa AbstractDict
-        valtype(edge_width) <: Number || error("edgewidth should be numerical")
+        valtype(edge_width) <: Number || error("edge_width should be numerical")
         return :by_edge
     else
         throw(
             ArgumentError(
-                "edgewidth should be a number or an AbstractDict with numerical values.",
+                "edge_width should be a number or an AbstractDict with numerical values.",
             ),
         )
     end
@@ -196,60 +212,38 @@ function resolve_phylo_plot_attributes(;
     )
 end
 
-function bridge_phylo_plot_attributes(
-    attributes::PhyloPlotAttributes;
-    x_limits=attributes.x_limits,
-    y_limits=attributes.y_limits,
-)::PlotKeywordSpec
-    edge_color_mode = attributes.edge_color isa AbstractDict ? :by_edge : :uniform
-    default_edge_color = _resolve_default_edge_color(
-        attributes.edge_color,
-        attributes.default_edge_color,
-        edge_color_mode,
-    )
-    edge_width_mode = _resolve_edge_width_mode(attributes.edge_width)
-
-    layout = PlotKeywordLayout(
+function with_phylo_plot_limits(
+    attributes::PhyloPlotAttributes,
+    x_limits,
+    y_limits,
+)::PhyloPlotAttributes
+    return PhyloPlotAttributes(
         attributes.use_edge_lengths,
-        attributes.style,
-        x_limits,
-        y_limits,
-        attributes.tip_label_offset,
-        true,
-    )
-    visibility = PlotKeywordVisibility(
         attributes.show_tip_labels,
+        attributes.show_internal_node_names,
         attributes.show_node_numbers,
         attributes.show_edge_lengths,
-        attributes.show_gamma,
         attributes.show_edge_numbers,
-        attributes.show_internal_node_names,
-    )
-    annotations = PlotKeywordAnnotations(
-        attributes.edge_annotations,
-        attributes.node_annotations,
-        attributes.tip_label_scale,
-        attributes.node_annotation_scale,
-        attributes.edge_annotation_scale,
-        attributes.edge_annotation_align,
-        attributes.node_annotation_align,
-    )
-    colors = PlotKeywordColors(
-        edge_color_mode,
+        attributes.show_gamma,
         attributes.edge_color,
-        default_edge_color,
+        attributes.default_edge_color,
         attributes.major_hybrid_edge_color,
         attributes.minor_hybrid_edge_color,
-        "grey",
-        attributes.edge_annotation_color,
-        attributes.node_annotation_color,
-    )
-    strokes = PlotKeywordStrokes(
-        attributes.minor_edge_arrow_length,
-        attributes.minor_edge_linestyle,
-        edge_width_mode,
         attributes.edge_width,
+        attributes.minor_edge_linestyle,
+        attributes.minor_edge_arrow_length,
+        attributes.node_annotations,
+        attributes.edge_annotations,
+        attributes.node_annotation_scale,
+        attributes.edge_annotation_scale,
+        attributes.node_annotation_color,
+        attributes.edge_annotation_color,
+        attributes.node_annotation_align,
+        attributes.edge_annotation_align,
+        attributes.tip_label_offset,
+        attributes.tip_label_scale,
+        x_limits,
+        y_limits,
+        attributes.style,
     )
-
-    return PlotKeywordSpec(layout, visibility, annotations, colors, strokes, ())
 end

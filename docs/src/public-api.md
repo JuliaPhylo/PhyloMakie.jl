@@ -10,8 +10,11 @@ the primary Makie surfaces, while `phyloplot` and `phyloplot!` remain thin
 generated convenience surfaces over the same owner.
 
 Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
-rejected at the recipe boundary. The live tranche-5 public attribute set is
-rendered below from `VERIFICATION_FOUNDATION`.
+rejected at the recipe boundary. Internally, the public owner resolves one
+`PhyloPlotAttributes` payload, passes it directly to the helper and render
+owners, and stores it on the returned plot as `resolved_attributes`. The live
+tranche-5 public attribute set is rendered below from
+`VERIFICATION_FOUNDATION`.
 
 ## Live public attribute set
 

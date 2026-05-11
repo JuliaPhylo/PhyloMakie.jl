@@ -10,18 +10,12 @@ function _deprecated_phylo_plot_attribute_message(legacy::Symbol, public_name)
     return "Use `$(public_name)`."
 end
 
-function _public_limit_error_message(helper_message::String, public_name::String)::String
-    first_space = findfirst(isequal(' '), helper_message)
-    isnothing(first_space) && return public_name
-    return string(public_name, helper_message[first_space:end])
-end
-
-function _validate_public_limits(limit, helper_message::String, public_name::String)
+function _validate_public_limits(limit, helper_message::String)
     if isnothing(limit)
         return nothing
     end
     if !applicable(length, limit) || length(limit) != 2
-        error(_public_limit_error_message(helper_message, public_name))
+        error(helper_message)
     end
     return limit
 end
@@ -103,24 +97,22 @@ function Makie.plot!(plot::PhyloPlot)
     )
 
     net = deepcopy(Makie.to_value(plot[:net]))
-    provisional_spec = bridge_phylo_plot_attributes(attributes; x_limits=nothing, y_limits=nothing)
-    layout = prepare_plot_layout(net, provisional_spec)
+    layout = prepare_plot_layout(net, attributes; preorder=true)
     validated_x_limits = _validate_public_limits(
         attributes.x_limits,
-        layout.bounds.xlim_error_message,
-        "x_limits",
+        layout.bounds.x_limits_error_message,
     )
     validated_y_limits = _validate_public_limits(
         attributes.y_limits,
-        layout.bounds.ylim_error_message,
-        "y_limits",
+        layout.bounds.y_limits_error_message,
     )
-    spec = bridge_phylo_plot_attributes(
-        attributes;
-        x_limits=validated_x_limits,
-        y_limits=validated_y_limits,
+    resolved_attributes = with_phylo_plot_limits(
+        attributes,
+        validated_x_limits,
+        validated_y_limits,
     )
-    layers = render_plot!(plot, net, spec, layout)
+    layers = render_plot!(plot, net, resolved_attributes, layout)
+    plot[:resolved_attributes] = resolved_attributes
     plot[:resolved_layout] = layout
     plot[:render_layers] = layers
     return plot

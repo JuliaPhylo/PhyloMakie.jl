@@ -8,10 +8,10 @@ CurrentModule = PhyloMakie
 user surface on a Makie-native stack.
 
 This repository snapshot now contains the tranche-1 verification foundation,
-the tranche-2 compatibility keyword owner, the tranche-3 layout and annotation
-owners, the tranche-4 Makie render owner, and the tranche-5 Makie-native
-public recipe owner. The package now exposes one public Makie recipe path that
-drives:
+the tranche-3 layout and annotation owners, the tranche-4 Makie render owner,
+the tranche-5 Makie-native public recipe owner, and the tranche-6 runtime
+carrier realignment that removed the old compatibility shell. The package now
+exposes one public Makie recipe path that drives:
 
 - `plot(net)`
 - `plot!(ax, net)`
@@ -21,8 +21,7 @@ drives:
 ## What the current snapshot establishes
 
 - a thin `PhyloMakie` module shell with a minimal `Makie` import
-- a canonical tranche-5 public attribute owner in `src/public_attribute_model.jl`
-- a tightly local compatibility bridge in `src/keyword_contract.jl` and `src/keyword_normalization.jl`
+- a canonical tranche-6 public attribute owner in `src/public_attribute_model.jl`
 - canonical tranche-3 helper owners in `src/layout_engine.jl` and `src/annotation_data.jl`
 - a canonical tranche-4 render owner in `src/render_adapter.jl`
 - a canonical tranche-5 public recipe owner in `src/public_plot_owner.jl`
@@ -38,9 +37,10 @@ Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
 rejected at the recipe boundary.
 
 The public owner deep-copies the caller-owned `HybridNetwork`, computes one
-`PlotLayout`, bridges locally into `PlotKeywordSpec`, and reuses the internal
-`render_plot!` owner directly. The returned `PhyloPlot` stores `resolved_layout`,
-`render_layers`, and `data_limits` as live artifacts.
+`PlotLayout`, passes the resulting `PhyloPlotAttributes` payload directly into
+the internal `render_plot!` owner, and stores `resolved_attributes`,
+`resolved_layout`, `render_layers`, and `data_limits` as live artifacts on the
+returned `PhyloPlot`.
 
 ## Verification pages
 

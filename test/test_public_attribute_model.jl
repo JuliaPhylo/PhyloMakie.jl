@@ -1,11 +1,12 @@
-using Logging: Warn
 using Makie
 
 @testset "Public attribute model" begin
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
     PhyloPlotAttributes = getfield(PhyloMakie, :PhyloPlotAttributes)
     resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
-    bridge_phylo_plot_attributes = getfield(PhyloMakie, :bridge_phylo_plot_attributes)
+    with_phylo_plot_limits = getfield(PhyloMakie, :with_phylo_plot_limits)
+    resolve_default_edge_color = getfield(PhyloMakie, :_resolve_default_edge_color)
+    resolve_edge_width_mode = getfield(PhyloMakie, :_resolve_edge_width_mode)
     supported_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOPLOT_ATTRIBUTES)
     attribute_migrations = getfield(PhyloMakie, :PHYLOPLOT_ATTRIBUTE_MIGRATIONS)
 
@@ -17,9 +18,8 @@ using Makie
     @test Tuple(entry.attribute for entry in Makie.deprecated_attributes(PhyloPlot)) ==
         EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES
 
-    @testset "Defaults and bridge payload" begin
+    @testset "Defaults and stored payload" begin
         attributes = resolve_phylo_plot_attributes()
-        spec = bridge_phylo_plot_attributes(attributes)
 
         @test attributes isa PhyloPlotAttributes
         @test attributes.use_edge_lengths === false
@@ -50,18 +50,14 @@ using Makie
         @test attributes.y_limits === nothing
         @test attributes.style == :fulltree
 
-        @test spec.layout.useedgelength === false
-        @test spec.layout.xlim === nothing
-        @test spec.layout.ylim === nothing
-        @test spec.layout.preorder === true
-        @test spec.visibility.showtiplabel === true
-        @test spec.visibility.shownodelabel === false
-        @test spec.colors.edgecolor_mode == :uniform
-        @test spec.colors.defaultedgecolor == "black"
-        @test spec.colors.edgenumbercolor == "grey"
-        @test spec.strokes.arrowlen == 0.1
-        @test spec.strokes.minorlinetype == "longdash"
-        @test spec.deferred_contracts == ()
+        resolved_limits = with_phylo_plot_limits(attributes, (0.0, 5.0), (1.0, 4.0))
+        @test resolved_limits isa PhyloPlotAttributes
+        @test resolved_limits !== attributes
+        @test resolved_limits.x_limits == (0.0, 5.0)
+        @test resolved_limits.y_limits == (1.0, 4.0)
+        @test resolved_limits.edge_color == attributes.edge_color
+        @test resolved_limits.node_annotations === attributes.node_annotations
+        @test resolved_limits.edge_annotations === attributes.edge_annotations
     end
 
     @testset "Style-dependent defaults" begin
@@ -79,39 +75,46 @@ using Makie
     end
 
     @testset "Color and width policy" begin
-        scalar_spec = bridge_phylo_plot_attributes(
-            resolve_phylo_plot_attributes(
-                edge_color="tomato4",
-                major_hybrid_edge_color="tan",
-                minor_hybrid_edge_color="skyblue",
-            ),
+        scalar_attributes = resolve_phylo_plot_attributes(
+            edge_color="tomato4",
+            major_hybrid_edge_color="tan",
+            minor_hybrid_edge_color="skyblue",
         )
-        @test scalar_spec.colors.edgecolor_mode == :uniform
-        @test scalar_spec.colors.edgecolor == "tomato4"
-        @test scalar_spec.colors.defaultedgecolor == "tomato4"
-        @test scalar_spec.colors.majorhybridedgecolor == "tan"
-        @test scalar_spec.colors.minorhybridedgecolor == "skyblue"
+        @test scalar_attributes.edge_color == "tomato4"
+        @test scalar_attributes.major_hybrid_edge_color == "tan"
+        @test scalar_attributes.minor_hybrid_edge_color == "skyblue"
+        @test resolve_default_edge_color(
+            scalar_attributes.edge_color,
+            scalar_attributes.default_edge_color,
+            :uniform,
+        ) == "tomato4"
+        @test resolve_edge_width_mode(scalar_attributes.edge_width) == :uniform
 
-        dict_spec = bridge_phylo_plot_attributes(
-            resolve_phylo_plot_attributes(
-                edge_color=Dict(1 => "tomato4", 3 => "tan"),
-                default_edge_color=nothing,
-                edge_width=Dict(1 => 2.0, 3 => 4.5),
-            ),
+        dict_attributes = resolve_phylo_plot_attributes(
+            edge_color=Dict(1 => "tomato4", 3 => "tan"),
+            default_edge_color=nothing,
+            edge_width=Dict(1 => 2.0, 3 => 4.5),
         )
-        @test dict_spec.colors.edgecolor_mode == :by_edge
-        @test dict_spec.colors.edgecolor == Dict(1 => "tomato4", 3 => "tan")
-        @test dict_spec.colors.defaultedgecolor == "black"
-        @test dict_spec.strokes.edgewidth_mode == :by_edge
-        @test dict_spec.strokes.edgewidth == Dict(1 => 2.0, 3 => 4.5)
+        @test dict_attributes.edge_color == Dict(1 => "tomato4", 3 => "tan")
+        @test dict_attributes.default_edge_color === nothing
+        @test dict_attributes.edge_width == Dict(1 => 2.0, 3 => 4.5)
+        @test resolve_default_edge_color(
+            dict_attributes.edge_color,
+            dict_attributes.default_edge_color,
+            :by_edge,
+        ) == "black"
+        @test resolve_edge_width_mode(dict_attributes.edge_width) == :by_edge
 
-        custom_default_spec = bridge_phylo_plot_attributes(
-            resolve_phylo_plot_attributes(
-                edge_color=Dict(1 => "tomato4"),
-                default_edge_color="grey20",
-            ),
+        custom_default_attributes = resolve_phylo_plot_attributes(
+            edge_color=Dict(1 => "tomato4"),
+            default_edge_color="grey20",
         )
-        @test custom_default_spec.colors.defaultedgecolor == "grey20"
+        @test custom_default_attributes.default_edge_color == "grey20"
+        @test resolve_default_edge_color(
+            custom_default_attributes.edge_color,
+            custom_default_attributes.default_edge_color,
+            :by_edge,
+        ) == "grey20"
 
         invalid_width_error = try
             resolve_phylo_plot_attributes(edge_width=Dict(1 => "wide"))
@@ -120,10 +123,19 @@ using Makie
             err
         end
         @test invalid_width_error isa ErrorException
-        @test invalid_width_error.msg == "edgewidth should be numerical"
+        @test invalid_width_error.msg == "edge_width should be numerical"
+
+        invalid_width_type = try
+            resolve_phylo_plot_attributes(edge_width="wide")
+            nothing
+        catch err
+            err
+        end
+        @test invalid_width_type isa ArgumentError
+        @test occursin("edge_width should be a number", sprint(showerror, invalid_width_type))
     end
 
-    @testset "DataFrame ownership and deferred limit validation" begin
+    @testset "DataFrame ownership" begin
         node_annotations = DataFrame(
             node=[-5, missing, 100],
             label=["90", "99", "bogus"],
@@ -134,24 +146,17 @@ using Makie
         )
         x_limits = [1.0, 2.0, 3.0]
 
-        @test_logs min_level=Warn begin
-            attributes = resolve_phylo_plot_attributes(
-                node_annotations=node_annotations,
-                edge_annotations=edge_annotations,
-                x_limits=x_limits,
-            )
-            @test attributes.node_annotations isa DataFrame
-            @test attributes.edge_annotations isa DataFrame
-            @test isequal(attributes.node_annotations, node_annotations)
-            @test isequal(attributes.edge_annotations, edge_annotations)
-            @test attributes.node_annotations !== node_annotations
-            @test attributes.edge_annotations !== edge_annotations
-            @test attributes.x_limits === x_limits
-
-            spec = bridge_phylo_plot_attributes(attributes)
-            @test spec.annotations.nodelabel === attributes.node_annotations
-            @test spec.annotations.edgelabel === attributes.edge_annotations
-            @test spec.layout.xlim === x_limits
-        end
+        attributes = resolve_phylo_plot_attributes(
+            node_annotations=node_annotations,
+            edge_annotations=edge_annotations,
+            x_limits=x_limits,
+        )
+        @test attributes.node_annotations isa DataFrame
+        @test attributes.edge_annotations isa DataFrame
+        @test isequal(attributes.node_annotations, node_annotations)
+        @test isequal(attributes.edge_annotations, edge_annotations)
+        @test attributes.node_annotations !== node_annotations
+        @test attributes.edge_annotations !== edge_annotations
+        @test attributes.x_limits === x_limits
     end
 end

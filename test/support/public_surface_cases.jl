@@ -1,35 +1,3 @@
-const EXPECTED_SUPPORTED_PLOT_KEYWORDS = (
-    :useedgelength,
-    :showtiplabel,
-    :shownodenumber,
-    :showedgelength,
-    :showgamma,
-    :edgecolor,
-    :majorhybridedgecolor,
-    :minorhybridedgecolor,
-    :defaultedgecolor,
-    :showedgenumber,
-    :shownodelabel,
-    :edgelabel,
-    :nodelabel,
-    :xlim,
-    :ylim,
-    :tipoffset,
-    :tipcex,
-    :nodecex,
-    :edgecex,
-    :style,
-    :arrowlen,
-    :minorlinetype,
-    :edgewidth,
-    :edgenumbercolor,
-    :edgelabelcolor,
-    :nodelabelcolor,
-    :edgelabeladj,
-    :nodelabeladj,
-    :preorder,
-)
-
 const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :use_edge_lengths,
     :show_tip_labels,
@@ -89,20 +57,4 @@ const EXPECTED_DEPRECATED_PHYLOPLOT_ATTRIBUTES = (
     :ylim,
     :edgenumbercolor,
     :preorder,
-)
-
-const EXPECTED_PLOT_KEYWORD_SPEC_FIELDS = (
-    :layout,
-    :visibility,
-    :annotations,
-    :colors,
-    :strokes,
-    :deferred_contracts,
-)
-
-const EXPECTED_DEFERRED_PLOT_CONTRACT_IDS = (
-    :edgelabel_public_surface_proof,
-    :nodelabel_public_surface_proof,
-    :xlim_public_surface_proof,
-    :ylim_public_surface_proof,
 )
