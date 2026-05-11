@@ -1,7 +1,7 @@
 ---
 date-created: 2026-05-11T00:38:07
 workflow-instrument: PRD
-workflow-status: Proposed
+workflow-status: Approved
 workflow-agent-thread-id: codex/019e15e4-4295-7a21-9f88-b3f615b795d0
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: crimson-cedar-bridge
@@ -24,7 +24,9 @@ Confirmed user clarifications on 2026-05-11:
   current API. Do not mention the current API in docs or as a legacy artifact.
 - The current migration table or layer may become redundant, but it must not be
   the focus or center of the work. The brief is centered on renaming the API:
-  old name to new name.
+  old name to new name. The table or code associated with it may be changed or 
+  removed if it blocks or interferes the rename. If the table becomes 
+  redundant you may note once the codebase reaches the state.
 - The supported plotting entry surfaces remain fixed: `plot(net)`,
   `plot!(ax, net)`, `phyloplot(net)`, and `phyloplot!(ax, net)`.
 - `style` remains the public style attribute for `:fulltree` and `:majortree`.
