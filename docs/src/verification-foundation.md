@@ -4,13 +4,13 @@ CurrentModule = PhyloMakie
 
 # Verification foundation
 
-Tranche 6 closes the compatibility-shell retirement on top of the tranche-1
-verification foundation, the tranche-3 layout and annotation owners, the
-tranche-4 render owner, and the tranche-5 Makie-native public owner.
+This page renders the source-backed verification owner for final package
+closure. If `PhyloMakie.VERIFICATION_FOUNDATION` drifts, the page should fail
+to build instead of silently preserving stale package claims.
 
-The tables below are rendered from `PhyloMakie.VERIFICATION_FOUNDATION`. If
-the source-side owner drifts or disappears, this page should fail to build
-instead of silently going stale.
+The final lock items are the package-closure locks from the PRD: capability
+parity without API mimicry, Makie composability and host-framework semantics,
+honest docs and migration surface, and honest verification surface.
 
 ## Target public surfaces
 
@@ -20,13 +20,13 @@ using PhyloMakie
 
 foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 rows = [
-    "| Target surface | Implemented | Direct proof deferred | Proof owner | Docs visibility |",
+    "| Target surface | Implemented | Proof owner | Proof artifact | Docs visibility |",
     "| --- | --- | --- | --- | --- |",
 ]
 for surface in foundation.target_public_surfaces
     push!(
         rows,
-        "| `$(surface.public_name)` | `$(surface.implemented)` | `$(surface.direct_proof_deferred)` | `Tranche $(surface.direct_proof_owner)` | `$(surface.docs_visibility)` |",
+        "| `$(surface.public_name)` | `$(surface.implemented)` | `$(surface.proof_owner)` | `$(surface.proof_artifact)` | `$(surface.docs_visibility)` |",
     )
 end
 Markdown.parse(join(rows, "\n"))
@@ -45,6 +45,23 @@ rows = [
 ]
 for item in foundation.lock_items
     push!(rows, "| `$(item.number)` | $(item.title) |")
+end
+Markdown.parse(join(rows, "\n"))
+```
+
+## Package truth surfaces
+
+```@eval
+using Markdown
+using PhyloMakie
+
+foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
+rows = [
+    "| Surface | Path | Role |",
+    "| --- | --- | --- |",
+]
+for surface in foundation.package_truth_surfaces
+    push!(rows, "| `$(surface.id)` | `$(surface.path)` | $(surface.role) |")
 end
 Markdown.parse(join(rows, "\n"))
 ```
@@ -153,13 +170,13 @@ using PhyloMakie
 
 foundation = getfield(PhyloMakie, :VERIFICATION_FOUNDATION)
 rows = [
-    "| Scenario ID | Direct proof owner | Closure status | Source |",
-    "| --- | --- | --- | --- |",
+    "| Scenario ID | Capability | Makie-native surface | Proof owner | Docs proof surface |",
+    "| --- | --- | --- | --- | --- |",
 ]
 for (scenario_id, scenario) in pairs(foundation.accepted_design_scenarios)
     push!(
         rows,
-        "| `:$(scenario_id)` | `Tranche $(scenario.direct_proof_owner)` | `$(scenario.closure_status)` | `$(scenario.source)` |",
+        "| `:$(scenario_id)` | $(scenario.migration_label) | `$(scenario.public_surface)` | `$(scenario.proof_owner)` | `$(scenario.docs_proof_surface)` |",
     )
 end
 Markdown.parse(join(rows, "\n"))

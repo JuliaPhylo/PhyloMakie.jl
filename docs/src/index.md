@@ -4,46 +4,71 @@ CurrentModule = PhyloMakie
 
 # PhyloMakie
 
-`PhyloMakie.jl` is rebuilding the `PhyloPlots.plot(::PhyloNetworks.HybridNetwork; ...)`
-user surface on a Makie-native stack.
-
-This repository snapshot now contains the tranche-1 verification foundation,
-the tranche-3 layout and annotation owners, the tranche-4 Makie render owner,
-the tranche-5 Makie-native public recipe owner, and the tranche-6 runtime
-carrier realignment that removed the old compatibility shell. The package now
-exposes one public Makie recipe path that drives:
+PhyloMakie is a Makie-native plotting package for phylogenetic trees and
+networks stored as `PhyloNetworks.HybridNetwork`. It preserves the plotting
+capabilities that make `PhyloPlots.plot` useful, but it teaches Makie-native
+entry surfaces first:
 
 - `plot(net)`
 - `plot!(ax, net)`
 - `phyloplot(net)`
 - `phyloplot!(ax, net)`
 
-## What the current snapshot establishes
+## What PhyloMakie provides
 
-- a thin `PhyloMakie` module shell with a minimal `Makie` import
-- a canonical tranche-6 public attribute owner in `src/public_attribute_model.jl`
-- canonical tranche-3 helper owners in `src/layout_engine.jl` and `src/annotation_data.jl`
-- a canonical tranche-4 render owner in `src/render_adapter.jl`
-- a canonical tranche-5 public recipe owner in `src/public_plot_owner.jl`
-- a canonical source-side verification owner in `VERIFICATION_FOUNDATION`
-- a canonical test-side fixture corpus and direct local regression suites for helper behavior
-- a repo-owned tranche-4 Makie source-set note and live public/render verification docs
+- full-tree and major-tree styles
+- edge-length-aware layout
+- gamma display for hybrid edges
+- node and edge annotations through the supported public attribute surface
+- color, width, linestyle, and explicit limit controls
+- plotting into a new figure or an existing axis without hidden current-axis state
 
-## Public surface
+## Installation
 
-The tranche-5 public attribute surface is the exact snake_case set recorded in
+This repository currently documents GitHub-based installation only. It does
+not claim General-registry installation.
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
+```
+
+## First plot
+
+```julia
+using CairoMakie
+using PhyloMakie
+using PhyloNetworks: readnewick
+
+net = readnewick(
+    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+)
+
+plot(
+    net;
+    use_edge_lengths = true,
+    show_gamma = true,
+    show_tip_labels = true,
+    style = :fulltree,
+)
+```
+
+## What changes for migrating PhyloPlots users
+
+PhyloMakie does not keep the legacy keyword shell as its public contract.
+Migration support lives in package-owned docs instead:
+
+- [Migration guide](migration-guide.md)
+- [Public API](public-api.md)
+
+The supported public attribute surface is the exact snake_case set recorded in
 `VERIFICATION_FOUNDATION.public_attribute_owner.supported_public_attributes`.
-Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
-rejected at the recipe boundary.
+Legacy spellings such as `showtiplabel`, `xlim`, `ylim`, `nodelabel`,
+`edgelabel`, `edgecolor`, and `preorder` are rejected at the recipe boundary.
 
-The public owner deep-copies the caller-owned `HybridNetwork`, computes one
-`PlotLayout`, passes the resulting `PhyloPlotAttributes` payload directly into
-the internal `render_plot!` owner, and stores `resolved_attributes`,
-`resolved_layout`, `render_layers`, and `data_limits` as live artifacts on the
-returned `PhyloPlot`.
-
-## Verification pages
+## Learn more
 
 - [Public API](public-api.md)
+- [Migration guide](migration-guide.md)
 - [Verification foundation](verification-foundation.md)
 - [Render verification](render-verification.md)

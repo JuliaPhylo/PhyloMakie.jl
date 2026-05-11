@@ -10,6 +10,7 @@
         :layout_annotation_owner,
         :render_owner,
         :public_plot_owner,
+        :package_truth_surfaces,
         :accepted_design_scenarios,
         :upstream_helper_regressions,
         :green_state_gates,
@@ -28,8 +29,8 @@
 
         for surface in foundation.target_public_surfaces
             @test surface.implemented === true
-            @test surface.direct_proof_deferred === false
-            @test surface.direct_proof_owner == 5
+            @test surface.proof_owner == :test_public_plot_owner
+            @test surface.proof_artifact == "test/test_public_plot_owner.jl"
         end
 
         @test foundation.target_public_surfaces[1].docs_visibility ==
@@ -39,15 +40,13 @@
     end
 
     @testset "Lock items" begin
-        @test length(foundation.lock_items) == 6
-        @test [item.number for item in foundation.lock_items] == collect(1:6)
+        @test length(foundation.lock_items) == 4
+        @test [item.number for item in foundation.lock_items] == [2, 5, 6, 7]
         @test [item.title for item in foundation.lock_items] == [
-            "Compatibility shell retirement",
-            "Single public-owner continuity during cleanup",
-            "Layout and annotation invariants survive the owner migration",
-            "Render invariants and Makie host semantics survive the owner migration",
-            "Verification metadata and shell tests reject compatibility-shell regrowth",
-            "Docs truth surfaces no longer teach or require the compatibility shell",
+            "Capability parity without API mimicry",
+            "Makie composability and host-framework semantics",
+            "Honest docs and migration surface",
+            "Honest verification surface",
         ]
     end
 
@@ -193,15 +192,29 @@
             "test/test_public_attribute_model.jl",
             "test/test_public_plot_owner.jl",
         )
-        @test owner.docs_surface == (
-            "docs/src/index.md",
-            "docs/src/public-api.md",
-            "docs/src/verification-foundation.md",
-        )
         @test owner.caller_owned_network_boundary ==
             "deepcopy(Makie.to_value(plot[:net]))"
         @test owner.reviewer_gate.clear isa String
         @test owner.reviewer_gate.reject isa String
+    end
+
+    @testset "Package truth surfaces" begin
+        @test [surface.id for surface in foundation.package_truth_surfaces] == [
+            :readme,
+            :home,
+            :public_api,
+            :migration_guide,
+            :verification_foundation,
+            :render_verification,
+        ]
+        @test [surface.path for surface in foundation.package_truth_surfaces] == [
+            "README.md",
+            "docs/src/index.md",
+            "docs/src/public-api.md",
+            "docs/src/migration-guide.md",
+            "docs/src/verification-foundation.md",
+            "docs/src/render-verification.md",
+        ]
     end
 
     @testset "Scenario inventories" begin
@@ -215,13 +228,17 @@
             :edgecolor_dict_fallback,
             :composable_dual_axes,
         )
-        @test foundation.accepted_design_scenarios.useedgelength_scaling.closure_status ==
-            :closed_layout_annotation_owner
-        @test foundation.accepted_design_scenarios.edgecolor_dict_fallback.closure_status ==
-            :closed_render_owner
-        @test foundation.accepted_design_scenarios.composable_dual_axes.direct_proof_owner == 5
-        @test foundation.accepted_design_scenarios.composable_dual_axes.closure_status ==
-            :closed_public_surface_proof
+        for scenario in values(foundation.accepted_design_scenarios)
+            @test scenario.proof_owner == :test_public_plot_owner
+            @test scenario.proof_artifact == "test/test_public_plot_owner.jl"
+            @test scenario.docs_proof_surface in (
+                "docs/src/public-api.md",
+                "docs/src/render-verification.md",
+            )
+            @test scenario.migration_label isa String
+            @test scenario.public_surface isa String
+            @test scenario.migration_guidance isa String
+        end
         @test propertynames(foundation.upstream_helper_regressions) == (
             :edgenode_coords_with_lengths_fulltree,
             :edgenode_coords_with_lengths_majortree,
@@ -279,31 +296,28 @@
             :docs_build,
         ]
         @test [state.id for state in foundation.current_status] == [
-            :dependency_activation_closed,
-            :render_owner_closed,
-            :public_attribute_surface_established,
-            :public_plot_owner_established,
-            :runtime_carrier_realigned,
-            :compatibility_shell_retired,
-            :truth_surface_realigned,
+            :public_entry_surfaces_live,
+            :runtime_carrier_live,
+            :package_tests_green,
+            :docs_build_green,
+            :docs_and_migration_surface_closed,
+            :verification_surface_closed,
         ]
         @test [state.status for state in foundation.current_status] == [
-            :closed_in_tranche_4,
-            :closed_in_tranche_4,
-            :closed_in_tranche_5,
-            :closed_in_tranche_5,
-            :closed_in_tranche_6,
-            :closed_in_tranche_6,
-            :closed_in_tranche_6,
+            :verified_on_2026_05_10,
+            :verified_on_2026_05_10,
+            :verified_on_2026_05_10,
+            :verified_on_2026_05_10,
+            :closed_in_tranche_7,
+            :closed_in_tranche_7,
         ]
     end
 
     @testset "Stop conditions" begin
         @test [stop_condition.id for stop_condition in foundation.stop_conditions] == [
-            :single_recipe_owner_breaks_down,
-            :legacy_public_spellings_reappear,
-            :caller_owned_mutation_returns,
-            :shadow_runtime_carrier_returns,
+            :legacy_names_needed_for_docs_closure,
+            :api_broadening_needed_for_docs_closure,
+            :post_tranche_6_baseline_missing,
             :proof_collapses_to_text_policing,
         ]
     end

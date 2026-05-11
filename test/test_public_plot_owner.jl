@@ -48,6 +48,31 @@ function _resolved_attributes(plot)
     return Makie.to_value(plot[:resolved_attributes])
 end
 
+function _geometry_tuple(geometry)
+    return (
+        geometry.edge_x_lo,
+        geometry.edge_x_hi,
+        geometry.edge_y_lo,
+        geometry.edge_y_hi,
+        geometry.node_x,
+        geometry.node_y,
+        geometry.node_y_lo,
+        geometry.node_y_hi,
+        geometry.arrow_x_lo,
+        geometry.arrow_x_hi,
+        geometry.arrow_y_lo,
+        geometry.arrow_y_hi,
+        geometry.xmin,
+        geometry.xmax,
+        geometry.ymin,
+        geometry.ymax,
+    )
+end
+
+function _rgba(value)
+    return convert(Makie.RGBAf, Makie.to_color(value))
+end
+
 @testset "Public plot owner" begin
     CairoMakie.activate!()
 
@@ -211,6 +236,117 @@ end
         @test preorder_error isa ArgumentError
         @test occursin("preorder", sprint(showerror, preorder_error))
         @test occursin("not accepted", sprint(showerror, preorder_error))
+    end
+
+    @testset "Accepted design scenario public proof" begin
+        @testset ":simple_tree_no_hybrid" begin
+            scenario = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
+            surface = Makie.plot(readnewick(scenario.newick); style=:fulltree)
+            layers = _render_layers(surface.plot)
+
+            @test layers.minor_edge_shafts.plot === nothing
+            @test isempty(layers.minor_edge_tips.plots)
+            @test isempty(layers.minor_gamma_labels.strings)
+            @test isempty(layers.major_gamma_labels.strings)
+            @test !isempty(_plot_colorbuffer(surface.figure))
+        end
+
+        @testset ":single_reticulation_gamma and :showgamma_rendering" begin
+            scenario = FIXTURE_CORPUS.accepted_design_scenarios.single_reticulation_gamma
+            surface = Makie.plot(
+                readnewick(scenario.newick);
+                use_edge_lengths=true,
+                show_gamma=true,
+                style=:fulltree,
+            )
+            layers = _render_layers(surface.plot)
+            attributes = _resolved_attributes(surface.plot)
+
+            @test layers.minor_edge_shafts.plot !== nothing
+            @test !isempty(layers.minor_edge_tips.plots)
+            @test !isempty(layers.minor_gamma_labels.strings)
+            @test !isempty(layers.major_gamma_labels.strings)
+            @test layers.minor_gamma_labels.colors ==
+                fill(_rgba(attributes.minor_hybrid_edge_color), length(layers.minor_gamma_labels.strings))
+            @test layers.major_gamma_labels.colors ==
+                fill(_rgba(attributes.major_hybrid_edge_color), length(layers.major_gamma_labels.strings))
+        end
+
+        @testset ":style_distinction_fulltree_vs_majortree" begin
+            scenario = FIXTURE_CORPUS.accepted_design_scenarios.style_distinction_fulltree_vs_majortree
+            fulltree_surface = Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:fulltree)
+            majortree_surface = Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:majortree)
+            fulltree_layers = _render_layers(fulltree_surface.plot)
+            majortree_layers = _render_layers(majortree_surface.plot)
+
+            @test fulltree_layers.resolved_style == :fulltree
+            @test majortree_layers.resolved_style == :majortree
+            @test fulltree_layers.minor_edge_shafts.linestyle == :dash
+            @test majortree_layers.minor_edge_shafts.linestyle == :solid
+            @test _plot_colorbuffer(fulltree_surface.figure) != _plot_colorbuffer(majortree_surface.figure)
+        end
+
+        @testset ":useedgelength_scaling" begin
+            layout_case = FIXTURE_CORPUS.layout_regression_cases.with_lengths_fulltree
+            surface = Makie.plot(readnewick(layout_case.newick); layout_case.attribute_kwargs...)
+
+            @test _geometry_tuple(_resolved_layout(surface.plot).geometry) == layout_case.expected
+        end
+
+        @testset ":dataframe_label_rendering" begin
+            annotation_case = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits
+            node_annotations =
+                _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
+            edge_annotations =
+                _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
+            surface = Makie.plot(
+                readnewick(annotation_case.newick);
+                annotation_case.attribute_kwargs...,
+                node_annotations=node_annotations,
+                edge_annotations=edge_annotations,
+                x_limits=annotation_case.x_limits,
+                y_limits=annotation_case.y_limits,
+            )
+            layout = _resolved_layout(surface.plot)
+            layers = _render_layers(surface.plot)
+            node_data = layout.annotations.node_data
+            edge_data = layout.annotations.edge_data
+
+            @test layers.node_annotations.strings == String.(node_data[!, :lab])
+            @test layers.node_annotations.positions ==
+                _node_channel_positions(layout, axes(node_data, 1))
+            @test layers.edge_annotations.strings == String.(edge_data[!, :lab])
+            @test layers.edge_annotations.positions ==
+                _edge_channel_positions(layout, axes(edge_data, 1))
+        end
+
+        @testset ":edgecolor_dict_fallback" begin
+            scenario = FIXTURE_CORPUS.accepted_design_scenarios.edgecolor_dict_fallback
+            render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
+            edge_color = Dict(scenario.edge_color_overrides)
+            edge_width = Dict(render_case.edge_width_overrides)
+            surface = Makie.plot(
+                readnewick(scenario.newick);
+                use_edge_lengths=true,
+                show_gamma=true,
+                edge_color=edge_color,
+                default_edge_color=scenario.default_edge_color,
+                edge_width=edge_width,
+                style=:fulltree,
+            )
+            layers = _render_layers(surface.plot)
+            expected_minor_widths = Float64[]
+            for edge in readnewick(scenario.newick).edge
+                if !edge.ismajor
+                    push!(expected_minor_widths, Float64(get(edge_width, edge.number, 1.0)))
+                end
+            end
+
+            @test length(unique(layers.edge_segments.colors)) > 1
+            @test layers.node_bars.colors ==
+                fill(_rgba(scenario.default_edge_color), length(layers.node_bars.colors))
+            @test layers.minor_edge_shafts.linewidths == expected_minor_widths
+        end
     end
 
     @testset "Dual-axis composition proof" begin

@@ -15,6 +15,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Public API" => "public-api.md",
+        "Migration guide" => "migration-guide.md",
         "Verification foundation" => "verification-foundation.md",
         "Render verification" => "render-verification.md",
     ],
