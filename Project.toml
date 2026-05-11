@@ -1,7 +1,11 @@
 name = "PhyloMakie"
 uuid = "ccbd7354-87c9-452d-961c-17247803ee9f"
 version = "0.1.0"
-authors = ["Jeet Sukumaran <jeetsukumaran@gmail.com>"]
+authors = [
+    "Cecile Ane <cecile.ane@wisc.edu>",
+    "Jeet Sukumaran <jeetsukumaran@gmail.com>",
+    "Matthew Andres Moreno <morenoma@umich.edu>"
+]
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
