@@ -1,8 +1,11 @@
 ---
 date-created: 2026-05-10T18:29:38-07:00
+date-updated: 2026-05-10T21:00:00-07:00
 workflow-instrument: Postmortem
 workflow-status: Approved
-authoring-agent-thread-id: 019e0c2f-337d-7973-b124-418e4b1c05e3
+authoring-agent-thread-id:
+  - 019e0c2f-337d-7973-b124-418e4b1c05e3
+  - claude-sonnet-4-6-evaluation-20260510T2100-07:00
 workflow-production-id: 202605090307_phylomakie-makie-rebuild
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-prd: .workflow-docs/202605090307_phylomakie-makie-rebuild/01_prd.md
@@ -35,9 +38,16 @@ The clean-port target is clear in the revised design brief and PRD:
 
 Evidence:
 
-- `design/prod01-vision.md`
-- `design/prod01-vision-supplement.md`
-- `.workflow-docs/202605090307_phylomakie-makie-rebuild/01_prd.md`
+- `design/prod01-vision.md` (revised in commit d13faf2, 2026-05-10)
+- `design/prod01-vision-supplement.md` (revised in commit d13faf2, 2026-05-10)
+- `.workflow-docs/202605090307_phylomakie-makie-rebuild/01_prd.md` (revised in commit d13faf2, 2026-05-10)
+
+**Note (added by evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+All three evidence documents are the *revised* versions. `design/prod01-vision-supplement.md`
+in its original form (commit bbf114c, 2026-05-09T03:01) was itself a primary
+source of the misframing, not evidence against it. Citing the revised supplement
+as ground truth for the clean-port intent without acknowledging its original
+content is an elision. See the amended Finding 1 below.
 
 ## Findings
 
@@ -56,6 +66,28 @@ The revised tranche plan names this explicitly:
 
 That was the decisive misframing.
 
+**Amendment (evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+The decisive misframing preceded tranche 2 by approximately fourteen hours.
+Git history establishes the following sequence:
+
+| Time | Commit | Event |
+|------|--------|-------|
+| 2026-05-09T02:01 | 2e3bf33 | User writes `design/prod01-vision.md`: *"internal API can be designed from the ground up for idiomatic Makie conventions"* but also *"replicated completely"* — genuine ambiguity |
+| 2026-05-09T03:01 | bbf114c | Agent writes `design/prod01-vision-supplement.md`, resolving the ambiguity: *"Its complete keyword surface is the **authoritative specification** for `phyloplot`. Behaviors are non-negotiable."* — this is the actual first wrong step |
+| 2026-05-09T04:14 | ccd0be3 | Agent writes PRD from supplement, enshrining keyword surface parity as Lock item 2 |
+| 2026-05-09T05:15 | 9546506 | Agent writes tranche plan; Tranche 2 titled "Public keyword normalization owner" |
+| 2026-05-09T16:58 | 712c2d8 | Tranche 2 tasking written: *"No Makie-idiom renaming is authorized in tranche 2"* |
+
+Tranche 2 executed faithfully against a plan that was already wrong.
+Attributing the misframing to tranche 2 is accurate as far as it goes, but it
+obscures that the supplement document — agent-authored, written before the PRD
+existed — is where the user's ambiguous brief was converted into a keyword-parity
+mandate. That is the earliest fixable point in the chain.
+
+The supplement also introduced the 29-keyword compliance table that became the
+content of `keyword_contract.jl`. The contract file's entire scope was
+downstream of one interpretive decision made in the supplement.
+
 ### Finding 2: the workflow optimized for keyword continuity after API redesign had already been authorized
 
 The user had already authorized a Makie-native redesign, but the workflow kept
@@ -70,6 +102,29 @@ That substituted the wrong question:
 
 The revised PRD now states this directly by resetting the goal from
 compatibility-first keyword parity to capability parity.
+
+**Amendment (evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+The claim that "the user had already authorized a Makie-native redesign" before
+the compatibility path was set is not fully supported by the git history.
+
+The user's first brief (2e3bf33, 2026-05-09T02:01) was genuinely ambiguous. It
+said both *"internal API can be designed from the ground up"* and *"replicated
+completely."* The authorization for API redesign — made explicit with phrases
+like *"I authorized a new API"* and *"I do not want the user to pretend they are
+using the same package"* — appears in the course correction commit (d13faf2,
+2026-05-10T13:45), not before the supplement was written.
+
+The supplement did not suppress an already-clear instruction. It resolved a
+genuinely ambiguous brief in the wrong direction. This distinction matters for
+how the failure is characterized:
+
+- if the authorization was already clear, the failure is a governance failure
+  (wrong question asked despite correct instruction)
+- if the brief was ambiguous, the failure is an interpretation failure at the
+  pre-PRD gap-closing stage
+
+The git record supports the latter. The supplement agent was filling a real gap,
+but filled it with the wrong answer and locked it in as non-negotiable.
 
 ### Finding 3: tranche 5 tolerated too much transitional debt
 
@@ -123,6 +178,20 @@ The specific mistake was not "using a bridge".
 The specific mistake was treating the bridge as a normal architectural center
 instead of as suspect debt that should die immediately.
 
+**Amendment (evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+More precisely: the earliest identifiable responsible agent is the one that
+authored `design/prod01-vision-supplement.md` (commit bbf114c,
+2026-05-09T03:01). That agent made the interpretive decision that converted an
+ambiguous user brief into an explicit keyword-parity mandate, attached a
+29-keyword compliance table, and marked behaviors as "non-negotiable." Every
+downstream agent — PRD author, tranche planner, tranche 2 tasker, tranche 2
+implementer — operated correctly within the mandate they were given.
+
+The pre-PRD gap-closing stage is therefore the highest-leverage point for
+prevention. It is also the point least covered by existing review gates,
+because gap-closing happens before the PRD exists and therefore before most
+governance checks engage.
+
 ### Secondary responsibility: review and approval layers that did not stop it
 
 Any agent, including me, that reviewed or passed forward the
@@ -134,6 +203,13 @@ The useful corrective sentence is:
 
 "A review gate failed to reject a runtime design whose main job was preserving
 legacy syntax after API redesign had already been authorized."
+
+**Amendment (evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+A secondary failure is that this postmortem's original form cited
+`design/prod01-vision-supplement.md` under "Ground truth" without noting that
+the original supplement was the source of the problem. The revised supplement
+(d13faf2) correctly supports the clean-port target; the original did not. A
+postmortem that does not distinguish these versions is partially self-exculpating.
 
 ### Lower responsibility: execution agents following the wrong plan
 
@@ -167,6 +243,27 @@ Keep it if it remains:
 Do not let tranche 7 absorb any remaining runtime semantic-center work.
 
 ## Concrete project-harness changes
+
+**Amendment (evaluating session claude-sonnet-4-6-evaluation-20260510T2100):**
+One additional change is required, targeting the pre-PRD gap-closing stage
+specifically (see amended Finding 1):
+
+### 0. Require explicit user confirmation before gap-closing documents lock in non-negotiable constraints
+
+Pre-PRD supplement documents (or any equivalent gap-closing artifact) that add
+compliance tables, mark behaviors as "non-negotiable," or enumerate an
+authoritative keyword or API surface must present these to the user for
+explicit confirmation before the PRD treats them as settled.
+
+Gap-closing happens before governance checks engage. It is currently the
+highest-risk stage for misinterpretation of ambiguous user language. An agent
+resolving ambiguity at this stage without a confirmation gate can propagate a
+wrong interpretation through every subsequent document in the chain.
+
+The specific failure mode to prevent: an agent reads an ambiguous phrase
+("replicated completely"), resolves it to the stricter interpretation
+(keyword-surface parity), marks it non-negotiable, and embeds it in a
+supplement that the PRD then treats as authoritative user intent.
 
 ### 1. Require explicit port classification in workflow documents
 
