@@ -23,31 +23,31 @@ const PhyloNetworks = PhyloMakie.PhyloNetworks
 const RENDER_CASES = (
     style_fulltree = (
         newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-        attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+        attribute_kwargs = (useedgelength = true, style = :fulltree),
     ),
     style_majortree = (
         newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-        attribute_kwargs = (use_edge_lengths = true, style = :majortree),
+        attribute_kwargs = (useedgelength = true, style = :majortree),
     ),
     gamma_and_edgecolor = (
         newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-        edge_color_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
-        edge_width_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
-        default_edge_color = "black",
-        attribute_kwargs = (use_edge_lengths = true, style = :fulltree, show_gamma = true),
+        edgecolor_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
+        edgewidth_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
+        defaultedgecolor = "black",
+        attribute_kwargs = (useedgelength = true, style = :fulltree, showgamma = true),
     ),
     annotation_and_limits = (
         newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-        x_limits = (0.0, 6.5),
-        y_limits = (0.0, 5.5),
+        xlim = (0.0, 6.5),
+        ylim = (0.0, 5.5),
         attribute_kwargs = (
-            use_edge_lengths = true,
+            useedgelength = true,
             style = :majortree,
-            show_internal_node_names = true,
-            show_node_numbers = true,
-            show_edge_numbers = true,
-            show_edge_lengths = true,
-            show_gamma = true,
+            shownodelabel = true,
+            shownodenumber = true,
+            showedgenumber = true,
+            showedgelength = true,
+            showgamma = true,
         ),
     ),
 )
@@ -152,7 +152,7 @@ Markdown.parse(
 
 ## Edge-color, gamma-color, and width artifact
 
-This artifact exercises dict-driven `edge_color`, `default_edge_color`,
+This artifact exercises dict-driven `edgecolor`, `defaultedgecolor`,
 major/minor hybrid colors, scalar-versus-dict width handling, and gamma text
 color independence in one live render.
 
@@ -161,9 +161,9 @@ color_fixture = RENDER_CASES.gamma_and_edgecolor # hide
 color_case = build_render_case( # hide
     color_fixture.newick; # hide
     color_fixture.attribute_kwargs..., # hide
-    edge_color=Dict(color_fixture.edge_color_overrides), # hide
-    default_edge_color=color_fixture.default_edge_color, # hide
-    edge_width=Dict(color_fixture.edge_width_overrides), # hide
+    edgecolor=Dict(color_fixture.edgecolor_overrides), # hide
+    defaultedgecolor=color_fixture.defaultedgecolor, # hide
+    edgewidth=Dict(color_fixture.edgewidth_overrides), # hide
 ) # hide
 color_case.figure
 ```
@@ -173,7 +173,7 @@ Markdown.parse(
     """
     | Proof surface | Live value |
     | --- | --- |
-    | Dict override edges | `$(collect(keys(Dict(color_fixture.edge_color_overrides))))` |
+    | Dict override edges | `$(collect(keys(Dict(color_fixture.edgecolor_overrides))))` |
     | Default edge fallback | `$(unique(color_case.layers.node_bars.colors))` |
     | Minor edge colors | `$(unique(color_case.layers.minor_edge_shafts.colors))` |
     | Minor gamma text colors | `$(unique(color_case.layers.minor_gamma_labels.colors))` |
@@ -196,10 +196,10 @@ edge_labels = render_fixture_dataframe(ANNOTATION_ROWS.edgelabel_filtered_rows) 
 annotation_case = build_render_case( # hide
     annotation_fixture.newick; # hide
     annotation_fixture.attribute_kwargs..., # hide
-    node_annotations=node_labels, # hide
-    edge_annotations=edge_labels, # hide
-    x_limits=annotation_fixture.x_limits, # hide
-    y_limits=annotation_fixture.y_limits, # hide
+    nodelabel=node_labels, # hide
+    edgelabel=edge_labels, # hide
+    xlim=annotation_fixture.xlim, # hide
+    ylim=annotation_fixture.ylim, # hide
 ) # hide
 annotation_case.figure
 ```
@@ -209,8 +209,8 @@ Markdown.parse(
     """
     | Proof surface | Live value |
     | --- | --- |
-    | Applied x limits | `$(annotation_case.layers.applied_x_limits)` |
-    | Applied y limits | `$(annotation_case.layers.applied_y_limits)` |
+    | Applied x limits | `$(annotation_case.layers.applied_xlim)` |
+    | Applied y limits | `$(annotation_case.layers.applied_ylim)` |
     | Tip labels | `$(annotation_case.layers.tip_labels.strings)` |
     | Internal node names | `$(annotation_case.layers.internal_node_names.strings)` |
     | Node numbers | `$(annotation_case.layers.node_numbers.strings)` |

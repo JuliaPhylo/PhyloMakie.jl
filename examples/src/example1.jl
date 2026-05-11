@@ -12,8 +12,8 @@ plot(net)
 
 # plot(
 #     net;
-#     use_edge_lengths = true,
-#     show_gamma = true,
-#     show_tip_labels = true,
+#     useedgelength = true,
+#     showgamma = true,
+#     showtiplabel = true,
 #     style = :fulltree,
 # )

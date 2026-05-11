@@ -14,8 +14,8 @@ struct PlotBounds
     xmax::Float64
     ymin::Float64
     ymax::Float64
-    x_limits_error_message::String
-    y_limits_error_message::String
+    xlim_error_message::String
+    ylim_error_message::String
 end
 
 struct PlotAnnotationData
@@ -46,41 +46,41 @@ end
 
 function _validate_node_data(
     net::PhyloNetworks.HybridNetwork,
-    node_annotations::DataFrames.DataFrame,
+    nodelabel::DataFrames.DataFrame,
 )::Tuple{Bool, DataFrames.DataFrame}
-    labelnodes = size(node_annotations, 1) > 0
+    labelnodes = size(nodelabel, 1) > 0
     if labelnodes &&
-       (size(node_annotations, 2) < 2 || !(nonmissingtype(eltype(node_annotations[!, 1])) <: Integer))
-        @warn "node_annotations should have 2+ columns, the first one giving the node numbers (Integer)"
+       (size(nodelabel, 2) < 2 || !(nonmissingtype(eltype(nodelabel[!, 1])) <: Integer))
+        @warn "nodelabel should have 2+ columns, the first one giving the node numbers (Integer)"
         labelnodes = false
     end
     if labelnodes
-        node_annotations = filter(row -> !ismissing(row[1]), node_annotations)
-        labelnodes = size(node_annotations, 1) > 0
+        nodelabel = filter(row -> !ismissing(row[1]), nodelabel)
+        labelnodes = size(nodelabel, 1) > 0
     end
     if labelnodes
-        missing_nodes = setdiff(node_annotations[!, 1], [node.number for node in net.node])
+        missing_nodes = setdiff(nodelabel[!, 1], [node.number for node in net.node])
         if !isempty(missing_nodes)
             message =
-                "Some node numbers in the node_annotations data frame are not found in the network:\n"
+                "Some node numbers in the nodelabel data frame are not found in the network:\n"
             for node_number in missing_nodes
                 message *= string(" ", node_number)
             end
             @warn message
         end
     end
-    return labelnodes, node_annotations
+    return labelnodes, nodelabel
 end
 
 function _prepare_node_annotation_data(
     net::PhyloNetworks.HybridNetwork,
-    node_annotations::DataFrames.AbstractDataFrame,
-    show_node_numbers::Bool,
-    show_internal_node_names::Bool,
+    nodelabel::DataFrames.AbstractDataFrame,
+    shownodenumber::Bool,
+    shownodelabel::Bool,
     labelnodes::Bool,
     geometry::PlotGeometry,
 )::DataFrames.DataFrame
-    row_count = if show_node_numbers || show_internal_node_names || labelnodes
+    row_count = if shownodenumber || shownodelabel || labelnodes
         net.numnodes
     else
         net.numtaxa
@@ -98,13 +98,13 @@ function _prepare_node_annotation_data(
     row_index = 1
     for node_index in 1:net.numnodes
         current_node = net.node[node_index]
-        if current_node.leaf || show_node_numbers || show_internal_node_names || labelnodes
+        if current_node.leaf || shownodenumber || shownodelabel || labelnodes
             node_data[row_index, :name] = current_node.name
             node_data[row_index, :num] = string(current_node.number)
             if labelnodes
-                label_index = findfirst(isequal(current_node.number), node_annotations[!, 1])
+                label_index = findfirst(isequal(current_node.number), nodelabel[!, 1])
                 node_data[row_index, :lab] =
-                    isnothing(label_index) ? "" : _format_annotation_value(node_annotations, label_index)
+                    isnothing(label_index) ? "" : _format_annotation_value(nodelabel, label_index)
             end
             node_data[row_index, :lea] = current_node.leaf
             node_data[row_index, :x] = geometry.node_x[node_index]
@@ -117,7 +117,7 @@ end
 
 function _prepare_edge_annotation_data(
     net::PhyloNetworks.HybridNetwork,
-    edge_annotations::DataFrames.AbstractDataFrame,
+    edgelabel::DataFrames.AbstractDataFrame,
     style::Symbol,
     geometry::PlotGeometry,
 )::Tuple{Bool, DataFrames.DataFrame}
@@ -133,21 +133,21 @@ function _prepare_edge_annotation_data(
         copycols=false,
     )
 
-    labeledges = size(edge_annotations, 1) > 0
+    labeledges = size(edgelabel, 1) > 0
     if labeledges &&
-       (size(edge_annotations, 2) < 2 || !(nonmissingtype(eltype(edge_annotations[!, 1])) <: Integer))
-        @warn "edge_annotations should have 2+ columns, the first one giving the edge numbers (Integer)"
+       (size(edgelabel, 2) < 2 || !(nonmissingtype(eltype(edgelabel[!, 1])) <: Integer))
+        @warn "edgelabel should have 2+ columns, the first one giving the edge numbers (Integer)"
         labeledges = false
     end
     if labeledges
-        edge_annotations = filter(row -> !ismissing(row[1]), edge_annotations)
-        labeledges = size(edge_annotations, 1) > 0
+        edgelabel = filter(row -> !ismissing(row[1]), edgelabel)
+        labeledges = size(edgelabel, 1) > 0
     end
     if labeledges
-        missing_edges = setdiff(edge_annotations[!, 1], [edge.number for edge in net.edge])
+        missing_edges = setdiff(edgelabel[!, 1], [edge.number for edge in net.edge])
         if !isempty(missing_edges)
             message =
-                "Some edge numbers in the edge_annotations data frame are not found in the network:\n"
+                "Some edge numbers in the edgelabel data frame are not found in the network:\n"
             for edge_number in missing_edges
                 message *= string(" ", edge_number)
             end
@@ -164,9 +164,9 @@ function _prepare_edge_annotation_data(
             current_edge.gamma == -1.0 ? "" : _format_sig3(current_edge.gamma)
         edge_data[edge_index, :num] = string(current_edge.number)
         if labeledges
-            label_index = findfirst(isequal(current_edge.number), edge_annotations[!, 1])
+            label_index = findfirst(isequal(current_edge.number), edgelabel[!, 1])
             edge_data[edge_index, :lab] =
-                isnothing(label_index) ? "" : _format_annotation_value(edge_annotations, label_index)
+                isnothing(label_index) ? "" : _format_annotation_value(edgelabel, label_index)
         end
         edge_data[edge_index, :hyb] = current_edge.hybrid
         edge_data[edge_index, :min] = !current_edge.ismajor
@@ -194,9 +194,9 @@ function _resolve_plot_bounds(
     xmax = geometry.xmax
     ymin = geometry.ymin
     ymax = geometry.ymax
-    if attributes.show_tip_labels ||
-       attributes.show_node_numbers ||
-       attributes.show_internal_node_names ||
+    if attributes.showtiplabel ||
+       attributes.shownodenumber ||
+       attributes.shownodelabel ||
        labelnodes
         expansion_factor = 0.1
         y_expansion = 0.5
@@ -205,12 +205,12 @@ function _resolve_plot_bounds(
         ymin -= y_expansion
         ymax += y_expansion
     end
-    xmax += attributes.tip_label_offset
-    x_limits_error_message =
-        "x_limits needs to contain 2 values: lower and upper limits. defaults: [$xmin,$xmax]"
-    y_limits_error_message =
-        "y_limits needs to contain 2 values: lower and upper limits. defaults: [$ymin,$ymax]"
-    return PlotBounds(xmin, xmax, ymin, ymax, x_limits_error_message, y_limits_error_message)
+    xmax += attributes.tipoffset
+    xlim_error_message =
+        "xlim needs to contain 2 values: lower and upper limits. defaults: [$xmin,$xmax]"
+    ylim_error_message =
+        "ylim needs to contain 2 values: lower and upper limits. defaults: [$ymin,$ymax]"
+    return PlotBounds(xmin, xmax, ymin, ymax, xlim_error_message, ylim_error_message)
 end
 
 function prepare_plot_layout(
@@ -219,18 +219,18 @@ function prepare_plot_layout(
     preorder::Bool=true,
 )::PlotLayout
     geometry = layout_plot_geometry(net, attributes; preorder=preorder)
-    labelnodes, node_annotations = _validate_node_data(net, attributes.node_annotations)
+    labelnodes, nodelabel = _validate_node_data(net, attributes.nodelabel)
     node_data = _prepare_node_annotation_data(
         net,
-        node_annotations,
-        attributes.show_node_numbers,
-        attributes.show_internal_node_names,
+        nodelabel,
+        attributes.shownodenumber,
+        attributes.shownodelabel,
         labelnodes,
         geometry,
     )
     labeledges, edge_data = _prepare_edge_annotation_data(
         net,
-        attributes.edge_annotations,
+        attributes.edgelabel,
         attributes.style,
         geometry,
     )

@@ -43,11 +43,11 @@ end
 
     render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
     render_kwargs = (
-        use_edge_lengths=true,
-        show_gamma=true,
-        edge_color=Dict(render_case.edge_color_overrides),
-        default_edge_color=render_case.default_edge_color,
-        edge_width=Dict(render_case.edge_width_overrides),
+        useedgelength=true,
+        showgamma=true,
+        edgecolor=Dict(render_case.edgecolor_overrides),
+        defaultedgecolor=render_case.defaultedgecolor,
+        edgewidth=Dict(render_case.edgewidth_overrides),
         style=:fulltree,
     )
 
@@ -99,17 +99,17 @@ end
 
     @testset "Caller-owned network boundary" begin
         surfaces = (
-            net -> Makie.plot(net; use_edge_lengths=true, style=:fulltree),
-            net -> phyloplot(net; use_edge_lengths=true, style=:fulltree),
+            net -> Makie.plot(net; useedgelength=true, style=:fulltree),
+            net -> phyloplot(net; useedgelength=true, style=:fulltree),
             net -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
-                Makie.plot!(axis, net; use_edge_lengths=true, style=:fulltree)
+                Makie.plot!(axis, net; useedgelength=true, style=:fulltree)
             end,
             net -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
-                phyloplot!(axis, net; use_edge_lengths=true, style=:fulltree)
+                phyloplot!(axis, net; useedgelength=true, style=:fulltree)
             end,
         )
 
@@ -123,47 +123,47 @@ end
 
     @testset "Public limit validation and direct limit proof" begin
         annotation_case = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits
-        node_annotations =
+        nodelabel =
             _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
-        edge_annotations =
+        edgelabel =
             _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         limit_surface = Makie.plot(
             readnewick(annotation_case.newick);
-            use_edge_lengths=true,
-            show_internal_node_names=true,
-            show_node_numbers=true,
-            show_edge_lengths=true,
-            show_edge_numbers=true,
-            show_gamma=true,
-            node_annotations=node_annotations,
-            edge_annotations=edge_annotations,
-            x_limits=annotation_case.x_limits,
-            y_limits=annotation_case.y_limits,
+            useedgelength=true,
+            shownodelabel=true,
+            shownodenumber=true,
+            showedgelength=true,
+            showedgenumber=true,
+            showgamma=true,
+            nodelabel=nodelabel,
+            edgelabel=edgelabel,
+            xlim=annotation_case.xlim,
+            ylim=annotation_case.ylim,
             style=:majortree,
         )
 
-        @test _plot_data_limits(limit_surface.plot)[1] == annotation_case.x_limits
-        @test _plot_data_limits(limit_surface.plot)[2] == annotation_case.y_limits
+        @test _plot_data_limits(limit_surface.plot)[1] == annotation_case.xlim
+        @test _plot_data_limits(limit_surface.plot)[2] == annotation_case.ylim
         @test !isempty(_plot_colorbuffer(limit_surface.figure))
 
         x_limit_error = try
-            Makie.plot(readnewick(annotation_case.newick); x_limits=[1.0, 2.0, 3.0])
+            Makie.plot(readnewick(annotation_case.newick); xlim=[1.0, 2.0, 3.0])
             nothing
         catch err
             err
         end
         @test x_limit_error isa ErrorException
-        @test occursin("x_limits needs to contain 2 values", sprint(showerror, x_limit_error))
+        @test occursin("xlim needs to contain 2 values", sprint(showerror, x_limit_error))
         @test occursin("defaults: [", sprint(showerror, x_limit_error))
 
         y_limit_error = try
-            phyloplot(readnewick(annotation_case.newick); y_limits=(1.0,))
+            phyloplot(readnewick(annotation_case.newick); ylim=(1.0,))
             nothing
         catch err
             err
         end
         @test y_limit_error isa ErrorException
-        @test occursin("y_limits needs to contain 2 values", sprint(showerror, y_limit_error))
+        @test occursin("ylim needs to contain 2 values", sprint(showerror, y_limit_error))
         @test occursin("defaults: [", sprint(showerror, y_limit_error))
     end
 
@@ -180,8 +180,8 @@ end
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.single_reticulation_gamma
             surface = Makie.plot(
                 readnewick(scenario.newick);
-                use_edge_lengths=true,
-                show_gamma=true,
+                useedgelength=true,
+                showgamma=true,
                 style=:fulltree,
             )
 
@@ -192,9 +192,9 @@ end
         @testset ":style_distinction_fulltree_vs_majortree" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.style_distinction_fulltree_vs_majortree
             fulltree_surface =
-                Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:fulltree)
+                Makie.plot(readnewick(scenario.newick); useedgelength=true, style=:fulltree)
             majortree_surface =
-                Makie.plot(readnewick(scenario.newick); use_edge_lengths=true, style=:majortree)
+                Makie.plot(readnewick(scenario.newick); useedgelength=true, style=:majortree)
 
             @test _plot_colorbuffer(fulltree_surface.figure) !=
                 _plot_colorbuffer(majortree_surface.figure)
@@ -202,21 +202,21 @@ end
 
         @testset ":dataframe_label_rendering" begin
             annotation_case = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits
-            node_annotations =
+            nodelabel =
                 _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
-            edge_annotations =
+            edgelabel =
                 _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
             surface = Makie.plot(
                 readnewick(annotation_case.newick);
                 annotation_case.attribute_kwargs...,
-                node_annotations=node_annotations,
-                edge_annotations=edge_annotations,
-                x_limits=annotation_case.x_limits,
-                y_limits=annotation_case.y_limits,
+                nodelabel=nodelabel,
+                edgelabel=edgelabel,
+                xlim=annotation_case.xlim,
+                ylim=annotation_case.ylim,
             )
 
-            @test _plot_data_limits(surface.plot)[1] == annotation_case.x_limits
-            @test _plot_data_limits(surface.plot)[2] == annotation_case.y_limits
+            @test _plot_data_limits(surface.plot)[1] == annotation_case.xlim
+            @test _plot_data_limits(surface.plot)[2] == annotation_case.ylim
             @test !isempty(_plot_colorbuffer(surface.figure))
         end
     end
@@ -235,15 +235,15 @@ end
         left_plot = Makie.plot!(
             left_axis,
             readnewick(scenario.newicks[1]);
-            use_edge_lengths=true,
-            show_gamma=true,
+            useedgelength=true,
+            showgamma=true,
             style=:fulltree,
         )
         right_plot = phyloplot!(
             right_axis,
             readnewick(scenario.newicks[2]);
-            use_edge_lengths=true,
-            show_edge_numbers=true,
+            useedgelength=true,
+            showedgenumber=true,
             style=:majortree,
         )
 

@@ -5,8 +5,8 @@ using Makie
     PhyloPlotAttributes = getfield(PhyloMakie, :PhyloPlotAttributes)
     resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     with_phylo_plot_limits = getfield(PhyloMakie, :with_phylo_plot_limits)
-    resolve_default_edge_color = getfield(PhyloMakie, :_resolve_default_edge_color)
-    resolve_edge_width_mode = getfield(PhyloMakie, :_resolve_edge_width_mode)
+    resolve_defaultedgecolor = getfield(PhyloMakie, :_resolve_defaultedgecolor)
+    resolve_edgewidth_mode = getfield(PhyloMakie, :_resolve_edgewidth_mode)
     supported_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOPLOT_ATTRIBUTES)
     @test supported_attributes == EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES
     @test sort(collect(Makie.attribute_names(PhyloPlot))) ==
@@ -16,141 +16,141 @@ using Makie
         attributes = resolve_phylo_plot_attributes()
 
         @test attributes isa PhyloPlotAttributes
-        @test attributes.use_edge_lengths === false
-        @test attributes.show_tip_labels === true
-        @test attributes.show_internal_node_names === false
-        @test attributes.show_node_numbers === false
-        @test attributes.show_edge_lengths === false
-        @test attributes.show_edge_numbers === false
-        @test attributes.show_gamma === false
-        @test attributes.edge_color == "black"
-        @test attributes.default_edge_color === nothing
-        @test attributes.major_hybrid_edge_color == "deepskyblue4"
-        @test attributes.minor_hybrid_edge_color == "deepskyblue"
-        @test attributes.edge_width == 1
-        @test attributes.minor_edge_linestyle == "longdash"
-        @test attributes.minor_edge_arrow_length == 0.1
-        @test isempty(attributes.node_annotations)
-        @test isempty(attributes.edge_annotations)
-        @test attributes.node_annotation_scale == 1
-        @test attributes.edge_annotation_scale == 1
-        @test attributes.node_annotation_color == "black"
-        @test attributes.edge_annotation_color == "black"
-        @test attributes.node_annotation_align == 1
-        @test attributes.edge_annotation_align == [0.5, 0]
-        @test attributes.tip_label_offset == 0
-        @test attributes.tip_label_scale == 1
-        @test attributes.x_limits === nothing
-        @test attributes.y_limits === nothing
+        @test attributes.useedgelength === false
+        @test attributes.showtiplabel === true
+        @test attributes.shownodelabel === false
+        @test attributes.shownodenumber === false
+        @test attributes.showedgelength === false
+        @test attributes.showedgenumber === false
+        @test attributes.showgamma === false
+        @test attributes.edgecolor == "black"
+        @test attributes.defaultedgecolor === nothing
+        @test attributes.majorhybridedgecolor == "deepskyblue4"
+        @test attributes.minorhybridedgecolor == "deepskyblue"
+        @test attributes.edgewidth == 1
+        @test attributes.minorlinetype == "longdash"
+        @test attributes.arrowlen == 0.1
+        @test isempty(attributes.nodelabel)
+        @test isempty(attributes.edgelabel)
+        @test attributes.nodecex == 1
+        @test attributes.edgecex == 1
+        @test attributes.nodelabelcolor == "black"
+        @test attributes.edgelabelcolor == "black"
+        @test attributes.nodelabeladj == 1
+        @test attributes.edgelabeladj == [0.5, 0]
+        @test attributes.tipoffset == 0
+        @test attributes.tipcex == 1
+        @test attributes.xlim === nothing
+        @test attributes.ylim === nothing
         @test attributes.style == :fulltree
 
         resolved_limits = with_phylo_plot_limits(attributes, (0.0, 5.0), (1.0, 4.0))
         @test resolved_limits isa PhyloPlotAttributes
         @test resolved_limits !== attributes
-        @test resolved_limits.x_limits == (0.0, 5.0)
-        @test resolved_limits.y_limits == (1.0, 4.0)
-        @test resolved_limits.edge_color == attributes.edge_color
-        @test resolved_limits.node_annotations === attributes.node_annotations
-        @test resolved_limits.edge_annotations === attributes.edge_annotations
+        @test resolved_limits.xlim == (0.0, 5.0)
+        @test resolved_limits.ylim == (1.0, 4.0)
+        @test resolved_limits.edgecolor == attributes.edgecolor
+        @test resolved_limits.nodelabel === attributes.nodelabel
+        @test resolved_limits.edgelabel === attributes.edgelabel
     end
 
     @testset "Style-dependent defaults" begin
         majortree_attributes = resolve_phylo_plot_attributes(style=:majortree)
         @test majortree_attributes.style == :majortree
-        @test majortree_attributes.minor_edge_arrow_length == 0
-        @test majortree_attributes.minor_edge_linestyle == "solid"
+        @test majortree_attributes.arrowlen == 0
+        @test majortree_attributes.minorlinetype == "solid"
 
         @test_logs (:warn, "Style weird is unknown. Defaulted to :fulltree.") begin
             unknown_style_attributes = resolve_phylo_plot_attributes(style=:weird)
             @test unknown_style_attributes.style == :fulltree
-            @test unknown_style_attributes.minor_edge_arrow_length == 0.1
-            @test unknown_style_attributes.minor_edge_linestyle == "longdash"
+            @test unknown_style_attributes.arrowlen == 0.1
+            @test unknown_style_attributes.minorlinetype == "longdash"
         end
     end
 
     @testset "Color and width policy" begin
         scalar_attributes = resolve_phylo_plot_attributes(
-            edge_color="tomato4",
-            major_hybrid_edge_color="tan",
-            minor_hybrid_edge_color="skyblue",
+            edgecolor="tomato4",
+            majorhybridedgecolor="tan",
+            minorhybridedgecolor="skyblue",
         )
-        @test scalar_attributes.edge_color == "tomato4"
-        @test scalar_attributes.major_hybrid_edge_color == "tan"
-        @test scalar_attributes.minor_hybrid_edge_color == "skyblue"
-        @test resolve_default_edge_color(
-            scalar_attributes.edge_color,
-            scalar_attributes.default_edge_color,
+        @test scalar_attributes.edgecolor == "tomato4"
+        @test scalar_attributes.majorhybridedgecolor == "tan"
+        @test scalar_attributes.minorhybridedgecolor == "skyblue"
+        @test resolve_defaultedgecolor(
+            scalar_attributes.edgecolor,
+            scalar_attributes.defaultedgecolor,
             :uniform,
         ) == "tomato4"
-        @test resolve_edge_width_mode(scalar_attributes.edge_width) == :uniform
+        @test resolve_edgewidth_mode(scalar_attributes.edgewidth) == :uniform
 
         dict_attributes = resolve_phylo_plot_attributes(
-            edge_color=Dict(1 => "tomato4", 3 => "tan"),
-            default_edge_color=nothing,
-            edge_width=Dict(1 => 2.0, 3 => 4.5),
+            edgecolor=Dict(1 => "tomato4", 3 => "tan"),
+            defaultedgecolor=nothing,
+            edgewidth=Dict(1 => 2.0, 3 => 4.5),
         )
-        @test dict_attributes.edge_color == Dict(1 => "tomato4", 3 => "tan")
-        @test dict_attributes.default_edge_color === nothing
-        @test dict_attributes.edge_width == Dict(1 => 2.0, 3 => 4.5)
-        @test resolve_default_edge_color(
-            dict_attributes.edge_color,
-            dict_attributes.default_edge_color,
+        @test dict_attributes.edgecolor == Dict(1 => "tomato4", 3 => "tan")
+        @test dict_attributes.defaultedgecolor === nothing
+        @test dict_attributes.edgewidth == Dict(1 => 2.0, 3 => 4.5)
+        @test resolve_defaultedgecolor(
+            dict_attributes.edgecolor,
+            dict_attributes.defaultedgecolor,
             :by_edge,
         ) == "black"
-        @test resolve_edge_width_mode(dict_attributes.edge_width) == :by_edge
+        @test resolve_edgewidth_mode(dict_attributes.edgewidth) == :by_edge
 
         custom_default_attributes = resolve_phylo_plot_attributes(
-            edge_color=Dict(1 => "tomato4"),
-            default_edge_color="grey20",
+            edgecolor=Dict(1 => "tomato4"),
+            defaultedgecolor="grey20",
         )
-        @test custom_default_attributes.default_edge_color == "grey20"
-        @test resolve_default_edge_color(
-            custom_default_attributes.edge_color,
-            custom_default_attributes.default_edge_color,
+        @test custom_default_attributes.defaultedgecolor == "grey20"
+        @test resolve_defaultedgecolor(
+            custom_default_attributes.edgecolor,
+            custom_default_attributes.defaultedgecolor,
             :by_edge,
         ) == "grey20"
 
         invalid_width_error = try
-            resolve_phylo_plot_attributes(edge_width=Dict(1 => "wide"))
+            resolve_phylo_plot_attributes(edgewidth=Dict(1 => "wide"))
             nothing
         catch err
             err
         end
         @test invalid_width_error isa ErrorException
-        @test invalid_width_error.msg == "edge_width should be numerical"
+        @test invalid_width_error.msg == "edgewidth should be numerical"
 
         invalid_width_type = try
-            resolve_phylo_plot_attributes(edge_width="wide")
+            resolve_phylo_plot_attributes(edgewidth="wide")
             nothing
         catch err
             err
         end
         @test invalid_width_type isa ArgumentError
-        @test occursin("edge_width should be a number", sprint(showerror, invalid_width_type))
+        @test occursin("edgewidth should be a number", sprint(showerror, invalid_width_type))
     end
 
     @testset "DataFrame ownership" begin
-        node_annotations = DataFrame(
+        nodelabel = DataFrame(
             node=[-5, missing, 100],
             label=["90", "99", "bogus"],
         )
-        edge_annotations = DataFrame(
+        edgelabel = DataFrame(
             edge=[8, missing, 200],
             label=["95", "99", "bogus"],
         )
-        x_limits = [1.0, 2.0, 3.0]
+        xlim = [1.0, 2.0, 3.0]
 
         attributes = resolve_phylo_plot_attributes(
-            node_annotations=node_annotations,
-            edge_annotations=edge_annotations,
-            x_limits=x_limits,
+            nodelabel=nodelabel,
+            edgelabel=edgelabel,
+            xlim=xlim,
         )
-        @test attributes.node_annotations isa DataFrame
-        @test attributes.edge_annotations isa DataFrame
-        @test isequal(attributes.node_annotations, node_annotations)
-        @test isequal(attributes.edge_annotations, edge_annotations)
-        @test attributes.node_annotations !== node_annotations
-        @test attributes.edge_annotations !== edge_annotations
-        @test attributes.x_limits === x_limits
+        @test attributes.nodelabel isa DataFrame
+        @test attributes.edgelabel isa DataFrame
+        @test isequal(attributes.nodelabel, nodelabel)
+        @test isequal(attributes.edgelabel, edgelabel)
+        @test attributes.nodelabel !== nodelabel
+        @test attributes.edgelabel !== edgelabel
+        @test attributes.xlim === xlim
     end
 end

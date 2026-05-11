@@ -48,9 +48,9 @@ end
         layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
             resolve_phylo_plot_attributes(
-                node_annotations=node_labels,
-                show_node_numbers=true,
-                show_internal_node_names=true,
+                nodelabel=node_labels,
+                shownodenumber=true,
+                shownodelabel=true,
             ),
             preorder=true,
         )
@@ -62,7 +62,7 @@ end
         warning_edges = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_warning_rows)
         layout_with_warning = @test_logs (:warn, warning_strings.edgelabel_unknown_edges) prepare_plot_layout(
             _read_annotation_network(base_newick),
-            resolve_phylo_plot_attributes(edge_annotations=warning_edges, style=:majortree),
+            resolve_phylo_plot_attributes(edgelabel=warning_edges, style=:majortree),
             preorder=true,
         )
         @test layout_with_warning.annotations.labeledges === true
@@ -70,7 +70,7 @@ end
         invalid_edges = warning_edges[!, 2:2]
         invalid_layout = @test_logs (:warn, warning_strings.edgelabel_invalid_shape) prepare_plot_layout(
             _read_annotation_network(base_newick),
-            resolve_phylo_plot_attributes(edge_annotations=invalid_edges, style=:majortree),
+            resolve_phylo_plot_attributes(edgelabel=invalid_edges, style=:majortree),
             preorder=true,
         )
         @test invalid_layout.annotations.labeledges === false
@@ -80,7 +80,7 @@ end
         filtered_layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
             resolve_phylo_plot_attributes(
-                edge_annotations=filtered_edge_numbers,
+                edgelabel=filtered_edge_numbers,
                 style=:majortree,
             ),
             preorder=true,
@@ -100,7 +100,7 @@ end
         edge_labels = _fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         layout = prepare_plot_layout(
             _read_annotation_network(base_newick),
-            resolve_phylo_plot_attributes(edge_annotations=edge_labels, style=:majortree),
+            resolve_phylo_plot_attributes(edgelabel=edge_labels, style=:majortree),
             preorder=true,
         )
         @test layout.annotations.labeledges === true
@@ -111,9 +111,9 @@ end
         @test layout.annotations.edge_data[midpoint_row, :x] == midpoint_expectation.x
         @test layout.annotations.edge_data[midpoint_row, :y] == midpoint_expectation.y
 
-        @test layout.bounds.x_limits_error_message ==
-            table_expectations.helper_bounds_messages.x_limits
-        @test layout.bounds.y_limits_error_message ==
-            table_expectations.helper_bounds_messages.y_limits
+        @test layout.bounds.xlim_error_message ==
+            table_expectations.helper_bounds_messages.xlim
+        @test layout.bounds.ylim_error_message ==
+            table_expectations.helper_bounds_messages.ylim
     end
 end

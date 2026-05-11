@@ -93,7 +93,7 @@ end
         @test _geometry_tuple(geometry) == layout_case.expected
 
         no_lengths_attributes =
-            resolve_phylo_plot_attributes(use_edge_lengths=false, style=:fulltree)
+            resolve_phylo_plot_attributes(useedgelength=false, style=:fulltree)
         no_lengths_geometry = layout_plot_geometry(
             _read_network(layout_case.newick),
             no_lengths_attributes;

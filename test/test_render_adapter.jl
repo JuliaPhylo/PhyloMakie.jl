@@ -33,12 +33,12 @@
         dotted_case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            minor_edge_linestyle=3,
+            minorlinetype=3,
         )
         blank_case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            minor_edge_linestyle="blank",
+            minorlinetype="blank",
         )
 
         @test dotted_case.layers.minor_edge_shafts.linestyle == :dot
@@ -54,44 +54,44 @@
 
     @testset "Color and width policy" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
-        edge_color = Dict(render_case.edge_color_overrides)
-        edge_width = Dict(render_case.edge_width_overrides)
+        edgecolor = Dict(render_case.edgecolor_overrides)
+        edgewidth = Dict(render_case.edgewidth_overrides)
         case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            edge_color=edge_color,
-            default_edge_color=render_case.default_edge_color,
-            edge_width=edge_width,
+            edgecolor=edgecolor,
+            defaultedgecolor=render_case.defaultedgecolor,
+            edgewidth=edgewidth,
         )
 
-        expected_edge_colors = Makie.RGBAf[]
-        expected_minor_edge_colors = Makie.RGBAf[]
-        expected_edge_widths = Float64[]
-        expected_minor_edge_widths = Float64[]
-        fallback_color = _rgba(render_case.default_edge_color)
+        expected_edgecolors = Makie.RGBAf[]
+        expected_minor_edgecolors = Makie.RGBAf[]
+        expected_edgewidths = Float64[]
+        expected_minor_edgewidths = Float64[]
+        fallback_color = _rgba(render_case.defaultedgecolor)
         for edge in case.network.edge
-            resolved_color = _rgba(get(edge_color, edge.number, render_case.default_edge_color))
-            resolved_width = Float64(get(edge_width, edge.number, 1.0))
-            push!(expected_edge_colors, resolved_color)
-            push!(expected_edge_widths, resolved_width)
+            resolved_color = _rgba(get(edgecolor, edge.number, render_case.defaultedgecolor))
+            resolved_width = Float64(get(edgewidth, edge.number, 1.0))
+            push!(expected_edgecolors, resolved_color)
+            push!(expected_edgewidths, resolved_width)
             if !edge.ismajor
-                push!(expected_minor_edge_colors, resolved_color)
-                push!(expected_minor_edge_widths, resolved_width)
+                push!(expected_minor_edgecolors, resolved_color)
+                push!(expected_minor_edgewidths, resolved_width)
             end
         end
 
-        @test case.layers.edge_segments.colors == expected_edge_colors
-        @test case.layers.edge_segments.linewidths == expected_edge_widths
-        @test case.layers.minor_edge_shafts.colors == expected_minor_edge_colors
-        @test case.layers.minor_edge_shafts.linewidths == expected_minor_edge_widths
+        @test case.layers.edge_segments.colors == expected_edgecolors
+        @test case.layers.edge_segments.linewidths == expected_edgewidths
+        @test case.layers.minor_edge_shafts.colors == expected_minor_edgecolors
+        @test case.layers.minor_edge_shafts.linewidths == expected_minor_edgewidths
         @test case.layers.node_bars.colors == fill(fallback_color, case.network.numnodes)
 
         expected_minor_gamma_color = fill(
-            _rgba(case.attributes.minor_hybrid_edge_color),
+            _rgba(case.attributes.minorhybridedgecolor),
             length(case.layers.minor_gamma_labels.strings),
         )
         expected_major_gamma_color = fill(
-            _rgba(case.attributes.major_hybrid_edge_color),
+            _rgba(case.attributes.majorhybridedgecolor),
             length(case.layers.major_gamma_labels.strings),
         )
         @test case.layers.minor_gamma_labels.colors == expected_minor_gamma_color
@@ -105,11 +105,11 @@
         scalar_case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            node_annotations=node_labels,
-            edge_annotations=edge_labels,
-            tip_label_scale=4.0,
-            node_annotation_scale=3.0,
-            edge_annotation_scale=2.0,
+            nodelabel=node_labels,
+            edgelabel=edge_labels,
+            tipcex=4.0,
+            nodecex=3.0,
+            edgecex=2.0,
         )
 
         @test scalar_case.layers.tip_labels.fontsize ==
@@ -118,10 +118,10 @@
             _expected_fontsizes(4.0, length(scalar_case.layers.internal_node_names.strings))
         @test scalar_case.layers.node_numbers.fontsize ==
             _expected_default_fontsizes(length(scalar_case.layers.node_numbers.strings))
-        @test scalar_case.layers.node_annotations.fontsize ==
-            _expected_fontsizes(3.0, length(scalar_case.layers.node_annotations.strings))
-        @test scalar_case.layers.edge_annotations.fontsize ==
-            _expected_fontsizes(2.0, length(scalar_case.layers.edge_annotations.strings))
+        @test scalar_case.layers.nodelabel.fontsize ==
+            _expected_fontsizes(3.0, length(scalar_case.layers.nodelabel.strings))
+        @test scalar_case.layers.edgelabel.fontsize ==
+            _expected_fontsizes(2.0, length(scalar_case.layers.edgelabel.strings))
         @test scalar_case.layers.edge_lengths.fontsize ==
             _expected_default_fontsizes(length(scalar_case.layers.edge_lengths.strings))
         @test scalar_case.layers.minor_gamma_labels.fontsize ==
@@ -134,9 +134,9 @@
         vector_case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            node_annotations=node_labels,
-            tip_label_scale=[0.5, 1.0, 1.5],
-            node_annotation_scale=[0.75, 1.25],
+            nodelabel=node_labels,
+            tipcex=[0.5, 1.0, 1.5],
+            nodecex=[0.75, 1.25],
         )
 
         @test vector_case.layers.tip_labels.fontsize ==
@@ -146,19 +146,19 @@
                 [0.5, 1.0, 1.5],
                 length(vector_case.layers.internal_node_names.strings),
             )
-        @test vector_case.layers.node_annotations.fontsize ==
-            _expected_fontsizes([0.75, 1.25], length(vector_case.layers.node_annotations.strings))
+        @test vector_case.layers.nodelabel.fontsize ==
+            _expected_fontsizes([0.75, 1.25], length(vector_case.layers.nodelabel.strings))
 
-        documented_edge_annotation_scale_case = _render_case(
+        documented_edgecex_case = _render_case(
             "(A,((B,#H1),(C,(D)#H1)));";
-            edge_annotations=DataFrame(edge=[1, 2], label=["edge number 1", "edge # 2"]),
-            edge_annotation_scale=[0.9, 1.1],
+            edgelabel=DataFrame(edge=[1, 2], label=["edge number 1", "edge # 2"]),
+            edgecex=[0.9, 1.1],
         )
 
-        @test documented_edge_annotation_scale_case.layers.edge_annotations.fontsize ==
+        @test documented_edgecex_case.layers.edgelabel.fontsize ==
             _expected_fontsizes(
                 [0.9, 1.1],
-                length(documented_edge_annotation_scale_case.layers.edge_annotations.strings),
+                length(documented_edgecex_case.layers.edgelabel.strings),
             )
     end
 
@@ -169,10 +169,10 @@
         case = _render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            node_annotations=node_labels,
-            edge_annotations=edge_labels,
-            x_limits=render_case.x_limits,
-            y_limits=render_case.y_limits,
+            nodelabel=node_labels,
+            edgelabel=edge_labels,
+            xlim=render_case.xlim,
+            ylim=render_case.ylim,
         )
 
         node_data = case.layout.annotations.node_data
@@ -182,15 +182,15 @@
         minor_gamma_rows = _rows_with_flag(edge_data.hyb .& edge_data.min)
         major_gamma_rows = _rows_with_flag(edge_data.hyb .& .!edge_data.min)
 
-        @test case.layers.applied_x_limits == render_case.x_limits
-        @test case.layers.applied_y_limits == render_case.y_limits
+        @test case.layers.applied_xlim == render_case.xlim
+        @test case.layers.applied_ylim == render_case.ylim
 
         @test case.layers.tip_labels.strings == String.(node_data[leaf_rows, :name])
         @test case.layers.tip_labels.positions ==
             _node_channel_positions(
                 case.layout,
                 leaf_rows;
-                x_offset=case.attributes.tip_label_offset,
+                x_offset=case.attributes.tipoffset,
             )
 
         @test case.layers.internal_node_names.strings == String.(node_data[internal_rows, :name])
@@ -201,12 +201,12 @@
         @test case.layers.node_numbers.positions ==
             _node_channel_positions(case.layout, axes(node_data, 1))
 
-        @test case.layers.node_annotations.strings == String.(node_data[!, :lab])
-        @test case.layers.node_annotations.positions ==
+        @test case.layers.nodelabel.strings == String.(node_data[!, :lab])
+        @test case.layers.nodelabel.positions ==
             _node_channel_positions(case.layout, axes(node_data, 1))
 
-        @test case.layers.edge_annotations.strings == String.(edge_data[!, :lab])
-        @test case.layers.edge_annotations.positions ==
+        @test case.layers.edgelabel.strings == String.(edge_data[!, :lab])
+        @test case.layers.edgelabel.positions ==
             _edge_channel_positions(case.layout, axes(edge_data, 1))
 
         @test case.layers.edge_lengths.strings == String.(edge_data[!, :len])

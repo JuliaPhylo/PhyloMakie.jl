@@ -72,8 +72,8 @@ tree_net = PhyloNetworks.readnewick(
 
 plot(
     tree_net;
-    use_edge_lengths = true,
-    show_tip_labels = true,
+    useedgelength = true,
+    showtiplabel = true,
     style = :fulltree,
 )
 ```
@@ -90,10 +90,10 @@ net = PhyloNetworks.readnewick(
 
 plot(
     net;
-    use_edge_lengths = true,
-    show_gamma = true,
-    show_internal_node_names = true,
-    tip_label_offset = 0.15,
+    useedgelength = true,
+    showgamma = true,
+    shownodelabel = true,
+    tipoffset = 0.15,
     style = :fulltree,
 )
 ```
@@ -109,11 +109,11 @@ composable.
 annotation_net = PhyloNetworks.readnewick(
     "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
 )
-node_annotations = DataFrames.DataFrame(
+nodelabel = DataFrames.DataFrame(
     node=[-5, -3, -4, 5],
     label=["90", "95", "99", "tip"],
 )
-edge_annotations = DataFrames.DataFrame(
+edgelabel = DataFrames.DataFrame(
     edge=[8, 9, 4, 6],
     label=["90", "95", "99", "tip"],
 )
@@ -129,27 +129,27 @@ hidespines!(right_axis)
 plot!(
     left_axis,
     annotation_net;
-    use_edge_lengths = true,
-    show_internal_node_names = true,
-    show_node_numbers = true,
-    show_edge_lengths = true,
-    show_edge_numbers = true,
-    show_gamma = true,
-    node_annotations = node_annotations,
-    edge_annotations = edge_annotations,
-    node_annotation_scale = 1.2,
-    edge_annotation_scale = 1.0,
-    x_limits = (0.0, 6.5),
-    y_limits = (0.0, 5.5),
+    useedgelength = true,
+    shownodelabel = true,
+    shownodenumber = true,
+    showedgelength = true,
+    showedgenumber = true,
+    showgamma = true,
+    nodelabel = nodelabel,
+    edgelabel = edgelabel,
+    nodecex = 1.2,
+    edgecex = 1.0,
+    xlim = (0.0, 6.5),
+    ylim = (0.0, 5.5),
     style = :majortree,
 )
 
 phyloplot!(
     right_axis,
     PhyloNetworks.readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);");
-    use_edge_lengths = true,
-    show_gamma = true,
-    minor_edge_arrow_length = 0.12,
+    useedgelength = true,
+    showgamma = true,
+    arrowlen = 0.12,
     style = :fulltree,
 )
 

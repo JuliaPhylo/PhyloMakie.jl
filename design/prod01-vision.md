@@ -47,7 +47,7 @@ net = readnewick(
 
 fig = Figure()
 ax = Axis(fig[1, 1], title = "Makie-native phylogenetic network")
-plot!(ax, net; style = :fulltree, show_tip_labels = true)
+plot!(ax, net; style = :fulltree, showtiplabel = true)
 fig
 ```
 

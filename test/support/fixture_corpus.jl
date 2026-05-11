@@ -45,8 +45,8 @@ const FIXTURE_CORPUS = (
         ),
         edgecolor_dict_fallback = (
             newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-            edge_color_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
-            default_edge_color = "black",
+            edgecolor_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
+            defaultedgecolor = "black",
             required_output = "Mapped edges use the provided colors and unmapped edges fall back to the default edge color.",
             expected_helper_regression_ids = (),
         ),
@@ -95,38 +95,38 @@ const FIXTURE_CORPUS = (
     render_regression_cases = (
         style_fulltree = (
             newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-            attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+            attribute_kwargs = (useedgelength = true, style = :fulltree),
         ),
         style_majortree = (
             newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-            attribute_kwargs = (use_edge_lengths = true, style = :majortree),
+            attribute_kwargs = (useedgelength = true, style = :majortree),
         ),
         gamma_and_edgecolor = (
             newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-            edge_color_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
-            edge_width_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
-            default_edge_color = "black",
-            attribute_kwargs = (use_edge_lengths = true, style = :fulltree, show_gamma = true),
+            edgecolor_overrides = ((1, "tomato4"), (3, "tan"), (7, "skyblue")),
+            edgewidth_overrides = ((1, 2.0), (3, 3.0), (7, 4.0)),
+            defaultedgecolor = "black",
+            attribute_kwargs = (useedgelength = true, style = :fulltree, showgamma = true),
         ),
         annotation_and_limits = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-            x_limits = (0.0, 6.5),
-            y_limits = (0.0, 5.5),
+            xlim = (0.0, 6.5),
+            ylim = (0.0, 5.5),
             attribute_kwargs = (
-                use_edge_lengths = true,
+                useedgelength = true,
                 style = :majortree,
-                show_internal_node_names = true,
-                show_node_numbers = true,
-                show_edge_numbers = true,
-                show_edge_lengths = true,
-                show_gamma = true,
+                shownodelabel = true,
+                shownodenumber = true,
+                showedgenumber = true,
+                showedgelength = true,
+                showgamma = true,
             ),
         ),
     ),
     layout_regression_cases = (
         with_lengths_fulltree = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-            attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+            attribute_kwargs = (useedgelength = true, style = :fulltree),
             expected = (
                 [1.0, 2.5, 2.5, 1.5, 2.5, 3.0, 2.5, 1.5, 1.0],
                 [3.5, 3.5, 3.0, 2.5, 3.5, 3.5, 3.0, 2.5, 1.5],
@@ -148,7 +148,7 @@ const FIXTURE_CORPUS = (
         ),
         with_lengths_majortree = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-            attribute_kwargs = (use_edge_lengths = true, style = :majortree),
+            attribute_kwargs = (useedgelength = true, style = :majortree),
             expected = (
                 [1.0, 2.5, 2.5, 1.5, 2.5, 3.0, 2.5, 1.5, 1.0],
                 [3.5, 3.5, 2.5, 2.5, 3.5, 3.5, 3.0, 2.5, 1.5],
@@ -170,7 +170,7 @@ const FIXTURE_CORPUS = (
         ),
         without_lengths_majortree = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-            attribute_kwargs = (use_edge_lengths = false, style = :majortree),
+            attribute_kwargs = (useedgelength = false, style = :majortree),
             expected = (
                 [1.0, 3.0, 3.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0],
                 [5.0, 5.0, 3.0, 3.0, 5.0, 5.0, 4.0, 3.0, 2.0],
@@ -192,7 +192,7 @@ const FIXTURE_CORPUS = (
         ),
         level2_with_gamma = (
             newick = "((((B)#H1:::0.2)#H2,((D,C,#H2:::0.8)S1,(#H1,A)S2)S3)S4);",
-            attribute_kwargs = (use_edge_lengths = false, style = :fulltree),
+            attribute_kwargs = (useedgelength = false, style = :fulltree),
             expected = (
                 [5.0, 4.0, 1.0, 3.0, 3.0, 3.0, 2.0, 4.0, 4.0, 2.0, 1.0],
                 [6.0, 5.0, 4.0, 6.0, 6.0, 4.0, 3.0, 5.0, 6.0, 4.0, 2.0],
@@ -214,7 +214,7 @@ const FIXTURE_CORPUS = (
         ),
         level2_without_gamma = (
             newick = "((((B)#H1:::0.2)#H2,((D,C,#H2)S1,(#H1,A)S2)S3)S4);",
-            attribute_kwargs = (use_edge_lengths = false, style = :fulltree),
+            attribute_kwargs = (useedgelength = false, style = :fulltree),
             expected = (
                 [5.0, 4.0, 1.0, 3.0, 3.0, 3.0, 2.0, 4.0, 4.0, 2.0, 1.0],
                 [6.0, 5.0, 4.0, 6.0, 6.0, 4.0, 3.0, 5.0, 6.0, 4.0, 2.0],
@@ -236,7 +236,7 @@ const FIXTURE_CORPUS = (
         ),
         all_missing_lengths_fulltree_fallback = (
             newick = "((((B)#H1:::0.2)#H2,((D,C,#H2)S1,(#H1,A)S2)S3)S4);",
-            attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+            attribute_kwargs = (useedgelength = true, style = :fulltree),
             expected = (
                 [5.0, 4.0, 1.0, 3.0, 3.0, 3.0, 2.0, 4.0, 4.0, 2.0, 1.0],
                 [6.0, 4.0, 4.0, 6.0, 6.0, 3.0, 3.0, 5.0, 6.0, 4.0, 2.0],
@@ -259,13 +259,13 @@ const FIXTURE_CORPUS = (
         ),
         mixed_missing_lengths_warning = (
             newick = "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
-            attribute_kwargs = (use_edge_lengths = true, style = :fulltree),
+            attribute_kwargs = (useedgelength = true, style = :fulltree),
             missing_edge_numbers = (3,),
             expected_warning = "At least one non-missing edge length: plotting any missing length as 1.0",
         ),
         incompatible_root = (
             newick = "((a,(b)#H1)i1,(#H1,c)i2)root:0.5;",
-            attribute_kwargs = (use_edge_lengths = false, style = :fulltree),
+            attribute_kwargs = (useedgelength = false, style = :fulltree),
             rooti = 2,
             expected_error_message = "non-leaf node 3 had 0 children.\nCould be a hybrid whose parents' direction conflicts with the root.\nischild1 and containroot were updated for a subset of edges in the network only.\nPlease change the root, perhaps using rootatnode! or rootatedge!",
         ),
@@ -379,15 +379,15 @@ const FIXTURE_CORPUS = (
             y = 3.0,
         ),
         helper_bounds_messages = (
-            x_limits = "x_limits needs to contain 2 values: lower and upper limits. defaults: [0.6,5.44]",
-            y_limits = "y_limits needs to contain 2 values: lower and upper limits. defaults: [0.5,4.5]",
+            xlim = "xlim needs to contain 2 values: lower and upper limits. defaults: [0.6,5.44]",
+            ylim = "ylim needs to contain 2 values: lower and upper limits. defaults: [0.5,4.5]",
         ),
     ),
     warning_strings = (
-        nodelabel_unknown_nodes = "Some node numbers in the node_annotations data frame are not found in the network:\n 100",
-        nodelabel_invalid_shape = "node_annotations should have 2+ columns, the first one giving the node numbers (Integer)",
-        edgelabel_unknown_edges = "Some edge numbers in the edge_annotations data frame are not found in the network:\n 200",
-        edgelabel_invalid_shape = "edge_annotations should have 2+ columns, the first one giving the edge numbers (Integer)",
+        nodelabel_unknown_nodes = "Some node numbers in the nodelabel data frame are not found in the network:\n 100",
+        nodelabel_invalid_shape = "nodelabel should have 2+ columns, the first one giving the node numbers (Integer)",
+        edgelabel_unknown_edges = "Some edge numbers in the edgelabel data frame are not found in the network:\n 200",
+        edgelabel_invalid_shape = "edgelabel should have 2+ columns, the first one giving the edge numbers (Integer)",
         mixed_missing_edge_lengths = "At least one non-missing edge length: plotting any missing length as 1.0",
     ),
 )

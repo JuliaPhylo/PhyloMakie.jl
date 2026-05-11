@@ -57,10 +57,10 @@ end
 
 function _resolve_edge_lengths(
     net::PhyloNetworks.HybridNetwork,
-    use_edge_lengths::Bool,
+    useedgelength::Bool,
 )::Tuple{Bool, Vector{Float64}}
-    calculate_edge_lengths = !use_edge_lengths
-    if use_edge_lengths
+    calculate_edge_lengths = !useedgelength
+    if useedgelength
         all_edge_lengths_missing = true
         no_edge_lengths_missing = true
         for edge in net.edge
@@ -213,7 +213,7 @@ function layout_plot_geometry(
         end
     end
 
-    _, edge_lengths = _resolve_edge_lengths(net, attributes.use_edge_lengths)
+    _, edge_lengths = _resolve_edge_lengths(net, attributes.useedgelength)
 
     xmin = 1.0
     xmax = xmin
@@ -253,7 +253,7 @@ function layout_plot_geometry(
         edge_x_hi[edge_index] = usedirecthybridline ?
             edge_x_lo[edge_index] :
             (
-                attributes.use_edge_lengths ?
+                attributes.useedgelength ?
                 edge_x_lo[edge_index] + edge_lengths[edge_index] :
                 node_x[child_index]
             )

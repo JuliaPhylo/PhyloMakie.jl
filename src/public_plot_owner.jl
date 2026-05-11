@@ -3,7 +3,7 @@ import PhyloNetworks
 function _deprecated_phylo_plot_attribute_message(legacy::Symbol, public_name)
     if isnothing(public_name)
         if legacy == :edgenumbercolor
-            return "The tranche-5 public surface does not expose a separate edge-number color control; `show_edge_numbers=true` uses the governed render-owner default `grey`."
+            return "The tranche-5 public surface does not expose a separate edge-number color control; `showedgenumber=true` uses the governed render-owner default `grey`."
         end
         return "`$(legacy)` is internal to the Makie recipe owner and is not accepted on the public surface."
     end
@@ -21,32 +21,32 @@ function _validate_public_limits(limit, helper_message::String)
 end
 
 Makie.@recipe PhyloPlot (net,) begin
-    use_edge_lengths = false
-    show_tip_labels = true
-    show_internal_node_names = false
-    show_node_numbers = false
-    show_edge_lengths = false
-    show_edge_numbers = false
-    show_gamma = false
-    edge_color = "black"
-    default_edge_color = nothing
-    major_hybrid_edge_color = "deepskyblue4"
-    minor_hybrid_edge_color = "deepskyblue"
-    edge_width = 1
-    minor_edge_linestyle = nothing
-    minor_edge_arrow_length = nothing
-    node_annotations = DataFrame()
-    edge_annotations = DataFrame()
-    node_annotation_scale = 1
-    edge_annotation_scale = 1
-    node_annotation_color = "black"
-    edge_annotation_color = "black"
-    node_annotation_align = 1
-    edge_annotation_align = [0.5, 0]
-    tip_label_offset = 0
-    tip_label_scale = 1
-    x_limits = nothing
-    y_limits = nothing
+    useedgelength = false
+    showtiplabel = true
+    shownodelabel = false
+    shownodenumber = false
+    showedgelength = false
+    showedgenumber = false
+    showgamma = false
+    edgecolor = "black"
+    defaultedgecolor = nothing
+    majorhybridedgecolor = "deepskyblue4"
+    minorhybridedgecolor = "deepskyblue"
+    edgewidth = 1
+    minorlinetype = nothing
+    arrowlen = nothing
+    nodelabel = DataFrame()
+    edgelabel = DataFrame()
+    nodecex = 1
+    edgecex = 1
+    nodelabelcolor = "black"
+    edgelabelcolor = "black"
+    nodelabeladj = 1
+    edgelabeladj = [0.5, 0]
+    tipoffset = 0
+    tipcex = 1
+    xlim = nothing
+    ylim = nothing
     style = :fulltree
 end
 
@@ -67,49 +67,49 @@ end
 
 function Makie.plot!(plot::PhyloPlot)
     attributes = resolve_phylo_plot_attributes(
-        use_edge_lengths=Makie.to_value(plot[:use_edge_lengths]),
-        show_tip_labels=Makie.to_value(plot[:show_tip_labels]),
-        show_internal_node_names=Makie.to_value(plot[:show_internal_node_names]),
-        show_node_numbers=Makie.to_value(plot[:show_node_numbers]),
-        show_edge_lengths=Makie.to_value(plot[:show_edge_lengths]),
-        show_edge_numbers=Makie.to_value(plot[:show_edge_numbers]),
-        show_gamma=Makie.to_value(plot[:show_gamma]),
-        edge_color=Makie.to_value(plot[:edge_color]),
-        default_edge_color=Makie.to_value(plot[:default_edge_color]),
-        major_hybrid_edge_color=Makie.to_value(plot[:major_hybrid_edge_color]),
-        minor_hybrid_edge_color=Makie.to_value(plot[:minor_hybrid_edge_color]),
-        edge_width=Makie.to_value(plot[:edge_width]),
-        minor_edge_linestyle=Makie.to_value(plot[:minor_edge_linestyle]),
-        minor_edge_arrow_length=Makie.to_value(plot[:minor_edge_arrow_length]),
-        node_annotations=Makie.to_value(plot[:node_annotations]),
-        edge_annotations=Makie.to_value(plot[:edge_annotations]),
-        node_annotation_scale=Makie.to_value(plot[:node_annotation_scale]),
-        edge_annotation_scale=Makie.to_value(plot[:edge_annotation_scale]),
-        node_annotation_color=Makie.to_value(plot[:node_annotation_color]),
-        edge_annotation_color=Makie.to_value(plot[:edge_annotation_color]),
-        node_annotation_align=Makie.to_value(plot[:node_annotation_align]),
-        edge_annotation_align=Makie.to_value(plot[:edge_annotation_align]),
-        tip_label_offset=Makie.to_value(plot[:tip_label_offset]),
-        tip_label_scale=Makie.to_value(plot[:tip_label_scale]),
-        x_limits=Makie.to_value(plot[:x_limits]),
-        y_limits=Makie.to_value(plot[:y_limits]),
+        useedgelength=Makie.to_value(plot[:useedgelength]),
+        showtiplabel=Makie.to_value(plot[:showtiplabel]),
+        shownodelabel=Makie.to_value(plot[:shownodelabel]),
+        shownodenumber=Makie.to_value(plot[:shownodenumber]),
+        showedgelength=Makie.to_value(plot[:showedgelength]),
+        showedgenumber=Makie.to_value(plot[:showedgenumber]),
+        showgamma=Makie.to_value(plot[:showgamma]),
+        edgecolor=Makie.to_value(plot[:edgecolor]),
+        defaultedgecolor=Makie.to_value(plot[:defaultedgecolor]),
+        majorhybridedgecolor=Makie.to_value(plot[:majorhybridedgecolor]),
+        minorhybridedgecolor=Makie.to_value(plot[:minorhybridedgecolor]),
+        edgewidth=Makie.to_value(plot[:edgewidth]),
+        minorlinetype=Makie.to_value(plot[:minorlinetype]),
+        arrowlen=Makie.to_value(plot[:arrowlen]),
+        nodelabel=Makie.to_value(plot[:nodelabel]),
+        edgelabel=Makie.to_value(plot[:edgelabel]),
+        nodecex=Makie.to_value(plot[:nodecex]),
+        edgecex=Makie.to_value(plot[:edgecex]),
+        nodelabelcolor=Makie.to_value(plot[:nodelabelcolor]),
+        edgelabelcolor=Makie.to_value(plot[:edgelabelcolor]),
+        nodelabeladj=Makie.to_value(plot[:nodelabeladj]),
+        edgelabeladj=Makie.to_value(plot[:edgelabeladj]),
+        tipoffset=Makie.to_value(plot[:tipoffset]),
+        tipcex=Makie.to_value(plot[:tipcex]),
+        xlim=Makie.to_value(plot[:xlim]),
+        ylim=Makie.to_value(plot[:ylim]),
         style=Makie.to_value(plot[:style]),
     )
 
     net = deepcopy(Makie.to_value(plot[:net]))
     layout = prepare_plot_layout(net, attributes; preorder=true)
-    validated_x_limits = _validate_public_limits(
-        attributes.x_limits,
-        layout.bounds.x_limits_error_message,
+    validated_xlim = _validate_public_limits(
+        attributes.xlim,
+        layout.bounds.xlim_error_message,
     )
-    validated_y_limits = _validate_public_limits(
-        attributes.y_limits,
-        layout.bounds.y_limits_error_message,
+    validated_ylim = _validate_public_limits(
+        attributes.ylim,
+        layout.bounds.ylim_error_message,
     )
     resolved_attributes = with_phylo_plot_limits(
         attributes,
-        validated_x_limits,
-        validated_y_limits,
+        validated_xlim,
+        validated_ylim,
     )
     render_plot!(plot, net, resolved_attributes, layout)
     return plot

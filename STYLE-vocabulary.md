@@ -27,9 +27,9 @@ keyword arguments, symbols, struct fields, or deliberate project terms.
 
 Examples:
 
-- Write "major hybrid edge" in prose; write `major_hybrid_edge_color` only for
+- Write "major hybrid edge" in prose; write `majorhybridedgecolor` only for
   the exact keyword name.
-- Write "tip label" in prose; write `show_tip_labels` only for the exact keyword
+- Write "tip label" in prose; write `showtiplabel` only for the exact keyword
   name.
 - Write "full-tree style" in prose; write `:fulltree` only for the exact style
   symbol.
@@ -194,7 +194,7 @@ or public attribute resolution.
 ### Tip and leaf
 
 `tip` is the canonical public plotting term for user-facing attribute names
-such as `show_tip_labels`, `tip_label_offset`, and related tip-label controls.
+such as `showtiplabel`, `tipoffset`, and related tip-label controls.
 `leaf` is the graph-structural term used when discussing `PhyloNetworks` node
 properties or general tree and network structure.
 

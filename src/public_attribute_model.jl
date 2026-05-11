@@ -3,62 +3,62 @@ using DataFrames: AbstractDataFrame, DataFrame
 const SUPPORTED_STYLE_SYMBOLS = (:fulltree, :majortree)
 
 const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
-    :use_edge_lengths,
-    :show_tip_labels,
-    :show_internal_node_names,
-    :show_node_numbers,
-    :show_edge_lengths,
-    :show_edge_numbers,
-    :show_gamma,
-    :edge_color,
-    :default_edge_color,
-    :major_hybrid_edge_color,
-    :minor_hybrid_edge_color,
-    :edge_width,
-    :minor_edge_linestyle,
-    :minor_edge_arrow_length,
-    :node_annotations,
-    :edge_annotations,
-    :node_annotation_scale,
-    :edge_annotation_scale,
-    :node_annotation_color,
-    :edge_annotation_color,
-    :node_annotation_align,
-    :edge_annotation_align,
-    :tip_label_offset,
-    :tip_label_scale,
-    :x_limits,
-    :y_limits,
+    :useedgelength,
+    :showtiplabel,
+    :shownodelabel,
+    :shownodenumber,
+    :showedgelength,
+    :showedgenumber,
+    :showgamma,
+    :edgecolor,
+    :defaultedgecolor,
+    :majorhybridedgecolor,
+    :minorhybridedgecolor,
+    :edgewidth,
+    :minorlinetype,
+    :arrowlen,
+    :nodelabel,
+    :edgelabel,
+    :nodecex,
+    :edgecex,
+    :nodelabelcolor,
+    :edgelabelcolor,
+    :nodelabeladj,
+    :edgelabeladj,
+    :tipoffset,
+    :tipcex,
+    :xlim,
+    :ylim,
     :style,
 )
 
 const PHYLOPLOT_ATTRIBUTE_MIGRATIONS = (
-    (legacy = :useedgelength, public = :use_edge_lengths),
-    (legacy = :showtiplabel, public = :show_tip_labels),
-    (legacy = :shownodelabel, public = :show_internal_node_names),
-    (legacy = :shownodenumber, public = :show_node_numbers),
-    (legacy = :showedgelength, public = :show_edge_lengths),
-    (legacy = :showedgenumber, public = :show_edge_numbers),
-    (legacy = :showgamma, public = :show_gamma),
-    (legacy = :edgecolor, public = :edge_color),
-    (legacy = :defaultedgecolor, public = :default_edge_color),
-    (legacy = :majorhybridedgecolor, public = :major_hybrid_edge_color),
-    (legacy = :minorhybridedgecolor, public = :minor_hybrid_edge_color),
-    (legacy = :edgewidth, public = :edge_width),
-    (legacy = :minorlinetype, public = :minor_edge_linestyle),
-    (legacy = :arrowlen, public = :minor_edge_arrow_length),
-    (legacy = :nodelabel, public = :node_annotations),
-    (legacy = :edgelabel, public = :edge_annotations),
-    (legacy = :nodecex, public = :node_annotation_scale),
-    (legacy = :edgecex, public = :edge_annotation_scale),
-    (legacy = :nodelabelcolor, public = :node_annotation_color),
-    (legacy = :edgelabelcolor, public = :edge_annotation_color),
-    (legacy = :nodelabeladj, public = :node_annotation_align),
-    (legacy = :edgelabeladj, public = :edge_annotation_align),
-    (legacy = :tipoffset, public = :tip_label_offset),
-    (legacy = :tipcex, public = :tip_label_scale),
-    (legacy = :xlim, public = :x_limits),
-    (legacy = :ylim, public = :y_limits),
+    (legacy = :useedgelength, public = :useedgelength),
+    (legacy = :showtiplabel, public = :showtiplabel),
+    (legacy = :shownodelabel, public = :shownodelabel),
+    (legacy = :shownodenumber, public = :shownodenumber),
+    (legacy = :showedgelength, public = :showedgelength),
+    (legacy = :showedgenumber, public = :showedgenumber),
+    (legacy = :showgamma, public = :showgamma),
+    (legacy = :edgecolor, public = :edgecolor),
+    (legacy = :defaultedgecolor, public = :defaultedgecolor),
+    (legacy = :majorhybridedgecolor, public = :majorhybridedgecolor),
+    (legacy = :minorhybridedgecolor, public = :minorhybridedgecolor),
+    (legacy = :edgewidth, public = :edgewidth),
+    (legacy = :minorlinetype, public = :minorlinetype),
+    (legacy = :arrowlen, public = :arrowlen),
+    (legacy = :nodelabel, public = :nodelabel),
+    (legacy = :edgelabel, public = :edgelabel),
+    (legacy = :nodecex, public = :nodecex),
+    (legacy = :edgecex, public = :edgecex),
+    (legacy = :nodelabelcolor, public = :nodelabelcolor),
+    (legacy = :edgelabelcolor, public = :edgelabelcolor),
+    (legacy = :nodelabeladj, public = :nodelabeladj),
+    (legacy = :edgelabeladj, public = :edgelabeladj),
+    (legacy = :tipoffset, public = :tipoffset),
+    (legacy = :tipcex, public = :tipcex),
+    (legacy = :xlim, public = :xlim),
+    (legacy = :ylim, public = :ylim),
     (legacy = :edgenumbercolor, public = nothing),
     (legacy = :preorder, public = nothing),
 )
@@ -82,32 +82,32 @@ struct PhyloPlotAttributes{
     TMinorEdgeArrowLength,
     TEdgeWidth,
 }
-    use_edge_lengths::Bool
-    show_tip_labels::Bool
-    show_internal_node_names::Bool
-    show_node_numbers::Bool
-    show_edge_lengths::Bool
-    show_edge_numbers::Bool
-    show_gamma::Bool
-    edge_color::TEdgeColor
-    default_edge_color::TDefaultEdgeColor
-    major_hybrid_edge_color::TMajorHybridEdgeColor
-    minor_hybrid_edge_color::TMinorHybridEdgeColor
-    edge_width::TEdgeWidth
-    minor_edge_linestyle::TMinorEdgeLineStyle
-    minor_edge_arrow_length::TMinorEdgeArrowLength
-    node_annotations::DataFrame
-    edge_annotations::DataFrame
-    node_annotation_scale::TNodeAnnotationScale
-    edge_annotation_scale::TEdgeAnnotationScale
-    node_annotation_color::TNodeAnnotationColor
-    edge_annotation_color::TEdgeAnnotationColor
-    node_annotation_align::TNodeAnnotationAlign
-    edge_annotation_align::TEdgeAnnotationAlign
-    tip_label_offset::TTipLabelOffset
-    tip_label_scale::TTipLabelScale
-    x_limits::TXLimits
-    y_limits::TYLimits
+    useedgelength::Bool
+    showtiplabel::Bool
+    shownodelabel::Bool
+    shownodenumber::Bool
+    showedgelength::Bool
+    showedgenumber::Bool
+    showgamma::Bool
+    edgecolor::TEdgeColor
+    defaultedgecolor::TDefaultEdgeColor
+    majorhybridedgecolor::TMajorHybridEdgeColor
+    minorhybridedgecolor::TMinorHybridEdgeColor
+    edgewidth::TEdgeWidth
+    minorlinetype::TMinorEdgeLineStyle
+    arrowlen::TMinorEdgeArrowLength
+    nodelabel::DataFrame
+    edgelabel::DataFrame
+    nodecex::TNodeAnnotationScale
+    edgecex::TEdgeAnnotationScale
+    nodelabelcolor::TNodeAnnotationColor
+    edgelabelcolor::TEdgeAnnotationColor
+    nodelabeladj::TNodeAnnotationAlign
+    edgelabeladj::TEdgeAnnotationAlign
+    tipoffset::TTipLabelOffset
+    tipcex::TTipLabelScale
+    xlim::TXLimits
+    ylim::TYLimits
     style::Symbol
 end
 
@@ -123,127 +123,127 @@ function _normalize_style(style::Symbol)::Symbol
     return :fulltree
 end
 
-function _resolve_default_edge_color(edge_color, default_edge_color, edge_color_mode::Symbol)
-    if edge_color_mode == :by_edge
-        return isnothing(default_edge_color) ? "black" : string(default_edge_color)
+function _resolve_defaultedgecolor(edgecolor, defaultedgecolor, edgecolor_mode::Symbol)
+    if edgecolor_mode == :by_edge
+        return isnothing(defaultedgecolor) ? "black" : string(defaultedgecolor)
     end
-    return isnothing(default_edge_color) ? edge_color : default_edge_color
+    return isnothing(defaultedgecolor) ? edgecolor : defaultedgecolor
 end
 
-function _resolve_edge_width_mode(edge_width)::Symbol
-    if edge_width isa Number
+function _resolve_edgewidth_mode(edgewidth)::Symbol
+    if edgewidth isa Number
         return :uniform
-    elseif edge_width isa AbstractDict
-        valtype(edge_width) <: Number || error("edge_width should be numerical")
+    elseif edgewidth isa AbstractDict
+        valtype(edgewidth) <: Number || error("edgewidth should be numerical")
         return :by_edge
     else
         throw(
             ArgumentError(
-                "edge_width should be a number or an AbstractDict with numerical values.",
+                "edgewidth should be a number or an AbstractDict with numerical values.",
             ),
         )
     end
 end
 
 function resolve_phylo_plot_attributes(;
-    use_edge_lengths::Bool=false,
-    show_tip_labels::Bool=true,
-    show_internal_node_names::Bool=false,
-    show_node_numbers::Bool=false,
-    show_edge_lengths::Bool=false,
-    show_edge_numbers::Bool=false,
-    show_gamma::Bool=false,
-    edge_color="black",
-    default_edge_color=nothing,
-    major_hybrid_edge_color::AbstractString="deepskyblue4",
-    minor_hybrid_edge_color::AbstractString="deepskyblue",
-    edge_width=1,
-    minor_edge_linestyle=nothing,
-    minor_edge_arrow_length=nothing,
-    node_annotations::AbstractDataFrame=DataFrame(),
-    edge_annotations::AbstractDataFrame=DataFrame(),
-    node_annotation_scale=1,
-    edge_annotation_scale=1,
-    node_annotation_color="black",
-    edge_annotation_color="black",
-    node_annotation_align=1,
-    edge_annotation_align=[0.5, 0],
-    tip_label_offset=0,
-    tip_label_scale=1,
-    x_limits=nothing,
-    y_limits=nothing,
+    useedgelength::Bool=false,
+    showtiplabel::Bool=true,
+    shownodelabel::Bool=false,
+    shownodenumber::Bool=false,
+    showedgelength::Bool=false,
+    showedgenumber::Bool=false,
+    showgamma::Bool=false,
+    edgecolor="black",
+    defaultedgecolor=nothing,
+    majorhybridedgecolor::AbstractString="deepskyblue4",
+    minorhybridedgecolor::AbstractString="deepskyblue",
+    edgewidth=1,
+    minorlinetype=nothing,
+    arrowlen=nothing,
+    nodelabel::AbstractDataFrame=DataFrame(),
+    edgelabel::AbstractDataFrame=DataFrame(),
+    nodecex=1,
+    edgecex=1,
+    nodelabelcolor="black",
+    edgelabelcolor="black",
+    nodelabeladj=1,
+    edgelabeladj=[0.5, 0],
+    tipoffset=0,
+    tipcex=1,
+    xlim=nothing,
+    ylim=nothing,
     style::Symbol=:fulltree,
 )::PhyloPlotAttributes
-    _resolve_edge_width_mode(edge_width)
+    _resolve_edgewidth_mode(edgewidth)
     resolved_style = _normalize_style(style)
-    resolved_minor_edge_arrow_length =
-        isnothing(minor_edge_arrow_length) ? (style == :majortree ? 0 : 0.1) : minor_edge_arrow_length
-    resolved_minor_edge_linestyle =
-        isnothing(minor_edge_linestyle) ? (style == :majortree ? "solid" : "longdash") : minor_edge_linestyle
+    resolved_arrowlen =
+        isnothing(arrowlen) ? (style == :majortree ? 0 : 0.1) : arrowlen
+    resolved_minorlinetype =
+        isnothing(minorlinetype) ? (style == :majortree ? "solid" : "longdash") : minorlinetype
 
     return PhyloPlotAttributes(
-        use_edge_lengths,
-        show_tip_labels,
-        show_internal_node_names,
-        show_node_numbers,
-        show_edge_lengths,
-        show_edge_numbers,
-        show_gamma,
-        edge_color,
-        default_edge_color,
-        major_hybrid_edge_color,
-        minor_hybrid_edge_color,
-        edge_width,
-        resolved_minor_edge_linestyle,
-        resolved_minor_edge_arrow_length,
-        _normalize_dataframe(node_annotations),
-        _normalize_dataframe(edge_annotations),
-        node_annotation_scale,
-        edge_annotation_scale,
-        node_annotation_color,
-        edge_annotation_color,
-        node_annotation_align,
-        edge_annotation_align,
-        tip_label_offset,
-        tip_label_scale,
-        x_limits,
-        y_limits,
+        useedgelength,
+        showtiplabel,
+        shownodelabel,
+        shownodenumber,
+        showedgelength,
+        showedgenumber,
+        showgamma,
+        edgecolor,
+        defaultedgecolor,
+        majorhybridedgecolor,
+        minorhybridedgecolor,
+        edgewidth,
+        resolved_minorlinetype,
+        resolved_arrowlen,
+        _normalize_dataframe(nodelabel),
+        _normalize_dataframe(edgelabel),
+        nodecex,
+        edgecex,
+        nodelabelcolor,
+        edgelabelcolor,
+        nodelabeladj,
+        edgelabeladj,
+        tipoffset,
+        tipcex,
+        xlim,
+        ylim,
         resolved_style,
     )
 end
 
 function with_phylo_plot_limits(
     attributes::PhyloPlotAttributes,
-    x_limits,
-    y_limits,
+    xlim,
+    ylim,
 )::PhyloPlotAttributes
     return PhyloPlotAttributes(
-        attributes.use_edge_lengths,
-        attributes.show_tip_labels,
-        attributes.show_internal_node_names,
-        attributes.show_node_numbers,
-        attributes.show_edge_lengths,
-        attributes.show_edge_numbers,
-        attributes.show_gamma,
-        attributes.edge_color,
-        attributes.default_edge_color,
-        attributes.major_hybrid_edge_color,
-        attributes.minor_hybrid_edge_color,
-        attributes.edge_width,
-        attributes.minor_edge_linestyle,
-        attributes.minor_edge_arrow_length,
-        attributes.node_annotations,
-        attributes.edge_annotations,
-        attributes.node_annotation_scale,
-        attributes.edge_annotation_scale,
-        attributes.node_annotation_color,
-        attributes.edge_annotation_color,
-        attributes.node_annotation_align,
-        attributes.edge_annotation_align,
-        attributes.tip_label_offset,
-        attributes.tip_label_scale,
-        x_limits,
-        y_limits,
+        attributes.useedgelength,
+        attributes.showtiplabel,
+        attributes.shownodelabel,
+        attributes.shownodenumber,
+        attributes.showedgelength,
+        attributes.showedgenumber,
+        attributes.showgamma,
+        attributes.edgecolor,
+        attributes.defaultedgecolor,
+        attributes.majorhybridedgecolor,
+        attributes.minorhybridedgecolor,
+        attributes.edgewidth,
+        attributes.minorlinetype,
+        attributes.arrowlen,
+        attributes.nodelabel,
+        attributes.edgelabel,
+        attributes.nodecex,
+        attributes.edgecex,
+        attributes.nodelabelcolor,
+        attributes.edgelabelcolor,
+        attributes.nodelabeladj,
+        attributes.edgelabeladj,
+        attributes.tipoffset,
+        attributes.tipcex,
+        xlim,
+        ylim,
         attributes.style,
     )
 end
