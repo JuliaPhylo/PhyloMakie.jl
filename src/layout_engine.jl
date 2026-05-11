@@ -20,18 +20,18 @@ struct PlotGeometry
 end
 
 function _node_index(
-    net::PhyloNetworks.HybridNetwork,
-    node::PhyloNetworks.Node,
-)::Int
+        net::PhyloNetworks.HybridNetwork,
+        node::PhyloNetworks.Node,
+    )::Int
     node_index = findfirst(candidate -> candidate === node, net.node)
     isnothing(node_index) && error("node $(node.number) is not part of the network")
     return node_index
 end
 
 function _edge_index(
-    net::PhyloNetworks.HybridNetwork,
-    edge::PhyloNetworks.Edge,
-)::Int
+        net::PhyloNetworks.HybridNetwork,
+        edge::PhyloNetworks.Edge,
+    )::Int
     edge_index = findfirst(candidate -> candidate === edge, net.edge)
     isnothing(edge_index) && error("edge $(edge.number) is not part of the network")
     return edge_index
@@ -45,7 +45,7 @@ function _prepare_traversal!(net::PhyloNetworks.HybridNetwork)::Nothing
             throw(
                 PhyloNetworks.RootMismatch(
                     err.msg *
-                    "\nPlease change the root, perhaps using rootatnode! or rootatedge!",
+                        "\nPlease change the root, perhaps using rootatnode! or rootatedge!",
                 ),
             )
         end
@@ -56,9 +56,9 @@ function _prepare_traversal!(net::PhyloNetworks.HybridNetwork)::Nothing
 end
 
 function _resolve_edge_lengths(
-    net::PhyloNetworks.HybridNetwork,
-    useedgelength::Bool,
-)::Tuple{Bool, Vector{Float64}}
+        net::PhyloNetworks.HybridNetwork,
+        useedgelength::Bool,
+    )::Tuple{Bool, Vector{Float64}}
     calculate_edge_lengths = !useedgelength
     if useedgelength
         all_edge_lengths_missing = true
@@ -117,10 +117,10 @@ function _resolve_edge_lengths(
 end
 
 function layout_plot_geometry(
-    net::PhyloNetworks.HybridNetwork,
-    attributes::PhyloPlotAttributes;
-    preorder::Bool=true,
-)::PlotGeometry
+        net::PhyloNetworks.HybridNetwork,
+        attributes::PhyloPlotAttributes;
+        preorder::Bool = true,
+    )::PlotGeometry
     usedirecthybridline = attributes.style == :majortree
     preorder && _prepare_traversal!(net)
 

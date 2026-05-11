@@ -2,7 +2,7 @@ import DataFrames
 import PhyloNetworks
 
 function _format_sig3(value::Real)::String
-    rounded_value = round(Float64(value); sigdigits=3)
+    rounded_value = round(Float64(value); sigdigits = 3)
     if isinteger(rounded_value)
         return string(Int(rounded_value))
     end
@@ -32,9 +32,9 @@ struct PlotLayout
 end
 
 function _format_annotation_value(
-    table::DataFrames.AbstractDataFrame,
-    row_index::Int,
-)::String
+        table::DataFrames.AbstractDataFrame,
+        row_index::Int,
+    )::String
     if ismissing(table[row_index, 2])
         return ""
     end
@@ -45,12 +45,12 @@ function _format_annotation_value(
 end
 
 function _validate_node_data(
-    net::PhyloNetworks.HybridNetwork,
-    nodelabel::DataFrames.DataFrame,
-)::Tuple{Bool, DataFrames.DataFrame}
+        net::PhyloNetworks.HybridNetwork,
+        nodelabel::DataFrames.DataFrame,
+    )::Tuple{Bool, DataFrames.DataFrame}
     labelnodes = size(nodelabel, 1) > 0
     if labelnodes &&
-       (size(nodelabel, 2) < 2 || !(nonmissingtype(eltype(nodelabel[!, 1])) <: Integer))
+            (size(nodelabel, 2) < 2 || !(nonmissingtype(eltype(nodelabel[!, 1])) <: Integer))
         @warn "nodelabel should have 2+ columns, the first one giving the node numbers (Integer)"
         labelnodes = false
     end
@@ -73,13 +73,13 @@ function _validate_node_data(
 end
 
 function _prepare_node_annotation_data(
-    net::PhyloNetworks.HybridNetwork,
-    nodelabel::DataFrames.AbstractDataFrame,
-    shownodenumber::Bool,
-    shownodelabel::Bool,
-    labelnodes::Bool,
-    geometry::PlotGeometry,
-)::DataFrames.DataFrame
+        net::PhyloNetworks.HybridNetwork,
+        nodelabel::DataFrames.AbstractDataFrame,
+        shownodenumber::Bool,
+        shownodelabel::Bool,
+        labelnodes::Bool,
+        geometry::PlotGeometry,
+    )::DataFrames.DataFrame
     row_count = if shownodenumber || shownodelabel || labelnodes
         net.numnodes
     else
@@ -92,7 +92,7 @@ function _prepare_node_annotation_data(
         :lea => Vector{Bool}(undef, row_count),
         :x => Vector{Float64}(undef, row_count),
         :y => Vector{Float64}(undef, row_count);
-        copycols=false,
+        copycols = false,
     )
 
     row_index = 1
@@ -116,11 +116,11 @@ function _prepare_node_annotation_data(
 end
 
 function _prepare_edge_annotation_data(
-    net::PhyloNetworks.HybridNetwork,
-    edgelabel::DataFrames.AbstractDataFrame,
-    style::Symbol,
-    geometry::PlotGeometry,
-)::Tuple{Bool, DataFrames.DataFrame}
+        net::PhyloNetworks.HybridNetwork,
+        edgelabel::DataFrames.AbstractDataFrame,
+        style::Symbol,
+        geometry::PlotGeometry,
+    )::Tuple{Bool, DataFrames.DataFrame}
     edge_data = DataFrames.DataFrame(
         :len => Vector{String}(undef, net.numedges),
         :gam => Vector{String}(undef, net.numedges),
@@ -130,12 +130,12 @@ function _prepare_edge_annotation_data(
         :min => Vector{Bool}(undef, net.numedges),
         :x => Vector{Float64}(undef, net.numedges),
         :y => Vector{Float64}(undef, net.numedges);
-        copycols=false,
+        copycols = false,
     )
 
     labeledges = size(edgelabel, 1) > 0
     if labeledges &&
-       (size(edgelabel, 2) < 2 || !(nonmissingtype(eltype(edgelabel[!, 1])) <: Integer))
+            (size(edgelabel, 2) < 2 || !(nonmissingtype(eltype(edgelabel[!, 1])) <: Integer))
         @warn "edgelabel should have 2+ columns, the first one giving the edge numbers (Integer)"
         labeledges = false
     end
@@ -186,18 +186,18 @@ function _prepare_edge_annotation_data(
 end
 
 function _resolve_plot_bounds(
-    attributes::PhyloPlotAttributes,
-    geometry::PlotGeometry,
-    labelnodes::Bool,
-)::PlotBounds
+        attributes::PhyloPlotAttributes,
+        geometry::PlotGeometry,
+        labelnodes::Bool,
+    )::PlotBounds
     xmin = geometry.xmin
     xmax = geometry.xmax
     ymin = geometry.ymin
     ymax = geometry.ymax
     if attributes.showtiplabel ||
-       attributes.shownodenumber ||
-       attributes.shownodelabel ||
-       labelnodes
+            attributes.shownodenumber ||
+            attributes.shownodelabel ||
+            labelnodes
         expansion_factor = 0.1
         y_expansion = 0.5
         xmin -= (xmax - xmin) * expansion_factor
@@ -214,11 +214,11 @@ function _resolve_plot_bounds(
 end
 
 function prepare_plot_layout(
-    net::PhyloNetworks.HybridNetwork,
-    attributes::PhyloPlotAttributes;
-    preorder::Bool=true,
-)::PlotLayout
-    geometry = layout_plot_geometry(net, attributes; preorder=preorder)
+        net::PhyloNetworks.HybridNetwork,
+        attributes::PhyloPlotAttributes;
+        preorder::Bool = true,
+    )::PlotLayout
+    geometry = layout_plot_geometry(net, attributes; preorder = preorder)
     labelnodes, nodelabel = _validate_node_data(net, attributes.nodelabel)
     node_data = _prepare_node_annotation_data(
         net,

@@ -35,25 +35,25 @@ const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
 
 
 struct PhyloPlotAttributes{
-    TXLimits,
-    TYLimits,
-    TTipLabelOffset,
-    TTipLabelScale,
-    TNodeAnnotationScale,
-    TEdgeAnnotationScale,
-    TNodeAnnotationColor,
-    TEdgeAnnotationColor,
-    TEdgeNumberColor,
-    TNodeAnnotationAlign,
-    TEdgeAnnotationAlign,
-    TEdgeColor,
-    TDefaultEdgeColor,
-    TMajorHybridEdgeColor,
-    TMinorHybridEdgeColor,
-    TMinorEdgeLineStyle,
-    TMinorEdgeArrowLength,
-    TEdgeWidth,
-}
+        TXLimits,
+        TYLimits,
+        TTipLabelOffset,
+        TTipLabelScale,
+        TNodeAnnotationScale,
+        TEdgeAnnotationScale,
+        TNodeAnnotationColor,
+        TEdgeAnnotationColor,
+        TEdgeNumberColor,
+        TNodeAnnotationAlign,
+        TEdgeAnnotationAlign,
+        TEdgeColor,
+        TDefaultEdgeColor,
+        TMajorHybridEdgeColor,
+        TMinorHybridEdgeColor,
+        TMinorEdgeLineStyle,
+        TMinorEdgeArrowLength,
+        TEdgeWidth,
+    }
     useedgelength::Bool
     showtiplabel::Bool
     shownodelabel::Bool
@@ -85,7 +85,7 @@ struct PhyloPlotAttributes{
 end
 
 function _normalize_dataframe(table::AbstractDataFrame)::DataFrame
-    return DataFrame(table; copycols=true)
+    return DataFrame(table; copycols = true)
 end
 
 function _normalize_style(style::Symbol)::Symbol
@@ -119,35 +119,35 @@ function _resolve_edgewidth_mode(edgewidth)::Symbol
 end
 
 function resolve_phylo_plot_attributes(;
-    useedgelength::Bool=false,
-    showtiplabel::Bool=true,
-    shownodelabel::Bool=false,
-    shownodenumber::Bool=false,
-    showedgelength::Bool=false,
-    showedgenumber::Bool=false,
-    showgamma::Bool=false,
-    edgecolor="black",
-    defaultedgecolor=nothing,
-    majorhybridedgecolor::AbstractString="deepskyblue4",
-    minorhybridedgecolor::AbstractString="deepskyblue",
-    edgewidth=1,
-    minorlinetype=nothing,
-    arrowlen=nothing,
-    nodelabel::AbstractDataFrame=DataFrame(),
-    edgelabel::AbstractDataFrame=DataFrame(),
-    nodecex=1,
-    edgecex=1,
-    nodelabelcolor="black",
-    edgelabelcolor="black",
-    edgenumbercolor="grey",
-    nodelabeladj=1,
-    edgelabeladj=[0.5, 0],
-    tipoffset=0,
-    tipcex=1,
-    xlim=nothing,
-    ylim=nothing,
-    style::Symbol=:fulltree,
-)::PhyloPlotAttributes
+        useedgelength::Bool = false,
+        showtiplabel::Bool = true,
+        shownodelabel::Bool = false,
+        shownodenumber::Bool = false,
+        showedgelength::Bool = false,
+        showedgenumber::Bool = false,
+        showgamma::Bool = false,
+        edgecolor = "black",
+        defaultedgecolor = nothing,
+        majorhybridedgecolor::AbstractString = "deepskyblue4",
+        minorhybridedgecolor::AbstractString = "deepskyblue",
+        edgewidth = 1,
+        minorlinetype = nothing,
+        arrowlen = nothing,
+        nodelabel::AbstractDataFrame = DataFrame(),
+        edgelabel::AbstractDataFrame = DataFrame(),
+        nodecex = 1,
+        edgecex = 1,
+        nodelabelcolor = "black",
+        edgelabelcolor = "black",
+        edgenumbercolor = "grey",
+        nodelabeladj = 1,
+        edgelabeladj = [0.5, 0],
+        tipoffset = 0,
+        tipcex = 1,
+        xlim = nothing,
+        ylim = nothing,
+        style::Symbol = :fulltree,
+    )::PhyloPlotAttributes
     _resolve_edgewidth_mode(edgewidth)
     resolved_style = _normalize_style(style)
     resolved_arrowlen =
@@ -188,10 +188,10 @@ function resolve_phylo_plot_attributes(;
 end
 
 function with_phylo_plot_limits(
-    attributes::PhyloPlotAttributes,
-    xlim,
-    ylim,
-)::PhyloPlotAttributes
+        attributes::PhyloPlotAttributes,
+        xlim,
+        ylim,
+    )::PhyloPlotAttributes
     return PhyloPlotAttributes(
         attributes.useedgelength,
         attributes.showtiplabel,
