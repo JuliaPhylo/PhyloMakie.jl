@@ -21,14 +21,22 @@ surface instead of keeping the legacy keyword shell as the package contract.
 ## Installation
 
 PhyloMakie is currently documented through GitHub-based installation. This
-repository does not currently claim General-registry installation. The
-quickstart example below uses CairoMakie as the backend, so install it in the
-same environment before running that example.
+repository does not currently claim General-registry installation. 
 
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
-Pkg.add("CairoMakie")
+```
+
+The
+quickstart example below uses CairoMakie as the backend and needs PhyloNetworks for the types and data parser, so install these in the
+same environment before running that example.
+
+```julia
+Pkg.add([
+    "CairoMakie",
+    "PhyloNetworks",
+])
 ```
 
 ## Quickstart
