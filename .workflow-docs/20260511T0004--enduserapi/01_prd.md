@@ -34,7 +34,7 @@ Confirmed user clarifications on 2026-05-11:
   later workflow.
 - `edgenumbercolor` remains unsupported unless explicitly authorized in a later
   workflow.
-- Downstream work may update `STYLE-vocabulary.md` so the compact names become
+- Update `STYLE-vocabulary.md` so the compact names become
   canonical PhyloMakie API names.
 
 The confirmed rename map is:
