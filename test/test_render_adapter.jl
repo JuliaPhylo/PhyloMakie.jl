@@ -45,6 +45,12 @@
         @test dotted_case.layers.minor_edge_shafts.plot !== nothing
         @test length(dotted_case.layers.minor_edge_tips.plots) ==
             length(dotted_case.layers.minor_edge_tips.startpoints)
+        for plot in dotted_case.layers.minor_edge_tips.plots
+            metrics = only(Makie.to_value(plot.arrow_metrics[]))
+            @test length(Makie.to_value(plot.meshes[])) == 2
+            @test isapprox(metrics[5], Makie.to_value(plot.tiplength[]))
+            @test isapprox(metrics[6], Makie.to_value(plot.tipwidth[]))
+        end
 
         @test blank_case.layers.minor_edge_shafts.plot === nothing
         @test isempty(blank_case.layers.minor_edge_tips.plots)

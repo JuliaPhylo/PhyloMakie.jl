@@ -67,9 +67,14 @@ const DEFAULT_NODE_BAR_WIDTH = 1.0
 const DEFAULT_TEXT_SIZE = 16.0
 const DEFAULT_ARROW_PIXEL_SCALE = 80.0
 const DEFAULT_ARROW_WIDTH_RATIO = 0.8
+const DEFAULT_INVISIBLE_ARROW_SHAFT_WIDTH = 1.0
 
 function _resolve_color(value)::Makie.RGBAf
     return convert(Makie.RGBAf, Makie.to_color(value))
+end
+
+function _transparent_color(color::Makie.RGBAf)::Makie.RGBAf
+    return Makie.RGBAf(color.r, color.g, color.b, 0.0f0)
 end
 
 function _resolve_edgecolors(
@@ -234,10 +239,10 @@ function _render_arrow_tip_layer!(
             taillength=0.0,
             tailwidth=0.0,
             minshaftlength=0.0,
-            shaftwidth=0.0,
+            shaftwidth=DEFAULT_INVISIBLE_ARROW_SHAFT_WIDTH,
             tiplength=tiplengths[index],
             tipwidth=tipwidths[index],
-            shaftcolor=colors[index],
+            shaftcolor=_transparent_color(colors[index]),
             tipcolor=colors[index],
             markerspace=:pixel,
         ) for index in eachindex(startpoints) if tiplengths[index] > 0
