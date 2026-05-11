@@ -32,6 +32,7 @@ Makie.@recipe PhyloPlot (net,) begin
     edgecex = 1
     nodelabelcolor = "black"
     edgelabelcolor = "black"
+    edgenumbercolor = "grey"
     nodelabeladj = 1
     edgelabeladj = [0.5, 0]
     tipoffset = 0
@@ -66,6 +67,7 @@ function Makie.plot!(plot::PhyloPlot)
         edgecex=Makie.to_value(plot[:edgecex]),
         nodelabelcolor=Makie.to_value(plot[:nodelabelcolor]),
         edgelabelcolor=Makie.to_value(plot[:edgelabelcolor]),
+        edgenumbercolor=Makie.to_value(plot[:edgenumbercolor]),
         nodelabeladj=Makie.to_value(plot[:nodelabeladj]),
         edgelabeladj=Makie.to_value(plot[:edgelabeladj]),
         tipoffset=Makie.to_value(plot[:tipoffset]),

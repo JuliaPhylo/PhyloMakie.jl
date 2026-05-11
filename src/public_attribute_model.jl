@@ -23,6 +23,7 @@ const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :edgecex,
     :nodelabelcolor,
     :edgelabelcolor,
+    :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
     :tipoffset,
@@ -42,6 +43,7 @@ struct PhyloPlotAttributes{
     TEdgeAnnotationScale,
     TNodeAnnotationColor,
     TEdgeAnnotationColor,
+    TEdgeNumberColor,
     TNodeAnnotationAlign,
     TEdgeAnnotationAlign,
     TEdgeColor,
@@ -72,6 +74,7 @@ struct PhyloPlotAttributes{
     edgecex::TEdgeAnnotationScale
     nodelabelcolor::TNodeAnnotationColor
     edgelabelcolor::TEdgeAnnotationColor
+    edgenumbercolor::TEdgeNumberColor
     nodelabeladj::TNodeAnnotationAlign
     edgelabeladj::TEdgeAnnotationAlign
     tipoffset::TTipLabelOffset
@@ -136,6 +139,7 @@ function resolve_phylo_plot_attributes(;
     edgecex=1,
     nodelabelcolor="black",
     edgelabelcolor="black",
+    edgenumbercolor="grey",
     nodelabeladj=1,
     edgelabeladj=[0.5, 0],
     tipoffset=0,
@@ -172,6 +176,7 @@ function resolve_phylo_plot_attributes(;
         edgecex,
         nodelabelcolor,
         edgelabelcolor,
+        edgenumbercolor,
         nodelabeladj,
         edgelabeladj,
         tipoffset,
@@ -208,6 +213,7 @@ function with_phylo_plot_limits(
         attributes.edgecex,
         attributes.nodelabelcolor,
         attributes.edgelabelcolor,
+        attributes.edgenumbercolor,
         attributes.nodelabeladj,
         attributes.edgelabeladj,
         attributes.tipoffset,

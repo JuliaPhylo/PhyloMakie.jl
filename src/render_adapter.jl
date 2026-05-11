@@ -588,7 +588,7 @@ function render_plot!(
         target,
         _table_strings(edge_table, axes(edge_table, 1), :num),
         _table_positions(edge_table, axes(edge_table, 1)),
-        _repeat_color(_resolve_color("grey"), size(edge_table, 1)),
+        _repeat_color(_resolve_color(attributes.edgenumbercolor), size(edge_table, 1)),
         _default_text_sizes(size(edge_table, 1)),
         (0.5, 0.0),
     ) : _empty_text_layer((0.5, 0.0))

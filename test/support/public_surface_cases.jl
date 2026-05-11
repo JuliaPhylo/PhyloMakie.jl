@@ -19,6 +19,7 @@ const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :edgecex,
     :nodelabelcolor,
     :edgelabelcolor,
+    :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
     :tipoffset,
