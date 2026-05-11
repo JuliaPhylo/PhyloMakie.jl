@@ -6,40 +6,38 @@
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks stored as `PhyloNetworks.HybridNetwork`. It preserves the plotting
-tasks that make `PhyloPlots.plot` useful, but it teaches a Makie-first public
-surface instead of keeping the legacy keyword shell as the package contract.
+networks stored as `PhyloNetworks.HybridNetwork`. It provides a pure Julia
+plotting path with no R dependency, using the standard Makie `plot` / `plot!`
+interface.
 
-## What PhyloMakie provides
+## Features
 
-- `plot(net)` and `plot!(ax, net)` for Makie-native plotting
-- `phyloplot` and `phyloplot!` as thin convenience surfaces over the same owner
-- full-tree and major-tree styles
-- edge-length scaling, gamma display, annotations, colors, widths, and axis composition
-- a pure Julia plotting path with no R dependency
+- `plot(net)` and `plot!(ax, net)` follow standard Makie conventions
+- `phyloplot` and `phyloplot!` as convenience aliases
+- Full-tree and major-tree layout styles
+- Edge-length scaling, gamma display, tip labels, colors, and widths
+- Composable with any Makie layout
 
-## Supported entry surfaces
+## API
 
-| Surface | Return contract | Notes |
+| Function | Returns | Notes |
 | --- | --- | --- |
-| `plot(net)` | `Makie.FigureAxisPlot` | Primary non-mutating Makie surface |
-| `plot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Primary mutating Makie surface |
-| `phyloplot(net)` | `Makie.FigureAxisPlot` | Thin convenience surface over the same owner |
-| `phyloplot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Thin convenience surface over the same owner |
+| `plot(net)` | `Makie.FigureAxisPlot` | Creates a new figure |
+| `plot!(ax, net)` | `PhyloPlot` | Draws into an existing axis |
+| `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)` |
+| `phyloplot!(ax, net)` | `PhyloPlot` | Alias for `plot!(ax, net)` |
 
 ## Installation
 
-PhyloMakie is currently documented through GitHub-based installation. This
-repository does not currently claim General-registry installation.
+PhyloMakie is not yet registered in the Julia General registry. Install
+directly from GitHub:
 
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
 ```
 
-The quickstart example below uses CairoMakie as the backend and needs
-PhyloNetworks for the types and data parser, so install these in the same
-environment before running that example.
+The quickstart example below also requires CairoMakie and PhyloNetworks:
 
 ```julia
 Pkg.add([
@@ -67,7 +65,6 @@ plot(
     style = :fulltree,
 )
 ```
-
 
 ## Documentation
 
