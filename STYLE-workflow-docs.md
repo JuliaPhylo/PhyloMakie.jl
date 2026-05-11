@@ -86,6 +86,26 @@ If disruptive redesign, deep refactor, clean-room replacement, migration, or
 external breakage is in play, the document must state what is authorized and
 what is not.
 
+### Port classification and compatibility stance
+
+If a workflow document describes a port, backend replacement, rewrite,
+reimplementation, API reset, or migration-sensitive redesign, it must classify
+the work explicitly.
+
+At minimum, it must say whether the effort is:
+
+- a compatibility-preserving port
+- a clean port with API redesign
+- a staged migration with temporary compatibility support
+
+It must also say explicitly:
+
+- whether legacy public names are required, optional migration material only,
+  or forbidden
+- whether a runtime compatibility shell is authorized at all
+- whether any temporary bridge is allowed, and if so which owner consumes it
+- the exact tranche or task where that bridge is deleted
+
 ### Verification and green-state gates
 
 Every workflow document must state what counts as complete for its scope.
@@ -181,6 +201,12 @@ Workflow documents must not:
 - let several distinct primary goals collapse into one generic regression if
   one of those goals could still survive behind a green suite
 - strip governance obligations from downstream documents
+- treat legacy public syntax as the product goal after the user has authorized
+  a clean port or API redesign
+- authorize a temporary bridge without naming its consuming owner, kill point,
+  and failing end-state proof
+- defer runtime semantic-center repair into a docs tranche, migration tranche,
+  or other narrative-only closeout
 
 If a downstream document is materially weaker than its parent on these points,
 that is workflow drift and must be corrected before execution proceeds.

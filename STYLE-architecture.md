@@ -68,6 +68,39 @@ If a contributor finds the same semantic being reconciled separately in more
 than one layer, that is evidence the ownership boundary is still too weak or
 too implicit.
 
+### Clean ports preserve capabilities, not inherited shells
+
+When a project is authorized as a clean port, backend replacement, or
+ground-up rewrite with public API redesign allowed, the upstream package is a
+capability and behavior reference, not the required public interface or
+runtime shape.
+
+Do not preserve a legacy keyword shell, compatibility payload, translation
+struct, or wrapper stack as the semantic center merely because it is easier to
+stage.
+
+If a temporary bridge is explicitly authorized for sequencing reasons, the
+bridge must name:
+
+- the single owner that consumes it
+- the exact tranche or task where it is deleted
+- the verification artifact that must fail if it survives past the accepted
+  end state
+
+If those conditions are missing, the bridge is not scaffolding. It is
+architecture drift.
+
+### Do not defer semantic-center repair into narrative cleanup
+
+Once a new public owner exists, the remaining work must drive the runtime
+through that owner directly.
+
+Do not leave the wrong semantic center in place and classify its removal as
+optional polish, migration prose, or late documentation cleanup.
+
+Docs and migration tranches may explain a redesign, but they must not be the
+first place where the real runtime architecture becomes honest.
+
 ### Prefer foundational tranches when ownership is wrong
 
 If several user-visible defects or requested features depend on one unclear or

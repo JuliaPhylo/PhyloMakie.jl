@@ -85,6 +85,27 @@ Do not generalize planning language to arbitrary graphs, arbitrary trees, or
 arbitrary network types when the contract being discussed is specific to
 `HybridNetwork`.
 
+### Capability parity
+
+Capability parity means preserving the accepted visualization tasks and visible
+plotting outcomes of `PhyloPlots.plot` without requiring identical public
+keyword spellings, wrapper structure, or runtime architecture.
+
+Use "capability parity" when the project must preserve what users can do or
+see.
+Do not collapse it into "keyword parity" or "API mimicry".
+
+### Compatibility shell
+
+The compatibility shell is any runtime layer that keeps legacy
+`PhyloPlots.plot` keyword spellings, translation structs, or compatibility
+payloads alive as the semantic center of public plotting.
+
+It is not accepted end-state architecture for this production run.
+Legacy capability mapping belongs in migration material, rejection boundaries,
+or historical diagnosis unless the project owner explicitly authorizes a real
+compatibility product.
+
 ### Public attribute surface
 
 The public attribute surface is the Makie-native set of public plotting
@@ -105,6 +126,16 @@ The legacy keyword surface is the historical
 migration reference.
 
 It is not the canonical PhyloMakie public contract for this production run.
+
+### Makie-native public plot owner
+
+The Makie-native public plot owner is the single recipe or plot type that owns
+public plotting semantics for `PhyloNetworks.HybridNetwork` in PhyloMakie.
+
+`plot(net)`, `plot!(ax, net)`, and any optional `phyloplot` convenience
+surfaces must route through this same owner.
+Do not let a wrapper, compatibility shell, or legacy keyword adapter become a
+second semantic center.
 
 ### Layout engine
 
