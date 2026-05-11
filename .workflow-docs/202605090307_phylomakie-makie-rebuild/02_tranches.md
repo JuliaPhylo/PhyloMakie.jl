@@ -1,9 +1,9 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-10T16:48:24-07:00
+date-updated: 2026-05-10T19:17:04-07:00
 parent-prd: 01_prd.md
 workflow-instrument: Tranche plan
-workflow-status: Proposed
+workflow-status: Approved
 workflow-production-id: 202605090307_phylomakie-makie-rebuild
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 ---
@@ -20,9 +20,12 @@ workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/202
   for all future work.
 - Tranches 1 through 4 remain completed historical baseline. They are not
   reopened by this rewrite.
-- Tranches 5 through 7 are proposed future work.
-- Downstream `Tranches -> Tasks` execution remains blocked for Tranches 5
-  through 7 until the project owner explicitly approves them.
+- Tranche 5 is completed.
+- Tranche 6 is completed.
+- Tranche 7 tasking is approved in
+  `03-08_tranche-07--tasking-1.md`.
+- Downstream `Tasks -> Execute` work is currently authorized for tranche 7
+  through that approved tasking file.
 
 ## Active authorities
 
@@ -99,9 +102,9 @@ Authority note:
 | 2 | Historical compatibility-first keyword baseline | Completed |
 | 3 | Layout and annotation data owner | Completed |
 | 4 | Render adapter and render-proof baseline | Completed |
-| 5 | Makie-native public plot owner and attribute model | Proposed |
-| 6 | Compatibility-owner retirement and internal public-path realignment | Proposed |
-| 7 | Docs, migration, and final capability closure | Proposed |
+| 5 | Makie-native public plot owner and attribute model | Completed |
+| 6 | Compatibility-shell eradication and internal public-path realignment | Completed |
+| 7 | Docs, migration, and final capability closure | Approved |
 
 ## Tranche 1: Verification and module shell foundation
 

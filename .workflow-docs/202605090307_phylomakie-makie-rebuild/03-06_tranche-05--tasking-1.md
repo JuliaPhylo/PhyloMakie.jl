@@ -1,7 +1,8 @@
 ---
 date-created: 2026-05-10T13:52:54-07:00
+date-updated: 2026-05-10T19:17:04-07:00
 workflow-instrument: Tasking Plan
-workflow-status: Approved
+workflow-status: Completed
 workflow-agent-thread-id: codex/019e13a4-7e72-7f21-9868-ff250a0959a2
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: 202605090307_phylomakie-makie-rebuild
@@ -13,10 +14,10 @@ workflow-tranche: .workflow-docs/202605090307_phylomakie-makie-rebuild/02_tranch
 
 ## Approval state
 
-- This file is proposed tasking output for proposed tranche 5 in `02_tranches.md`.
-- This file is not an execution request.
-- To authorize a downstream `Tasks -> Execute` run, the project owner must set
-  `workflow-status: Approved` in this file's frontmatter.
+- This file was approved, executed, and closed for tranche 5.
+- The diagnosis, task list, and verification obligations below remain the
+  historical execution input for that tranche.
+- No downstream `Tasks -> Execute` run remains pending under this file.
 
 ## Settled user decisions and environment baseline
 
