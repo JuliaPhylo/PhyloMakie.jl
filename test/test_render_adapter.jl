@@ -1,4 +1,4 @@
-@testset "Render adapter owner" begin
+@testset "Render adapter" begin
     DEFAULT_TEXT_SIZE = getfield(PhyloMakie, :DEFAULT_TEXT_SIZE)
     PlotRenderLayers = getfield(PhyloMakie, :PlotRenderLayers)
 
@@ -8,7 +8,7 @@
         [DEFAULT_TEXT_SIZE * Float64(scales[mod1(index, length(scales))]) for index in 1:count]
     _expected_default_fontsizes(count::Integer) = fill(DEFAULT_TEXT_SIZE, count)
 
-    @testset "Style distinction and internal owner typing" begin
+    @testset "Style produces distinct render layers with correct types" begin
         render_cases = FIXTURE_CORPUS.render_regression_cases
         fulltree_case = _render_case(
             render_cases.style_fulltree.newick;

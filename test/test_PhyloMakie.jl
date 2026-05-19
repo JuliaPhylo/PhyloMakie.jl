@@ -1,7 +1,7 @@
 using Makie
 using PhyloNetworks: HybridNetwork, readnewick
 
-@testset "Shell owner" begin
+@testset "PhyloMakie module" begin
     @test !isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
     @test isdefined(PhyloMakie, :PhyloPlotAttributes)
     @test isdefined(PhyloMakie, :PlotGeometry)

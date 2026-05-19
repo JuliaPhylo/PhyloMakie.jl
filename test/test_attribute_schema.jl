@@ -1,6 +1,6 @@
 using Makie
 
-@testset "Public attribute model" begin
+@testset "Attribute schema" begin
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
     PhyloPlotAttributes = getfield(PhyloMakie, :PhyloPlotAttributes)
     resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)

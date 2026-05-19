@@ -11,7 +11,7 @@ function _read_annotation_network(newick::AbstractString)
     return readnewick(newick)
 end
 
-@testset "Annotation data owner" begin
+@testset "Annotation data preparation" begin
     resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
     prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
     validate_node_data = getfield(PhyloMakie, :_validate_node_data)

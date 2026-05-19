@@ -41,7 +41,7 @@ end
     layout_plot_geometry = getfield(PhyloMakie, :layout_plot_geometry)
     layout_cases = FIXTURE_CORPUS.layout_regression_cases
 
-    @testset "Exact geometry parity" begin
+    @testset "Computed coordinates match expected values" begin
         for case_name in (
             :with_lengths_fulltree,
             :with_lengths_majortree,
@@ -102,7 +102,7 @@ end
         @test _geometry_tuple(geometry) != _geometry_tuple(no_lengths_geometry)
     end
 
-    @testset "Root mismatch augmentation" begin
+    @testset "Root index mismatch raises RootMismatch error" begin
         layout_case = layout_cases.incompatible_root
         network = _read_network(layout_case.newick)
         network.rooti = layout_case.rooti
@@ -117,7 +117,7 @@ end
         @test caught_error.msg == layout_case.expected_error_message
     end
 
-    @testset "Preorder mutation boundary" begin
+    @testset "Layout output is identical whether preorder runs internally or is pre-run by the caller" begin
         layout_case = layout_cases.with_lengths_fulltree
         fresh_network = _read_network(layout_case.newick)
         attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
