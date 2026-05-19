@@ -33,7 +33,10 @@ end
 
 function _plot_colorbuffer(figure)
     CairoMakie.activate!()
-    return Makie.colorbuffer(figure; backend=CairoMakie)
+    # copy() is required: colorbuffer reuses an internal buffer across calls on the
+    # same figure, so without copy the caller holds a reference to live memory that
+    # gets overwritten by the next colorbuffer call.
+    return copy(Makie.colorbuffer(figure; backend=CairoMakie))
 end
 
 @testset "Public plot owner" begin
@@ -219,6 +222,33 @@ end
             @test _plot_data_limits(surface.plot)[2] == annotation_case.ylim
             @test !isempty(_plot_colorbuffer(surface.figure))
         end
+    end
+
+    @testset "Reactivity: attribute changes propagate without re-creating the plot" begin
+        CairoMakie.activate!()
+        # Hybrid network required: style=:fulltree vs :majortree is only visually
+        # distinct when minor (hybrid) edges are present.
+        net = readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+        surface = Makie.plot(net; style = :fulltree)
+        plot_handle = surface.plot
+
+        before_color = _plot_colorbuffer(surface.figure)
+        plot_handle[:edgecolor][] = "firebrick"
+        after_color = _plot_colorbuffer(surface.figure)
+        @test before_color != after_color
+
+        before_style = _plot_colorbuffer(surface.figure)
+        plot_handle[:style][] = :majortree
+        after_style = _plot_colorbuffer(surface.figure)
+        @test before_style != after_style
+
+        net2 = readnewick("((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
+        before_net = _plot_colorbuffer(surface.figure)
+        plot_handle[:net][] = net2
+        after_net = _plot_colorbuffer(surface.figure)
+        @test before_net != after_net
+
+        @test plot_handle isa PhyloPlot
     end
 
     @testset "Dual-axis composition proof" begin

@@ -3,6 +3,7 @@ using DataFrames: AbstractDataFrame, DataFrame
 const SUPPORTED_STYLE_SYMBOLS = (:fulltree, :majortree)
 
 const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
+    :clip_planes,
     :useedgelength,
     :showtiplabel,
     :shownodelabel,

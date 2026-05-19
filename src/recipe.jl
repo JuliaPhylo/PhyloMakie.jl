@@ -12,6 +12,7 @@ function _validate_public_limits(limit, helper_message::String)
 end
 
 Makie.@recipe PhyloPlot (net,) begin
+    clip_planes = @inherit clip_planes Makie.automatic
     useedgelength = false
     showtiplabel = true
     shownodelabel = false
@@ -46,53 +47,93 @@ Makie.plottype(::PhyloNetworks.HybridNetwork) = PhyloPlot
 
 
 function Makie.plot!(plot::PhyloPlot)
-    attributes = resolve_phylo_plot_attributes(
-        useedgelength = Makie.to_value(plot[:useedgelength]),
-        showtiplabel = Makie.to_value(plot[:showtiplabel]),
-        shownodelabel = Makie.to_value(plot[:shownodelabel]),
-        shownodenumber = Makie.to_value(plot[:shownodenumber]),
-        showedgelength = Makie.to_value(plot[:showedgelength]),
-        showedgenumber = Makie.to_value(plot[:showedgenumber]),
-        showgamma = Makie.to_value(plot[:showgamma]),
-        edgecolor = Makie.to_value(plot[:edgecolor]),
-        defaultedgecolor = Makie.to_value(plot[:defaultedgecolor]),
-        majorhybridedgecolor = Makie.to_value(plot[:majorhybridedgecolor]),
-        minorhybridedgecolor = Makie.to_value(plot[:minorhybridedgecolor]),
-        edgewidth = Makie.to_value(plot[:edgewidth]),
-        minorlinetype = Makie.to_value(plot[:minorlinetype]),
-        arrowlen = Makie.to_value(plot[:arrowlen]),
-        nodelabel = Makie.to_value(plot[:nodelabel]),
-        edgelabel = Makie.to_value(plot[:edgelabel]),
-        nodecex = Makie.to_value(plot[:nodecex]),
-        edgecex = Makie.to_value(plot[:edgecex]),
-        nodelabelcolor = Makie.to_value(plot[:nodelabelcolor]),
-        edgelabelcolor = Makie.to_value(plot[:edgelabelcolor]),
-        edgenumbercolor = Makie.to_value(plot[:edgenumbercolor]),
-        nodelabeladj = Makie.to_value(plot[:nodelabeladj]),
-        edgelabeladj = Makie.to_value(plot[:edgelabeladj]),
-        tipoffset = Makie.to_value(plot[:tipoffset]),
-        tipcex = Makie.to_value(plot[:tipcex]),
-        xlim = Makie.to_value(plot[:xlim]),
-        ylim = Makie.to_value(plot[:ylim]),
-        style = Makie.to_value(plot[:style]),
-    )
+    # Guards against ComputePipeline re-entry: adding child plots fires bounding-box
+    # updates that re-trigger this callback before the current rebuild has finished.
+    is_rebuilding = Ref(false)
 
-    # deepcopy prevents the user's network from being mutated by directedges!/preorder!
-    net = deepcopy(Makie.to_value(plot[:net]))
-    layout = prepare_plot_layout(net, attributes; preorder = true)
-    validated_xlim = _validate_public_limits(
-        attributes.xlim,
-        layout.bounds.xlim_error_message,
-    )
-    validated_ylim = _validate_public_limits(
-        attributes.ylim,
-        layout.bounds.ylim_error_message,
-    )
-    resolved_attributes = with_phylo_plot_limits(
-        attributes,
-        validated_xlim,
-        validated_ylim,
-    )
-    render_plot!(plot, net, resolved_attributes, layout)
+    Makie.onany(
+        plot[:net],
+        plot[:useedgelength],
+        plot[:showtiplabel],
+        plot[:shownodelabel],
+        plot[:shownodenumber],
+        plot[:showedgelength],
+        plot[:showedgenumber],
+        plot[:showgamma],
+        plot[:edgecolor],
+        plot[:defaultedgecolor],
+        plot[:majorhybridedgecolor],
+        plot[:minorhybridedgecolor],
+        plot[:edgewidth],
+        plot[:minorlinetype],
+        plot[:arrowlen],
+        plot[:nodelabel],
+        plot[:edgelabel],
+        plot[:nodecex],
+        plot[:edgecex],
+        plot[:nodelabelcolor],
+        plot[:edgelabelcolor],
+        plot[:edgenumbercolor],
+        plot[:nodelabeladj],
+        plot[:edgelabeladj],
+        plot[:tipoffset],
+        plot[:tipcex],
+        plot[:xlim],
+        plot[:ylim],
+        plot[:style];
+        update = true,
+    ) do net,
+            useedgelength, showtiplabel, shownodelabel, shownodenumber,
+            showedgelength, showedgenumber, showgamma,
+            edgecolor, defaultedgecolor, majorhybridedgecolor, minorhybridedgecolor,
+            edgewidth, minorlinetype, arrowlen,
+            nodelabel, edgelabel,
+            nodecex, edgecex,
+            nodelabelcolor, edgelabelcolor, edgenumbercolor,
+            nodelabeladj, edgelabeladj,
+            tipoffset, tipcex,
+            xlim, ylim, style
+        is_rebuilding[] && return nothing
+        is_rebuilding[] = true
+        try
+            # delete!(recipe_plot, child) dispatches to attribute deletion — use the scene instead
+            scene = Makie.get_scene(plot)
+            foreach(child -> delete!(scene, child), copy(plot.plots))
+            empty!(plot.plots)
+            # deepcopy prevents the user's network from being mutated by directedges!/preorder!
+            net_copy = deepcopy(net)
+            attributes = resolve_phylo_plot_attributes(;
+                useedgelength, showtiplabel, shownodelabel, shownodenumber,
+                showedgelength, showedgenumber, showgamma,
+                edgecolor, defaultedgecolor, majorhybridedgecolor, minorhybridedgecolor,
+                edgewidth, minorlinetype, arrowlen,
+                nodelabel, edgelabel,
+                nodecex, edgecex,
+                nodelabelcolor, edgelabelcolor, edgenumbercolor,
+                nodelabeladj, edgelabeladj,
+                tipoffset, tipcex,
+                xlim, ylim, style,
+            )
+            layout = prepare_plot_layout(net_copy, attributes; preorder = true)
+            validated_xlim = _validate_public_limits(
+                attributes.xlim,
+                layout.bounds.xlim_error_message,
+            )
+            validated_ylim = _validate_public_limits(
+                attributes.ylim,
+                layout.bounds.ylim_error_message,
+            )
+            resolved_attributes = with_phylo_plot_limits(
+                attributes,
+                validated_xlim,
+                validated_ylim,
+            )
+            render_plot!(plot, net_copy, resolved_attributes, layout)
+        finally
+            is_rebuilding[] = false
+        end
+        return nothing
+    end
+
     return plot
 end
