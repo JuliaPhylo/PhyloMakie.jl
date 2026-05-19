@@ -12,11 +12,11 @@ include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
-    include("test_public_attribute_model.jl")
+    include("test_attribute_schema.jl")
     include("test_layout_engine.jl")
-    include("test_annotation_data.jl")
+    include("test_plot_layout.jl")
     include("test_render_adapter.jl")
-    include("test_public_plot_owner.jl")
+    include("test_recipe.jl")
 
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(

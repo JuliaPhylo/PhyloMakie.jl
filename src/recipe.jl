@@ -77,6 +77,7 @@ function Makie.plot!(plot::PhyloPlot)
         style = Makie.to_value(plot[:style]),
     )
 
+    # deepcopy prevents the user's network from being mutated by directedges!/preorder!
     net = deepcopy(Makie.to_value(plot[:net]))
     layout = prepare_plot_layout(net, attributes; preorder = true)
     validated_xlim = _validate_public_limits(

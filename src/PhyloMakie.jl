@@ -2,10 +2,12 @@ module PhyloMakie
 
 import Makie
 
-include("public_attribute_model.jl")
+include("attribute_schema.jl")
 include("layout_engine.jl")
-include("annotation_data.jl")
+include("plot_layout.jl")
 include("render_adapter.jl")
-include("public_plot_owner.jl")
+include("recipe.jl")
+
+export phyloplot, phyloplot!, PhyloPlot
 
 end
