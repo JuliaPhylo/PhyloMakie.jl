@@ -60,4 +60,7 @@ plot(
 ## Learn more
 
 - [Public API](public-api.md)
+- [Edge controls](edge-controls.md)
+- [Annotations](annotations.md)
+- [Extending plots](extending-plots.md)
 - [Render verification](render-verification.md)
