@@ -96,11 +96,9 @@ function Makie.plot!(plot::PhyloPlot)
         is_rebuilding[] && return nothing
         is_rebuilding[] = true
         try
-            # delete!(recipe_plot, child) dispatches to attribute deletion — use the scene instead
             scene = Makie.get_scene(plot)
             foreach(child -> delete!(scene, child), copy(plot.plots))
             empty!(plot.plots)
-            # deepcopy prevents the user's network from being mutated by directedges!/preorder!
             net_copy = deepcopy(net)
             attributes = resolve_phylo_plot_attributes(;
                 useedgelength, showtiplabel, shownodelabel, shownodenumber,
