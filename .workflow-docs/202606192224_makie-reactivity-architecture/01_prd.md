@@ -735,11 +735,16 @@ None. The project owner resolved the prior open questions:
 
 ## Further notes
 
-The current implementation is not treated as worthless. It contains useful
-knowledge about layout, annotation preparation, render channels, and accepted
-visual behavior. The refactor should mine that knowledge into the computation
-layer and graph layer rather than preserve the current scaffold as the default
+The current logic for computing, annotation preparation, render channels, 
+and accepted visual behavior is CORRECT.
+The refactor should abstract these into a core computation layer, preserving all
+functionality and behavior.
+However, do not preserve the current scaffold as the default
 shape.
+The computation graph layer makes using of the computation layer functions for calculations, mapping
+input nodes to output nodes based on the results.
+
+
 
 This PRD is saved with `workflow-status: Proposed`. The project owner may
 review and revise it. It must not drive trancheing until the project owner sets
