@@ -57,6 +57,11 @@ User decisions during interview:
   layers must use direct compute-node primitive arguments wherever Makie 0.24.10
   supports them, and the PRD must name any exceptions rather than leaving them
   for later discovery.
+- Public plotting must remain caller-safe for `HybridNetwork` inputs. The
+  computation layer owns traversal preparation by copying the input network and
+  running `PhyloNetworks.directedges!` and `PhyloNetworks.preorder!` on the
+  private copy. Making users prepare networks before plotting is not the
+  default contract for this PRD.
 
 ## Problem statement
 
@@ -110,6 +115,9 @@ contract:
   per-edge `arrows2d!` children.
 - Updates do not delete and recreate the child plot tree as the normal
   reactivity mechanism.
+- Plotting and reactive updates do not mutate caller-owned
+  `PhyloNetworks.HybridNetwork` values. Required direction and preorder
+  traversal state is prepared on a private computation-layer copy.
 - Existing capability behavior stays intact for full-tree style, major-tree
   style, edge lengths, hybrid edge styling, labels, text sizes, colors, widths,
   limits, and multi-axis composition.
@@ -229,6 +237,25 @@ contract:
 - The verification artifact for this PRD is an explicit out-of-scope boundary
   and stop condition for pointer interaction work.
 
+### Lock item 10: Keep network traversal preparation caller-safe
+
+- The work is not complete if public plotting requires users to call
+  `PhyloNetworks.directedges!` or `PhyloNetworks.preorder!` on their own
+  network before `plot(net)`, `plot!(axis, net)`, `phyloplot(net)`, or
+  `phyloplot!(axis, net)` works.
+- The direct red-state repro is calling the current geometry routine with
+  traversal preparation disabled on a fresh `readnewick` network, which fails
+  because `net.vec_node` is empty.
+- The expected owner is the computation-layer tranche that introduces the
+  prepared plotting network abstraction.
+- The verification artifact must prove that plotting a fresh
+  `HybridNetwork` prepares a private copy with `directedges!` and `preorder!`
+  while preserving the caller-owned network's traversal and edge-direction
+  state.
+- A future explicit mutating preparation API such as `prepare_plot_network!`
+  can be proposed separately, but it is out of scope for the default public
+  plotting contract in this PRD.
+
 ## User stories
 
 1. As a Makie user, I can call `plot(net)` and receive a
@@ -241,25 +268,27 @@ contract:
 4. As a package user, I can update the plotted `HybridNetwork` through the
    recipe argument update path and see the plot update without mutating my
    original network.
-5. As a maintainer, I can read the computation layer without knowing
+5. As a package user, I can pass a fresh network from `readnewick` directly to
+   plotting without manually preparing edge directions or preorder traversal.
+6. As a maintainer, I can read the computation layer without knowing
    ComputePipeline internals.
-6. As a maintainer, I can read the reactive graph layer and see every input
+7. As a maintainer, I can read the reactive graph layer and see every input
    node, output node, and calculation dependency.
-7. As a maintainer, I can read `Makie.plot!` and see only orchestration:
+8. As a maintainer, I can read `Makie.plot!` and see only orchestration:
    graph registration, primitive construction, narrow reactions, and return.
-8. As a test author, I can test output-value calculations without creating a
+9. As a test author, I can test output-value calculations without creating a
    Makie figure.
-9. As a test author, I can test graph mappings without depending on CairoMakie
+10. As a test author, I can test graph mappings without depending on CairoMakie
    render capture.
-10. As a reviewer, I can tell whether an implementation uses output nodes or
+11. As a reviewer, I can tell whether an implementation uses output nodes or
     hides a local `onany` anti-fix.
-11. As a reviewer, I can see that obsolete scaffold names have been replaced
+12. As a reviewer, I can see that obsolete scaffold names have been replaced
     by names that match the computation layer, graph layer, and primitive
     assembly responsibilities.
-12. As a future contributor, I can add a new public attribute by adding a
+13. As a future contributor, I can add a new public attribute by adding a
     computation function, wiring it in the reactive graph layer, and consuming
     the output node in a primitive call.
-13. As a future contributor, I can add pointer interactions later without
+14. As a future contributor, I can add pointer interactions later without
     overloading this PRD with unresolved hover and click semantics.
 
 ## Authorized disruption boundary
@@ -280,8 +309,9 @@ contract:
   covered by tests and visual verification artifacts.
 - Non-negotiable protections: no broad rebuild callback as the accepted
   reactivity mechanism; no direct pointer-interaction implementation in this
-  PRD; no hidden compatibility break; no local anti-fix that only masks the old
-  architecture.
+  PRD; no public requirement that users mutate or pre-prepare networks before
+  plotting; no hidden compatibility break; no local anti-fix that only masks
+  the old architecture.
 
 ## Current-state architecture
 
@@ -291,8 +321,9 @@ contract:
   dispatch, and the current `Makie.plot!(plot::PhyloPlot)` body.
 - `src/attribute_schema.jl` owns supported public attributes and resolves them
   into `PhyloPlotAttributes`.
-- `src/layout_engine.jl` computes node, edge, and arrow geometry after
-  mutating a network copy for traversal.
+- `src/layout_engine.jl` computes node, edge, and arrow geometry after running
+  `PhyloNetworks.directedges!` and `PhyloNetworks.preorder!` on a network copy
+  to establish edge direction and `net.vec_node` preorder traversal.
 - `src/plot_layout.jl` prepares annotation tables and bounds.
 - `src/render_adapter.jl` resolves colors, widths, text channels, limits, and
   primitive plotting, then returns `PlotRenderLayers`.
@@ -334,8 +365,8 @@ plots, or mutate caller-owned data.
 Representative responsibilities:
 
 - normalize and validate public plot inputs
-- calculate traversal-safe layout data from a copied or explicitly prepared
-  `HybridNetwork`
+- calculate traversal-safe layout data from a private copied `HybridNetwork`
+  prepared with `PhyloNetworks.directedges!` and `PhyloNetworks.preorder!`
 - calculate edge segment points
 - calculate node bar points
 - calculate minor hybrid edge arrowhead meshes and colors
@@ -653,13 +684,15 @@ or escalated to the user.
   preserve current public attributes; use `Makie.update!` for dynamic entry;
   use `map!` or `register_computation!` for output nodes; defer pointer
   interactions; purge old internal scaffold names; use computed `poly!`
-  meshes for hybrid arrowheads.
+  meshes for hybrid arrowheads; keep public plotting caller-safe by preparing
+  a private network copy with `PhyloNetworks.directedges!` and
+  `PhyloNetworks.preorder!`.
 - **Authorization boundary**: deep internal redesign and scaffold purging are
   authorized for the reactive architecture, but external breaking changes and
   public surface renames are not authorized.
 - **Current-state diagnosis**: current `Makie.plot!` uses a broad `onany`
   callback that rebuilds child plots and targets an older reactivity style.
-- **Primary-goal lock**: lock items 1 through 9 in this PRD.
+- **Primary-goal lock**: lock items 1 through 10 in this PRD.
 - **Direct red-state repros**: current `src/recipe.jl` broad rebuild callback;
   direct compute-node mutation tests without `Makie.update!`; absence of a
   reactive graph layer; primitive construction from snapshot values.
@@ -670,7 +703,8 @@ or escalated to the user.
   and render helper modules, tests, docs, and workflow documents needed to plan
   the refactor.
 - **Exact files or surfaces out of scope**: pointer interactions; R interop;
-  non-`HybridNetwork` plotting; external public API redesign.
+  non-`HybridNetwork` plotting; external public API redesign; making mutating
+  network-preparation functions the default public plotting contract.
 - **Required upstream primary sources**: all sources listed in the previous
   section.
 - **Green-state gates**: full tests, docs build, direct `Makie.update!`
@@ -682,7 +716,8 @@ or escalated to the user.
   as dynamic per-edge `arrows2d!` child plots; stop if it implements pointer
   interactions; stop if it breaks the public attribute surface without explicit
   approval; stop if it cannot name the output node corresponding to a reactive
-  primitive argument.
+  primitive argument; stop if it makes users call `directedges!` or
+  `preorder!` before public plotting works.
 - **Regression expectations**: every accepted visible behavior currently
   covered by tests or docs remains covered; new verification must fail the old
   broad-rebuild or direct-node-mutation-only implementation shape.
@@ -716,6 +751,8 @@ or escalated to the user.
 - R interoperability.
 - Non-`HybridNetwork` public input types.
 - Public attribute renaming.
+- User-responsibility network preparation as the default public plotting
+  contract.
 - Performance optimization beyond avoiding the old full-rebuild architecture.
 - Preserving old internal scaffold names as target architecture names.
 
@@ -732,6 +769,10 @@ None. The project owner resolved the prior open questions:
   PRD revision is architectural rather than reactive: hybrid arrowheads move
   from per-edge `arrows2d!` children to computed `poly!` mesh geometry because
   `Arrows2D` cannot represent per-arrow vector `tiplength` and `tipwidth`.
+- Network traversal preparation remains caller-safe by default. The
+  computation layer prepares a private copied network with
+  `PhyloNetworks.directedges!` and `PhyloNetworks.preorder!`; users are not
+  required to mutate their own network before public plotting works.
 
 ## Further notes
 

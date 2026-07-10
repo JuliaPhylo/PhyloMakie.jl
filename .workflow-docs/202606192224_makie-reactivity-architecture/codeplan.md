@@ -85,7 +85,8 @@ Makie.plot!(plot::PhyloPlot)
     3. return plot
         |
         | Makie.plot! does not compute layout.
-        | Makie.plot! does not delete children for normal updates.
+        | Normal updates are Makie.update!(plot; ...).
+        | Normal updates change graph inputs, not child plot membership.
         | Makie.plot! does not dereference output nodes for primitive args.
         v
 Reactive graph layer
@@ -98,7 +99,7 @@ Reactive graph layer
         v
 Computation layer
     resolve public inputs into a config value
-    copy and prepare HybridNetwork for traversal
+    copy HybridNetwork and prepare the copy with directedges! and preorder!
     compute geometry
     compute annotation tables
     compute primitive channels
@@ -154,7 +155,9 @@ Stable child primitives
     text!(plot, plot.major_gamma_label_positions; text = ..., ...)
     text!(plot, plot.edge_number_positions; text = ..., ...)
         |
-        | Current scope has no child primitive update! reactions.
+        | Parent updates use Makie.update!(plot; ...).
+        | Child primitives receive changed node values directly.
+        | No callbacks call update! on child primitives in current scope.
         | Hidden layers are typed empty outputs, not deleted children.
         v
 Makie/ComputePipeline propagation
@@ -187,7 +190,11 @@ Public names that survive:
 - all public attributes in the current public attribute surface
 - public style symbols `:fulltree` and `:majortree`
 
-Old internal scaffold names that must not survive as target architecture:
+Internal names are evaluated by referent and ownership accuracy, not churn.
+Keep a name when it accurately names the narrowed abstraction. Rename or retire
+it when it reflects old scaffold ownership, mixed responsibilities, or a clumsy
+referent. The following current names are flagged because they currently name
+old scaffold responsibilities:
 
 - `PhyloPlotAttributes`
 - `PlotLayout`
@@ -195,8 +202,30 @@ Old internal scaffold names that must not survive as target architecture:
 - `render_plot!`
 
 These target names are normative for this PRD unless a future approved PRD or
-tranche document amends them. A downstream agent must not keep old internal
-names merely to reduce internal test churn.
+tranche document amends them. A downstream agent must not keep one of the
+flagged names merely to reduce internal test churn; preserving one requires
+narrowing the referent and documenting why the name remains accurate.
+
+## Network Preparation Contract
+
+Default public plotting is caller-safe:
+
+- `plot(net)`, `plot!(axis, net)`, `phyloplot(net)`, and `phyloplot!(axis, net)`
+  must accept a fresh `PhyloNetworks.HybridNetwork` from `readnewick` without
+  requiring the user to call `PhyloNetworks.directedges!` or
+  `PhyloNetworks.preorder!`.
+- The computation layer prepares traversal state by deep-copying the input
+  network, then running `PhyloNetworks.directedges!` and
+  `PhyloNetworks.preorder!` on that private copy.
+- The prepared copy is required because current geometry code relies on
+  root-directed `getparent` / `getchild` semantics and `net.vec_node`
+  preorder traversal.
+- Caller-owned network state, including edge-direction fields and
+  `net.vec_node`, must not be mutated by plotting or by reactive
+  `Makie.update!` calls.
+- A future explicit mutating preparation API, such as
+  `prepare_plot_network!(net)`, is outside this PRD's default public plotting
+  contract and requires separate approval.
 
 ## Computation layer type signatures
 
@@ -256,7 +285,10 @@ struct PhyloPlotConfig{
 end
 
 # Prepared plotting network.
-# Owns the copied network that traversal helpers are allowed to mutate.
+# Owns a private network copy after PhyloNetworks.directedges! and
+# PhyloNetworks.preorder! have established edge direction and net.vec_node
+# traversal order for layout.
+# Caller-owned HybridNetwork values are never mutated.
 struct PlotNetwork{TNet}
     net::TNet
 end
@@ -415,8 +447,10 @@ function validate_limit_pair(limit, helper_message::AbstractString)
 end
 
 # Produce a caller-safe network copy for layout traversal.
-# This function is allowed to mutate only the copied network stored in
-# PlotNetwork.
+# Plotting functions must not mutate the caller-owned network. This function
+# deep-copies the network, then runs PhyloNetworks.directedges! and
+# PhyloNetworks.preorder! on that copy so the geometry code can rely on
+# getparent/getchild edge direction and net.vec_node preorder traversal.
 function prepare_plot_network(
         net::PhyloNetworks.HybridNetwork,
     )::PlotNetwork{PhyloNetworks.HybridNetwork}
@@ -894,6 +928,8 @@ end
 ```julia
 # Computation tests: no Figure, Axis, ComputeGraph, or child primitives.
 function test_resolve_plot_config_defaults()::Nothing end
+function test_prepare_plot_network_directs_and_preorders_private_copy()::Nothing end
+function test_prepare_plot_network_preserves_caller_network_state()::Nothing end
 function test_compute_network_geometry_preserves_current_coordinates()::Nothing end
 function test_compute_annotation_tables_preserves_current_labels()::Nothing end
 function test_compute_primitive_channels_preserves_render_channels()::Nothing end
@@ -904,8 +940,10 @@ function test_register_phylo_graph_names_all_required_outputs()::Nothing end
 function test_makie_update_recomputes_segment_outputs()::Nothing end
 function test_makie_update_recomputes_text_outputs_atomically()::Nothing end
 function test_makie_update_recomputes_data_limits()::Nothing end
+function test_makie_update_with_fresh_network_keeps_original_network_unmutated()::Nothing end
 
 # Integration tests: create figures and verify visible behavior.
+function test_plot_accepts_fresh_readnewick_network_without_user_preparation()::Nothing end
 function test_plot_update_does_not_recreate_child_primitives()::Nothing end
 function test_arrowheads_use_one_poly_child_not_per_edge_arrows2d()::Nothing end
 function test_hidden_layers_use_empty_outputs_not_deleted_children()::Nothing end
@@ -938,7 +976,9 @@ tranche cannot preserve green state, split it before implementation.
   source files under `src/`, current tests under `test/`.
 - **Settled decisions**: keep public plot surfaces and attributes; purge old
   internal scaffold names; use direct computed primitive arguments; use
-  `poly!` for hybrid arrowheads; do not implement pointer interactions.
+  `poly!` for hybrid arrowheads; prepare a private copied network with
+  `PhyloNetworks.directedges!` and `PhyloNetworks.preorder!`; do not implement
+  pointer interactions.
 - **Authorization boundary**: deep internal redesign is authorized; public
   surface renames and external breaking changes are not authorized.
 - **Current-state diagnosis**: current `Makie.plot!` uses broad rebuild
@@ -953,8 +993,9 @@ tranche cannot preserve green state, split it before implementation.
 - **Exact scope in**: architecture planning and implementation signatures for
   the reactive graph refactor.
 - **Exact scope out**: pointer interactions, public attribute renaming, R
-  interoperability, non-`HybridNetwork` inputs, performance optimization
-  beyond avoiding full rebuild architecture.
+  interoperability, non-`HybridNetwork` inputs, making mutating
+  network-preparation functions the default public plotting contract,
+  performance optimization beyond avoiding full rebuild architecture.
 - **Required upstream primary sources**: Makie and ComputePipeline sources
   listed above.
 - **Green-state gates**: full tests, docs build, computation-layer tests,
@@ -964,4 +1005,5 @@ tranche cannot preserve green state, split it before implementation.
   as target architecture; stop if it reintroduces broad rebuild callbacks;
   stop if it dereferences graph outputs before primitive construction; stop if
   it implements pointer interactions under this PRD; stop if upstream Makie
-  contract verification contradicts this codeplan.
+  contract verification contradicts this codeplan; stop if public plotting
+  requires users to call `directedges!` or `preorder!` before plotting.
