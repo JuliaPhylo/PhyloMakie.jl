@@ -62,7 +62,7 @@ Controlled vocabulary constraints:
   `minor hybrid edge` as defined in `STYLE-vocabulary.md`.
 - Treat `reactive graph layer` as workflow-local PRD language.
 - Treat `render_plot!`, `PhyloPlotAttributes`, `PlotLayout`, and
-  `PlotRenderLayers` as old internal scaffold names, not target architecture
+  `PlotRenderLayers` as told internal scaffold names, not target architecture
   vocabulary.
 
 Additional upstream source flagged:
