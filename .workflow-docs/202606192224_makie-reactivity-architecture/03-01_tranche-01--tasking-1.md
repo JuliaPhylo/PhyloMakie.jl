@@ -1,7 +1,7 @@
 ---
 date-created: 2026-07-10T17:46:31-07:00
 workflow-instrument: Tasking plan
-workflow-status: Proposed
+workflow-status: Approved
 workflow-agent-thread-id: codex/019f4e98-1ddf-7c70-b0af-5b726b7b95f0
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: reactive-makie-spine
@@ -42,6 +42,7 @@ The current green behavior is therefore real and must be preserved unless this f
 An implementation agent must read these line by line before touching files:
 
 - `CONTRIBUTING.md`
+- `STYLE-agent-language.md`
 - `STYLE-agent-handoffs.md`
 - `STYLE-architecture.md`
 - `STYLE-docs.md`
@@ -84,7 +85,7 @@ The existing implementation is green behaviorally but red architecturally for th
 - `src/render_adapter.jl` mixes calculation and primitive construction through `SegmentRenderLayer`, `ArrowTipRenderLayer`, `TextRenderLayer`, `PlotRenderLayers`, and `render_plot!`.
 - `_render_arrow_tip_layer!` currently constructs one `Makie.arrows2d!` child per visible arrow tip.
 - `test/test_PhyloMakie.jl` still asserts old internal scaffold names as loaded package members.
-- Existing tests exercise current behavior and should remain green, but several computation tests must be moved from primitive/render ownership to the new computation owners.
+- Existing tests exercise current behavior and should remain green, but several computation tests must target the named calculation functions and types listed in this tasking file instead of primitive/render metadata.
 
 ## Upstream contract notes
 
@@ -105,7 +106,58 @@ Protect these public surfaces throughout the tranche:
 - the current documented keyword attributes and accepted style values
 - current warning/error behavior for unsupported labels, limits, colors, widths, and styles unless this tasking explicitly names a replacement
 
-Current helper names such as `resolve_phylo_plot_attributes`, `layout_plot_geometry`, `prepare_plot_layout`, and `render_plot!` may remain only as transitional internal wrappers if needed to keep the current recipe green. They are not the target ownership model for new computation tests.
+Only the names listed in the next section may survive as transitional wrappers. No other old computation, layout, or render helper name is implicitly approved as a wrapper.
+
+## Allowed transitional wrappers
+
+For this tranche, a transitional wrapper is an old function or type name that remains temporarily to keep existing callers or the current rebuild-based recipe path working. The old name may call the named new implementation and may adapt the return shape expected by current tests or current render code. The old name must not independently calculate, validate, default, mutate, or otherwise reimplement the behavior assigned to the named new implementation.
+
+The single authoritative implementations for Tranche 1 calculations are:
+
+- `resolve_plot_config` and `PhyloPlotConfig` for public plotting attribute defaults, normalization, validation, and limit configuration.
+- `prepare_plot_network` and `PlotNetwork` for caller-safe network copying and traversal preparation.
+- `compute_network_geometry` and `NetworkGeometry` for node, edge, and minor-hybrid-edge coordinates.
+- `compute_layout`, `LayoutComputation`, `AnnotationTables`, and `PlotExtent` for annotation tables and plot extent calculation.
+- `compute_segment_channels` and `SegmentChannel` for segment coordinates, colors, widths, and line styles.
+- `compute_text_channels` and `TextChannel` for text positions, strings, colors, sizes, and alignment.
+- `compute_arrowhead_channel` and `ArrowheadChannel` for hybrid arrowhead mesh or polygon payloads.
+- `compute_data_limits` for `Makie.Rect3d` data-limit calculation.
+- `compute_primitive_channels` and `PrimitiveChannels` for the complete primitive payload aggregate consumed by the current render path and later reactive graph layer.
+
+The full allowed transitional wrapper list for Tranche 1 is:
+
+- `PhyloPlotAttributes`: may remain only as the old configuration return shape mechanically constructed from `PhyloPlotConfig`.
+- `resolve_phylo_plot_attributes`: may remain only if it calls `resolve_plot_config` and adapts the returned `PhyloPlotConfig`.
+- `with_phylo_plot_limits`: may remain only if it adapts a `PhyloPlotConfig` limit update or calls the same validation path used by `resolve_plot_config`.
+- `PlotGeometry`: may remain only as the old geometry return shape mechanically constructed from `NetworkGeometry`.
+- `layout_plot_geometry`: may remain only if it calls `prepare_plot_network` and `compute_network_geometry`; it must not call `directedges!` or `preorder!` on the caller's original network.
+- `PlotBounds`: may remain only as the old bounds return shape mechanically constructed from `PlotExtent`.
+- `PlotAnnotationData`: may remain only as the old annotation return shape mechanically constructed from `AnnotationTables`.
+- `PlotLayout`: may remain only as the old layout return shape mechanically constructed from `LayoutComputation`.
+- `prepare_plot_layout`: may remain only if it calls `compute_layout` and adapts the returned `LayoutComputation`.
+- `SegmentRenderLayer`: may remain only as current render metadata constructed from `SegmentChannel`.
+- `ArrowTipRenderLayer`: may remain only as current render metadata constructed from `ArrowheadChannel`.
+- `TextRenderLayer`: may remain only as current render metadata constructed from `TextChannel`.
+- `PlotRenderLayers`: may remain only as current render metadata constructed from `PrimitiveChannels`.
+- `render_plot!`: may remain only as the current side-effectful render shell that calls `compute_primitive_channels`, constructs current Makie child primitives, and applies already-computed limits.
+
+These names may survive only if all of the following are true:
+
+- The wrapper body calls the named new implementation for the calculation or validation rule it exposes.
+- The wrapper performs only return-shape adaptation or current-render side effects.
+- Breaking the named new implementation makes wrapper tests or render tests fail.
+- New computation tests target the new implementation names, not the wrapper names.
+- The implementation report names each wrapper that remains and the exact new implementation it calls.
+
+These are not allowed as transitional wrappers:
+
+- Private helpers that keep independent calculations for edge colors, edge widths, text strings, text positions, arrow metrics, arrowhead geometry, plot bounds, data limits, or traversal preparation.
+- A renamed copy of old logic under a new filename.
+- A wrapper that calls `directedges!` or `preorder!` on the caller's original network.
+- A wrapper that preserves old behavior by bypassing `PhyloPlotConfig`, `PlotNetwork`, `NetworkGeometry`, `LayoutComputation`, `AnnotationTables`, `SegmentChannel`, `TextChannel`, `ArrowheadChannel`, `PrimitiveChannels`, or `compute_data_limits`.
+- New tests that pass when the named new implementation is deleted or broken.
+
+Private helpers that do only side effects still owned by the current render shell may remain. For example, applying already-computed limits to an axis is render-shell work. Computing those limits is not.
 
 ## Primary-goal locks
 
@@ -117,9 +169,9 @@ Direct red-state proof: current source routes through `resolve_phylo_plot_attrib
 
 Completion proof:
 
-- New computation owners can be tested without `Figure`, `Axis`, `Scene`, `ComputeGraph`, or child primitive plots.
-- Removing a new computation owner breaks tests even if old render helpers still exist.
-- Source audit shows the new owners, not `render_adapter.jl`, own plot-ready calculations.
+- `resolve_plot_config`, `prepare_plot_network`, `compute_network_geometry`, `compute_layout`, `compute_segment_channels`, `compute_text_channels`, `compute_arrowhead_channel`, `compute_data_limits`, and `compute_primitive_channels` can be tested without `Figure`, `Axis`, `Scene`, `ComputeGraph`, or child primitive plots.
+- Breaking any listed function or type breaks tests even if old render helpers still exist.
+- Source audit shows the listed implementations, not `render_adapter.jl`, calculate plot-ready values.
 
 Covered by tasks: 1, 2, 3, 4, 5, 6, 7.
 
@@ -187,8 +239,8 @@ Direct red-state proof: `test/test_PhyloMakie.jl` asserts old names as loaded pa
 
 Completion proof:
 
-- New tests assert new computation owner names and contracts.
-- Old names, if retained for transitional green-state compatibility, delegate to new owners or stay quarantined as current-render wrappers.
+- New tests assert the named calculation functions, return types, and contracts listed in this tasking file.
+- Old names, if retained for transitional green-state compatibility, appear only in the allowed transitional wrapper list and satisfy that section's delegation rules.
 - No new test treats an old scaffold name as the primary owner.
 
 Covered by tasks: 1, 3, 4, 5, 6, 7.
@@ -211,7 +263,7 @@ Covered by tasks: all tasks.
 
 - Work task by task and keep the repository green after each task whenever practical.
 - Start each task by reproducing or locating the direct red state named in that task.
-- Prefer new semantic owners over compatibility shims. Transitional wrappers are acceptable only when they preserve current public behavior until later tranches.
+- Prefer new semantic owners over compatibility shims. Only the explicitly listed transitional wrappers are acceptable, and only under the delegation rules above.
 - Keep pure computation functions free of Makie scene mutation and child primitive construction.
 - Use concrete or parametric struct fields for channel payloads; do not store `Vector{Any}` or abstractly typed fields for stable reactive payloads.
 - Preserve current error and warning strings unless a task explicitly requires a new message.
@@ -230,7 +282,7 @@ Dependencies: none
 Primary output:
 
 - `src/plot_config.jl` owns `PhyloPlotConfig`, supported public attribute names, public input normalization, and limit validation.
-- Tests verify config behavior through the new owner, not through `PhyloPlotAttributes`.
+- Tests verify config behavior through `resolve_plot_config` and `PhyloPlotConfig`, not through `PhyloPlotAttributes`.
 
 Positive contract:
 
@@ -238,8 +290,8 @@ Positive contract:
 - Implement `resolve_plot_config(...)::PhyloPlotConfig`.
 - Preserve the current public keyword surface and current default behavior.
 - Keep `SUPPORTED_PHYLOPLOT_ATTRIBUTES` or an equivalent public attribute-name owner available for tests and callers that rely on it.
-- `resolve_phylo_plot_attributes`, `with_phylo_plot_limits`, and `PhyloPlotAttributes` may remain only as transitional wrappers if needed; wrappers must delegate to or be mechanically derived from `PhyloPlotConfig`.
-- Update package include order and loading tests for the new owner.
+- `resolve_phylo_plot_attributes`, `with_phylo_plot_limits`, and `PhyloPlotAttributes` may remain only as listed transitional wrappers. They must call `resolve_plot_config` or mechanically adapt `PhyloPlotConfig`; they must not keep independent defaulting, validation, or limit logic.
+- Update package include order and loading tests for `resolve_plot_config` and `PhyloPlotConfig`.
 
 Negative contract:
 
@@ -263,7 +315,7 @@ Verification:
 - New tests fail on the current code because `PhyloPlotConfig` and `resolve_plot_config` do not exist.
 - New tests pass after the task and cover defaults, accepted keyword forms, limit validation, and error/warning parity.
 - `test/test_PhyloMakie.jl` asserts the new target owner names instead of asserting old scaffold names as architecture.
-- Source audit confirms any remaining old config names are transitional wrappers and not the only implementation.
+- Source audit confirms any remaining old config names are listed transitional wrappers and that their behavior fails if `PhyloPlotConfig` or `resolve_plot_config` is broken.
 
 Suggested commands:
 
@@ -323,7 +375,7 @@ julia --project=test test/runtests.jl
 rg -n "directedges!|preorder!" src/network_layout.jl src/layout_engine.jl
 ```
 
-## Task 3: Add annotation and extent computation owner
+## Task 3: Add annotation and extent computation implementation
 
 Type: `WRITE`
 
@@ -340,7 +392,7 @@ Positive contract:
 - Implement `compute_layout(plot_network, config, geometry)::LayoutComputation`.
 - Preserve current behavior for tip labels, node labels, edge labels, hybrid labels, formatted values, warnings, and bounds.
 - Make extents and data needed for later primitive channels explicit in typed structs.
-- Keep old `prepare_plot_layout` only as a transitional wrapper if current recipe/render code still needs it.
+- Keep old `prepare_plot_layout` only as a listed transitional wrapper if current recipe/render code still needs it. It must call `compute_layout` or mechanically adapt `LayoutComputation`; it must not keep independent annotation, bounds, or table logic.
 
 Negative contract:
 
@@ -387,7 +439,7 @@ Primary output:
 Positive contract:
 
 - Implement `SegmentChannel` and `TextChannel` with concrete or parametric field types.
-- Implement `compute_edge_colors`, `compute_edge_widths`, `compute_segment_points`, `compute_segment_channels`, `compute_text_sizes`, `compute_text_align`, `compute_text_channel`, `compute_text_channels`, and `compute_data_limits` as needed by the codeplan.
+- Implement the codeplan's segment, text, and limit functions: `compute_edge_colors`, `compute_edge_widths`, `compute_segment_points`, `compute_segment_channels`, `compute_text_sizes`, `compute_text_align`, `compute_text_channel`, `compute_text_channels`, and `compute_data_limits`.
 - Preserve current color, width, linestyle, label, text-size, alignment, and limit behavior.
 - Return typed empty vectors for hidden segment and hidden text cases.
 - Keep the functions pure: no scene mutation and no child primitive construction.
@@ -466,7 +518,7 @@ Verification:
 - Visible hybrid-arrow cases produce non-empty concrete mesh or polygon payloads.
 - Hidden and no-arrow cases produce concrete typed empty payloads.
 - Tests verify that the payload is acceptable to Makie's poly conversion contract without constructing one `arrows2d!` child per arrowhead.
-- Source audit confirms `src/primitive_channels.jl` contains no `arrows2d!`; any remaining `arrows2d!` in `src/render_adapter.jl` is explicitly transitional render debt for Tranche 3, not the computation owner.
+- Source audit confirms `src/primitive_channels.jl` contains no `arrows2d!`; any remaining `arrows2d!` in `src/render_adapter.jl` is explicitly transitional render debt for Tranche 3, not the implementation that calculates arrowhead geometry.
 
 Suggested commands:
 
@@ -483,15 +535,15 @@ Dependencies: Task 5
 
 Primary output:
 
-- The current rebuild-based render path consumes `PrimitiveChannels` or thin delegating wrappers around it.
-- Current public plotting behavior stays green while computation ownership moves out of the render adapter.
+- The current rebuild-based render path consumes `PrimitiveChannels` or the explicitly listed render-path wrappers around it.
+- Current public plotting behavior stays green while plot-ready value calculation moves out of the render adapter.
 
 Positive contract:
 
 - Refactor `render_plot!` and render-layer helpers so value calculations come from `PhyloPlotConfig`, `PlotNetwork`, `LayoutComputation`, and `PrimitiveChannels`.
 - Keep render adapter responsibility limited to translating computed channels into the current child primitive calls and applying current scene/axis effects.
 - Preserve the existing public plotting behavior and render test expectations.
-- Keep transitional wrappers only when they delegate to the new computation owners and are necessary for current green-state compatibility.
+- Keep only the listed transitional wrappers, and only when they satisfy the delegation rules in this file and are necessary for current green-state compatibility.
 - Document in code sparingly where a transitional render path remains for later Tranche 3 primitive-child consolidation.
 
 Negative contract:
@@ -517,8 +569,8 @@ Likely files:
 Verification:
 
 - Existing render adapter and recipe tests remain green.
-- Deleting or breaking `compute_primitive_channels` causes render or computation tests to fail, proving computation ownership is real.
-- Source audit shows old render-only helper names are gone or are thin delegating wrappers.
+- Deleting or breaking `compute_primitive_channels` causes render or computation tests to fail, proving the current render path depends on the `PrimitiveChannels` payload.
+- Source audit shows old render-only helper names are gone unless they are in the allowed transitional wrapper list. Listed render wrappers must consume `PrimitiveChannels`; private helpers must not keep independent edge-color, edge-width, text, arrow-metric, arrowhead-geometry, or data-limit logic.
 - Visual/colorbuffer checks keep protecting current public behavior.
 
 Suggested commands:
@@ -545,7 +597,7 @@ Positive contract:
 - Ensure `test/runtests.jl` includes every new computation test file.
 - Ensure new computation tests do not depend on `Figure`, `Axis`, `Scene`, `ComputeGraph`, or primitive construction.
 - Ensure public behavior tests for `Makie.plot`, `Makie.plot!`, `phyloplot`, and `phyloplot!` remain green.
-- Audit old scaffold names and classify remaining uses as transitional wrappers, tests for compatibility, or later-tranche debt.
+- Audit old scaffold names and classify remaining uses against the allowed transitional wrapper list. Any old name outside that list requires project-owner approval or removal.
 - Run the full test suite. Run docs if source/include changes create documentation risk or if docs are already part of the active verification profile.
 
 Negative contract:
@@ -571,7 +623,7 @@ Verification:
 - Full suite passes.
 - Computation-layer tests fail on the old implementation and pass on the new one.
 - Source/test audit shows no new computation test asserts old scaffold names as primary owners.
-- Any remaining old scaffold names are explicitly understood as transitional compatibility, current public behavior, or later-tranche debt.
+- Any remaining old scaffold names are either listed transitional wrappers satisfying this file's delegation rules, current public behavior, or recorded later-tranche debt.
 
 Suggested commands:
 
@@ -588,11 +640,11 @@ If `docs/make.jl` fails for an existing unrelated reason, record the exact failu
 
 Tranche 1 is complete only when all of the following are true:
 
-- `PhyloPlotConfig`, `PlotNetwork`, `NetworkGeometry`, `LayoutComputation`, annotation tables, primitive channels, data limits, and arrowhead mesh payloads have clear computation owners.
+- `PhyloPlotConfig`, `PlotNetwork`, `NetworkGeometry`, `LayoutComputation`, `AnnotationTables`, `SegmentChannel`, `TextChannel`, `ArrowheadChannel`, `PrimitiveChannels`, and `compute_data_limits` exist and are the named implementations for plot configuration, caller-safe traversal preparation, network geometry, annotation tables, primitive payloads, and data-limit calculation.
 - The caller's `HybridNetwork` is not mutated by the public plotting preparation path.
 - Computation tests prove plot-ready values without creating scenes or child plots.
 - Existing public plotting behavior remains green.
-- Old scaffold names are no longer treated as the architecture target where the tranche touched their ownership.
+- Old scaffold names are no longer treated as the architecture target where this tranche changes responsibility; any survivor is listed explicitly and tied to the exact new implementation it calls.
 - No later-tranche work is claimed as done.
 - Full verification is run or any inability to run it is recorded with the exact blocker.
 
