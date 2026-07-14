@@ -120,14 +120,20 @@ end
     @testset "Layout output is identical whether preorder runs internally or is pre-run by the caller" begin
         layout_case = layout_cases.with_lengths_fulltree
         fresh_network = _read_network(layout_case.newick)
+        original_preorder_from_fresh = [node.number for node in fresh_network.vec_node]
+        original_edge_direction_from_fresh = [edge.ischild1 for edge in fresh_network.edge]
+        original_containroot_from_fresh = [edge.containroot for edge in fresh_network.edge]
+        original_isrooted_from_fresh = fresh_network.isrooted
         attributes = resolve_phylo_plot_attributes(; layout_case.attribute_kwargs...)
         prepared_by_owner = layout_plot_geometry(
             fresh_network,
             attributes;
             preorder=true,
         )
-        @test fresh_network.isrooted === true
-        @test !isempty(fresh_network.vec_node)
+        @test fresh_network.isrooted === original_isrooted_from_fresh
+        @test [node.number for node in fresh_network.vec_node] == original_preorder_from_fresh
+        @test [edge.ischild1 for edge in fresh_network.edge] == original_edge_direction_from_fresh
+        @test [edge.containroot for edge in fresh_network.edge] == original_containroot_from_fresh
 
         prepared_network = _read_network(layout_case.newick)
         PhyloNetworks.directedges!(prepared_network)

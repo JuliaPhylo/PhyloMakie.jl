@@ -2,13 +2,7 @@ import PhyloNetworks
 
 
 function _validate_public_limits(limit, helper_message::String)
-    if isnothing(limit)
-        return nothing
-    end
-    if !applicable(length, limit) || length(limit) != 2
-        error(helper_message)
-    end
-    return limit
+    return validate_limit_pair(limit, helper_message)
 end
 
 Makie.@recipe PhyloPlot (net,) begin
@@ -99,8 +93,7 @@ function Makie.plot!(plot::PhyloPlot)
             scene = Makie.get_scene(plot)
             foreach(child -> delete!(scene, child), copy(plot.plots))
             empty!(plot.plots)
-            net_copy = deepcopy(net)
-            attributes = resolve_phylo_plot_attributes(;
+            config = resolve_plot_config(;
                 useedgelength, showtiplabel, shownodelabel, shownodenumber,
                 showedgelength, showedgenumber, showgamma,
                 edgecolor, defaultedgecolor, majorhybridedgecolor, minorhybridedgecolor,
@@ -112,21 +105,10 @@ function Makie.plot!(plot::PhyloPlot)
                 tipoffset, tipcex,
                 xlim, ylim, style,
             )
-            layout = prepare_plot_layout(net_copy, attributes; preorder = true)
-            validated_xlim = _validate_public_limits(
-                attributes.xlim,
-                layout.bounds.xlim_error_message,
-            )
-            validated_ylim = _validate_public_limits(
-                attributes.ylim,
-                layout.bounds.ylim_error_message,
-            )
-            resolved_attributes = with_phylo_plot_limits(
-                attributes,
-                validated_xlim,
-                validated_ylim,
-            )
-            render_plot!(plot, net_copy, resolved_attributes, layout)
+            plot_network = prepare_plot_network(net)
+            geometry = compute_network_geometry(plot_network, config)
+            layout = compute_layout(plot_network, config, geometry)
+            render_plot!(plot, plot_network, config, layout)
         finally
             is_rebuilding[] = false
         end
