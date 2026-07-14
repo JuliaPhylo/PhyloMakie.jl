@@ -769,4 +769,3 @@ acceptance of the docs, visual artifacts, and lock-item audit.
 - User story 12: obsolete scaffold names replaced in implementation-facing prose.
 - User story 13: future contributors can add attributes through the new owner path.
 - User story 14: pointer interactions remain deferred.
-

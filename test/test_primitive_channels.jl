@@ -18,6 +18,7 @@ end
     prepare_plot_network = getfield(PhyloMakie, :prepare_plot_network)
     compute_network_geometry = getfield(PhyloMakie, :compute_network_geometry)
     compute_layout = getfield(PhyloMakie, :compute_layout)
+    compute_arrowhead_channel = getfield(PhyloMakie, :compute_arrowhead_channel)
     compute_primitive_channels = getfield(PhyloMakie, :compute_primitive_channels)
     resolve_plot_config = getfield(PhyloMakie, :resolve_plot_config)
 
@@ -67,6 +68,7 @@ end
         @test channels.minor_edge_shafts.linewidths == Float32[]
         @test channels.minor_arrowheads.meshes == getfield(PhyloMakie, :ArrowheadPolygon)[]
         @test channels.minor_arrowheads.colors == Makie.RGBAf[]
+        @test channels.minor_arrowheads.source_indices == Int[]
         @test channels.tip_labels.positions == Makie.Point2f[]
         @test channels.tip_labels.strings == String[]
         @test channels.tip_labels.colors == Makie.RGBAf[]
@@ -84,9 +86,45 @@ end
         @test eltype(channels.minor_arrowheads.meshes) == getfield(PhyloMakie, :ArrowheadPolygon)
         @test length(channels.minor_arrowheads.colors) == length(channels.minor_arrowheads.meshes)
         @test length(channels.minor_arrowheads.strokecolors) == length(channels.minor_arrowheads.meshes)
+        @test length(channels.minor_arrowheads.source_indices) ==
+            length(channels.minor_arrowheads.meshes)
         @test all(>(0), channels.minor_arrowheads.tiplengths)
         @test all(>(0), channels.minor_arrowheads.tipwidths)
         converted = Makie.convert_arguments(Makie.Poly, channels.minor_arrowheads.meshes)
         @test only(converted) == channels.minor_arrowheads.meshes
+    end
+
+    @testset "Suppressed arrowheads keep channel arrays aligned" begin
+        points = Makie.Point2f[(0, 0), (1, 0), (0, 1), (1, 1)]
+        shaft_channel = SegmentChannel(
+            points,
+            fill(Makie.RGBAf(0, 0, 0, 1), length(points)),
+            fill(1.0f0, length(points)),
+            :dash,
+        )
+        input_colors = Makie.RGBAf[
+            Makie.RGBAf(1, 0, 0, 1),
+            Makie.RGBAf(0, 1, 0, 1),
+        ]
+        arrowheads = compute_arrowhead_channel(
+            shaft_channel,
+            input_colors,
+            Float32[0, 8],
+            Float32[4, 4],
+            true,
+        )
+
+        @test arrowheads.source_indices == [2]
+        @test arrowheads.startpoints == Makie.Point2f[points[3]]
+        @test arrowheads.endpoints == Makie.Point2f[points[4]]
+        @test arrowheads.colors == Makie.RGBAf[input_colors[2]]
+        @test arrowheads.strokecolors == Makie.RGBAf[input_colors[2]]
+        @test arrowheads.tiplengths == Float32[8]
+        @test arrowheads.tipwidths == Float32[4]
+        @test length(arrowheads.meshes) == 1
+        @test length(arrowheads.colors) == length(arrowheads.startpoints)
+        @test length(arrowheads.colors) == length(arrowheads.endpoints)
+        @test length(arrowheads.colors) == length(arrowheads.tiplengths)
+        @test length(arrowheads.colors) == length(arrowheads.tipwidths)
     end
 end

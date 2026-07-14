@@ -776,7 +776,7 @@ None. The project owner resolved the prior open questions:
 
 ## Further notes
 
-The current logic for computing, annotation preparation, render channels, 
+The current logic for computing, annotation preparation, render channels,
 and accepted visual behavior is CORRECT.
 The refactor should abstract these into a core computation layer, preserving all
 functionality and behavior.

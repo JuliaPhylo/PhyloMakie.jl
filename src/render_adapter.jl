@@ -102,7 +102,8 @@ function _render_arrow_tip_layer!(
         channel::ArrowheadChannel,
         shaft_channel::SegmentChannel,
     )::ArrowTipRenderLayer
-    shaft_widths = _render_segment_linewidths(shaft_channel)
+    all_shaft_widths = _render_segment_linewidths(shaft_channel)
+    shaft_widths = Float64[all_shaft_widths[index] for index in channel.source_indices]
     # Transitional Tranche 1 render shell: arrowhead geometry is calculated by
     # ArrowheadChannel, while current public rendering still uses Arrows2D until
     # the stable poly! primitive assembly tranche replaces this child shape.
@@ -122,7 +123,7 @@ function _render_arrow_tip_layer!(
                 shaftcolor = _transparent_color(channel.colors[index]),
                 tipcolor = channel.colors[index],
                 markerspace = :pixel,
-            ) for index in eachindex(channel.startpoints) if channel.tiplengths[index] > 0
+            ) for index in eachindex(channel.startpoints)
     ]
     return ArrowTipRenderLayer(
         plots,

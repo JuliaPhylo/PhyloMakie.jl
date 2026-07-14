@@ -30,6 +30,7 @@ struct ArrowheadChannel{TMesh}
     colors::Vector{Makie.RGBAf}
     strokecolors::Vector{Makie.RGBAf}
     strokewidth::Float32
+    source_indices::Vector{Int}
     startpoints::Vector{Makie.Point2f}
     endpoints::Vector{Makie.Point2f}
     tiplengths::Vector{Float32}
@@ -325,6 +326,7 @@ function compute_arrowhead_channel(
             Makie.RGBAf[],
             Makie.RGBAf[],
             DEFAULT_ARROW_STROKEWIDTH,
+            Int[],
             Makie.Point2f[],
             Makie.Point2f[],
             Float32[],
@@ -333,11 +335,21 @@ function compute_arrowhead_channel(
     end
 
     meshes = ArrowheadPolygon[]
-    mesh_colors = Makie.RGBAf[]
+    render_colors = Makie.RGBAf[]
+    render_source_indices = Int[]
+    render_startpoints = Makie.Point2f[]
+    render_endpoints = Makie.Point2f[]
+    render_tiplengths = Float32[]
+    render_tipwidths = Float32[]
     for index in eachindex(startpoints)
         if typed_tiplengths[index] <= 0 || typed_tipwidths[index] <= 0
             continue
         end
+        push!(render_source_indices, index)
+        push!(render_startpoints, startpoints[index])
+        push!(render_endpoints, endpoints[index])
+        push!(render_tiplengths, typed_tiplengths[index])
+        push!(render_tipwidths, typed_tipwidths[index])
         push!(
             meshes,
             _arrowhead_polygon(
@@ -347,17 +359,18 @@ function compute_arrowhead_channel(
                 typed_tipwidths[index],
             ),
         )
-        push!(mesh_colors, colors[index])
+        push!(render_colors, colors[index])
     end
     return ArrowheadChannel(
         meshes,
-        mesh_colors,
-        copy(mesh_colors),
+        render_colors,
+        copy(render_colors),
         DEFAULT_ARROW_STROKEWIDTH,
-        startpoints,
-        endpoints,
-        typed_tiplengths,
-        typed_tipwidths,
+        render_source_indices,
+        render_startpoints,
+        render_endpoints,
+        render_tiplengths,
+        render_tipwidths,
     )
 end
 

@@ -58,6 +58,41 @@
         @test all(iszero, blank_case.layers.minor_edge_tips.tipwidths)
     end
 
+    @testset "Arrow tip render accepts suppressed arrow metrics" begin
+        SegmentChannel = getfield(PhyloMakie, :SegmentChannel)
+        compute_arrowhead_channel = getfield(PhyloMakie, :compute_arrowhead_channel)
+        render_arrow_tip_layer! = getfield(PhyloMakie, :_render_arrow_tip_layer!)
+        points = Makie.Point2f[(0, 0), (1, 0), (0, 1), (1, 1)]
+        shaft_channel = SegmentChannel(
+            points,
+            fill(Makie.RGBAf(0, 0, 0, 1), length(points)),
+            Float32[2, 2, 7, 7],
+            :dash,
+        )
+        input_colors = Makie.RGBAf[
+            Makie.RGBAf(1, 0, 0, 1),
+            Makie.RGBAf(0, 1, 0, 1),
+        ]
+        arrowhead_channel = compute_arrowhead_channel(
+            shaft_channel,
+            input_colors,
+            Float32[0, 8],
+            Float32[4, 4],
+            true,
+        )
+        figure = Figure(size = (200, 200))
+        axis = Axis(figure[1, 1])
+        layer = render_arrow_tip_layer!(axis, arrowhead_channel, shaft_channel)
+
+        @test length(layer.plots) == 1
+        @test layer.startpoints == [(0.0, 1.0)]
+        @test layer.endpoints == [(1.0, 1.0)]
+        @test layer.colors == Makie.RGBAf[input_colors[2]]
+        @test layer.linewidths == [7.0]
+        @test layer.tiplengths == [8.0]
+        @test layer.tipwidths == [4.0]
+    end
+
     @testset "Color and width policy" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
         edgecolor = Dict(render_case.edgecolor_overrides)

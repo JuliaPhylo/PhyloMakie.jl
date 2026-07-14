@@ -9,7 +9,7 @@
 
 # A Makie plot is modeled as a directed graph, implemented using `ComputePipeline.ComputeGraph`, with nodes representing states of attributes and edges representing computations on a set of input nodes resulting in a set of output nodes.
 
-# The input nodes represent any values by which we want 
+# The input nodes represent any values by which we want
 # to determine or inform the plot appearance.
 # This includes the data itself as well as various parameters of the visualization aesthetics.
 # Each distinct positional argument and keyword argument passed to the plotting function or defined in the plot `@recipe` is mapped to a distinct node in the compute graph.
@@ -38,7 +38,7 @@
 # inputs when called with `update!(plt; ...)`.
 # Our plotting function is not responding to changes in inputs
 # because when
-# we used the `[]`/`getindex` function to dereference the 
+# we used the `[]`/`getindex` function to dereference the
 # value of the of the attributes in the plotting function,
 # we took a "snapshot" of the static values currently wrapped
 # by the node.
@@ -49,31 +49,31 @@
 # to use the compute graph *nodes* (`ComputePipeline.ComputeNode` objects)
 # rather than the compute graph node *values*.
 # Specifically, we need to create nodes that update based on input changes, and our plotting functions
-# have to, ultimately, use these nodes or other nodes derived from these nodes as arguments to 
+# have to, ultimately, use these nodes or other nodes derived from these nodes as arguments to
 # other Makie plotting functions that actually render the graphical elements.
 # We do this by
 # adding a new directed edge to the plot's underlying compute graph
-# (given by the plot `attributes::ComputePipeline.ComputeGraph` 
+# (given by the plot `attributes::ComputePipeline.ComputeGraph`
 # property) that will connect, as source nodes,
 # the nodes parameters, variables, or data to which we are reacting
-# to, as destination nodes, the values used in 
+# to, as destination nodes, the values used in
 # by our primitive calls in ourplotting algorithm.
 
 # We can add a compute edge to our plot using `map!`.
 # `ComputePipeline.register_computation!()` a  `map!` function.
 
-# We can also use the full `ComputePipeline.register_computation!()`, of which `map!`  
+# We can also use the full `ComputePipeline.register_computation!()`, of which `map!`
 # is a convenience wrapper.
-# `ComputePipeline.register_computation!` exposes 
-# information about which of the inputs has changed as well 
-# as the cached value of the previous output. 
-# It has a bulkier signature and requires input nodes be dereferenced 
+# `ComputePipeline.register_computation!` exposes
+# information about which of the inputs has changed as well
+# as the cached value of the previous output.
+# It has a bulkier signature and requires input nodes be dereferenced
 # by the `[]` function.
 
 # If we are fine on unconditionally recomputing the output any time
 # *any* of the inputs changes, `map!` provides a cleaner syntax.
 # `ComputePipeline.register_computation!` is preferered
-# if we can and want to economize the computation 
+# if we can and want to economize the computation
 # depending on which inputs of the input set have change.
 
 
@@ -88,7 +88,7 @@
 # - A tuple with equal size to the output names set in map!(::ComputeGraph),
 #   or a single value in only a single output node specified, or nothing if the result is the same as the previous
 #
-# In addition, note how the positional arguments do NOT have to be 
+# In addition, note how the positional arguments do NOT have to be
 # dereferenced, which makes for much cleaner syntax.
 #
 # ::: {.callout-note title="Adding a compute edge with `map!`"}
@@ -107,7 +107,7 @@
 #   end
 # ```
 #
-# ::: 
+# :::
 
 # #### `register_computation`
 
@@ -115,7 +115,7 @@
 #
 # Arguments:
 #
-# - `inputs::NamedTuple{input_names, Ref)`: `Ref`s to the data held by the inputs of the computation. 
+# - `inputs::NamedTuple{input_names, Ref)`: `Ref`s to the data held by the inputs of the computation.
 #   The order always matches the order of the input names given to register_computation!().
 # - `changed::NamedTuple{input_names, Bool}`: inputs have changed since the computation was last triggered.
 # - `cached::Union{Nothing, Tuple}` the data of the previous output(s) in order, or nothing if no previous output exists.
@@ -129,7 +129,7 @@
 # ```julia
 # register_computation!(
 #     plt.attributes,         ## The plot's `ComputeGraph` object: the graph to which we are adding a compute edge
-#     [:r, :g, :b, :opacity], ## Source node(s) of the new compute edge 
+#     [:r, :g, :b, :opacity], ## Source node(s) of the new compute edge
 #     [:circle_colors],       ## Destination node(s) of the compute edge
 # ) do inputs, changed, cached
 #     r, g, b, opacity = inputs
@@ -142,7 +142,7 @@
 # end
 # ```
 #
-# ::: 
+# :::
 
 
 # :::
@@ -222,20 +222,20 @@ fig
 
 # Reactivity is executed by calling the `Makie.update!` function
 # on the plot.
-# This function has a method that takes the plot as its 
+# This function has a method that takes the plot as its
 # sole positional argument, followed by a set of keyword arguments
 # that provide the new values for the states of the input nodes.
 #
-# Input nodes corresponding to positional arguments 
+# Input nodes corresponding to positional arguments
 # are referenced by `arg1`, `arg2`, etc. keywords,
-# while, the keyword argument input nodes 
+# while, the keyword argument input nodes
 # are referenced by their respective keyword labels.
 
 # Here, the $x$ and $y$ coordinates are given by positional arguments,
 # and so are referenced by `arg1` and `arg2`, respectively, while the remaining
 # nodes are referenced by the given keyword names: `r`, `g`, `b`, `opacity`, `size`, and `overlap`.
 
-# So, for example, the $x$-coordinate of the centroid of plot is determined by the 
+# So, for example, the $x$-coordinate of the centroid of plot is determined by the
 # first positional argument to the plotting function call (`rgbdiscs(x, y; ...)`
 # and so is referenced as `arg1`.
 
@@ -289,17 +289,17 @@ fig
 
 # ## Architectural considerations
 
-# Each and every argument passed to the a Makie plot 
-# function (`scatter!`, `lines!`, `linesegments!`, `text!` etc.) must correspond to a single output 
+# Each and every argument passed to the a Makie plot
+# function (`scatter!`, `lines!`, `linesegments!`, `text!` etc.) must correspond to a single output
 #  node if that argument is meant to be reactive.
-# 
+#
 # Design should not build up visual complexity in terms of a series of plotting instructions.
-# Design should focus on the transformations required to 
+# Design should focus on the transformations required to
 # map the various input data to arguments passed to primitive plotting functions.
-# 
+#
 # Note that we cannot package the arguments into more complex structures, such as `tuple`, `struct`s or `dict`s.
-# 
-# 
+#
+#
 # For example given:
 
 
@@ -331,9 +331,9 @@ end
 #         plt.attributes,
 #         [:annulus_data, :annulus_plot_configuration],
 #         [:plot_data, :plot_kwargs],
-#     ) do annulus_data, annulus_configuration 
+#     ) do annulus_data, annulus_configuration
 #         plot_data = repeat([1.0], annulus_data.n_segments)
-#         plot_kwargs = (; 
+#         plot_kwargs = (;
 #             color = 1:length(plot_data),
 #             radius = annulus_plot_configuration.radius,
 #             inner_radius = annulus_plot_configuration.inner_radius,
@@ -345,7 +345,7 @@ end
 #     pie!(plt, 5, 5, plot_data;
 #         color = plot_kwargs.color,  ## WILL NOT WORK!
 #         radius = plot_kwargs.radius,  ## WILL NOT WORK!
-#         inner_radius = plot_kwargs.inner_radius, 
+#         inner_radius = plot_kwargs.inner_radius,
 #     )
 #     return plt
 # end
