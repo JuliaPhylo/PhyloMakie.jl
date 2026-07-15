@@ -12,6 +12,15 @@ The principles below are ordered from most foundational to most derived. Each
 one follows from the one above it. All are in force unless §4 creates an
 explicit carve-out.
 
+Any Julia workflow document, review, audit, implementation report, or
+user-facing explanation that uses ownership, contract, boundary, layer,
+invariant, compatibility, or verification terms must also follow
+`STYLE-agent-language.md`. When responsibility matters, the prose must name the
+exact function, type, module, file, public surface, or external contract; the
+behavior it owns or enforces; the consumers that rely on it; the duplicate or
+bypass paths that must not keep that responsibility; and the verification
+artifact that fails if the responsibility remains unclear.
+
 ---
 
 ### 1.1 Pure functions
@@ -21,7 +30,8 @@ explicit carve-out.
 
 A function is pure if — given the same arguments — it always returns the same
 value and does nothing else observable. Purity is the basis for every other
-property: equational reasoning, safe caching, parallelism, and testability all
+property: equational reasoning, deterministic caching, parallelism, and
+testability all
 depend on it.
 
 **In Julia:**
@@ -267,7 +277,7 @@ In scientific computing, idempotency matters most at:
 - **API boundaries**: registering a resource that already exists should not error.
 
 ```julia
-# Idempotent cache fetch — calling twice is safe
+# Idempotent cache fetch — calling twice returns the same value
 function fetch_occurrences(taxon::String, cache::OccurrenceCache)::Vector{OccurrenceRecord}
     haskey(cache, taxon) && return cache[taxon]
     result = _fetch_from_pbdb(taxon)
@@ -465,7 +475,7 @@ habitat(::TerrestrialOccurrence)::Symbol = :terrestrial
   Representation types must be fully specified by the struct definition and its
   type parameters.
 - Distinguish function argument abstraction from struct field design:
-  function arguments should usually be typed at the appropriate abstract level,
+  function arguments should usually be typed at the required abstract level,
   but struct fields must usually be concrete or concretized through type
   parameters.
 - Use abstract supertypes to define interfaces; use concrete field types and
@@ -480,7 +490,7 @@ habitat(::TerrestrialOccurrence)::Symbol = :terrestrial
 
 #### 1.13.1 Argument type annotations (mandatory except when harmful to design)
 
-> Function arguments must be annotated at the correct level of abstraction to
+> Function arguments must be annotated at the required level of abstraction to
 > express the interface contract. Overly concrete annotations are correctness
 > bugs at the design level.
 
@@ -499,7 +509,8 @@ This project mandates argument annotation to:
   in execution.
 
 However, annotation must not come at the cost of generality. The goal is not to
-specify the most specific type, but the **most appropriate abstraction**.
+specify the most specific type, but the **least specific abstraction that still
+expresses the required semantics**.
 
 **Examples:**
 
@@ -568,7 +579,7 @@ function compute_mean(x::AbstractVector{<:Real})::Float64
 
 Argument annotations define method selection. Overly specific types reduce the
 applicability of methods and fragment the API. Overly general types collapse
-dispatch distinctions and defer errors. The correct annotation is the one that
+dispatch distinctions and defer errors. The valid annotation is the one that
 captures the **minimal valid interface** for the computation.
 
 ---
@@ -615,7 +626,8 @@ end
   are trivially local and their return type is immediately obvious from a
   single-expression body.
 - Return types must be:
-  - Concrete where appropriate (`Float64`, `Int`, `Vector{Float64}`), or
+  - Concrete when the return type is fixed (`Float64`, `Int`,
+    `Vector{Float64}`), or
   - Abstract but constrained when the concrete type depends on input type
     parameters (`AbstractVector{<:Real}`).
 - Do not use `Any` as a return type. If a function cannot be given a more
@@ -682,8 +694,8 @@ end
 - Global mutable state (module-level `Ref`, `Dict`, etc.) destroys reentrancy.
   If a cache or accumulator must exist, it should be wrapped in a lock when
   accessed from multiple threads, or use thread-local storage.
-- `Threads.@spawn` tasks should only capture immutable values or explicitly
-  thread-safe data structures.
+- `Threads.@spawn` tasks should only capture immutable values or data structures
+  with explicit thread-safety guarantees.
 - If a function is intended to be parallelized, say so in its docstring and
   ensure it is reentrant.
 
@@ -973,7 +985,8 @@ end
 
 **Rules:**
 - Annotate arguments against abstract types, not concrete ones (§1.12 and
-  §1.13.1 cover the full annotation rules and the correct level of abstraction).
+  §1.13.1 cover the full annotation rules and the required level of
+  abstraction).
 - Do not construct or look up dependencies (API clients, caches, file handles)
   inside a function — accept them as arguments. This is statelessness (§1.9)
   applied to dependencies.
@@ -1003,7 +1016,7 @@ function process_b(occ::OccurrenceRecord)::OccurrenceRecord
     # ...
 end
 
-# DRY: single source of truth
+# DRY: single authoritative implementation for age validation
 function validate_age(occ::OccurrenceRecord)::OccurrenceRecord
     occ.age_ma >= 0.0 || throw(DomainError(occ.age_ma, "Age must be non-negative"))
     return occ
@@ -1026,13 +1039,13 @@ process_b(occ::OccurrenceRecord)::OccurrenceRecord = occ |> validate_age |> _pro
 
 #### 1.16.3 KISS — Keep It Simple, Stupid
 
-> The simplest correct solution is the right solution. Complexity is a cost,
+> The simplest valid solution is the preferred solution. Complexity is a cost,
 > not a feature.
 
 Every abstraction layer, type parameter, macro, and level of indirection has a
 cost: it must be understood, maintained, and debugged. Add complexity only when
-simplicity provably cannot solve the problem. When two designs are equally
-correct, the simpler one wins.
+simplicity provably cannot solve the problem. When two designs satisfy the same
+requirements, the simpler one wins.
 
 ```julia
 # Over-engineered: abstract machinery introduced for a single concrete case
@@ -1058,7 +1071,7 @@ exists (see §1.16.5 YAGNI).
   behavior.
 - Metaprogramming (`@generated`, `@eval`, custom macros) carries high cognitive
   cost. Use it only when there is no readable, direct alternative.
-- When two designs are equally correct, prefer the one with fewer concepts,
+- When two designs satisfy the same requirements, prefer the one with fewer concepts,
   fewer lines, and fewer moving parts.
 
 ---
@@ -1111,7 +1124,7 @@ end
 Premature generality is not a virtue. An abstraction built for a use case that
 never materializes must still be read, tested, and maintained — indefinitely.
 Write the simplest concrete solution for the current requirement; add generality
-only when a second concrete use case forces it and the right abstraction is
+only when a second concrete use case forces it and the required abstraction is
 visible from both examples.
 
 ```julia
@@ -1128,8 +1141,8 @@ fetch_pbdb(taxon::String)::Vector{OccurrenceRecord} = _fetch_pbdb(taxon)
 ```
 
 When `FossilWorksSource` is actually needed, introduce the abstraction then.
-The refactor is mechanical and the design will be better informed by two real
-use cases rather than one real and one imagined.
+The refactor is mechanical and the design will be better informed by two actual
+use cases rather than one actual and one imagined.
 
 **Rules:**
 - Do not write stub or placeholder implementations for functionality not yet
@@ -1139,7 +1152,7 @@ use cases rather than one real and one imagined.
 - Do not add keyword arguments, configuration options, or flags for behavior
   that no current caller needs.
 - Do not pre-emptively generalize type signatures beyond what current callers
-  require. Generalize when the need arises (§1.12 governs the correct level of
+  require. Generalize when the need arises (§1.12 governs the required level of
   abstraction for what is needed now).
 
 ---
@@ -1284,7 +1297,7 @@ end
   not deep in a call chain.
 - Error messages must be informative for newcomers: say what was expected, what
   was received, and what the user should do.
-- Use appropriate error types: `ArgumentError` for bad inputs, `DomainError` for
+- Use specific error types: `ArgumentError` for bad inputs, `DomainError` for
   values outside a function's mathematical domain, `DimensionMismatch` for
   array size issues.
 
@@ -1309,19 +1322,25 @@ end
 
 ### 3.9 Ownership, invariants, and anti-fixes
 
-- Repair shared invariants at the owning layer. Do not distribute one invariant
-  across many call sites through repeated defensive patches.
-- If multiple modules are applying the same corrective logic, stop and identify
-  the real owner before adding another patch.
-- Prefer a single well-owned repair over many local compensations.
+- Repair shared invariants in the exact function, type, module, file, public
+  surface, or external contract responsible for enforcing them. Do not
+  distribute one invariant across many call sites through repeated defensive
+  patches.
+- If multiple modules are applying the same corrective logic, stop before adding
+  another patch. Identify the responsible entity, the consumers that should rely
+  on it, the duplicate or bypass paths that must not keep the same
+  responsibility, and the verification artifact that fails if duplication
+  remains.
+- Prefer one named repair entity over many local compensations.
 - Do not clamp, mask, or cosmetically suppress invalid state merely to make
   tests pass or output look plausible. That is an anti-fix unless the masking
-  policy is itself the explicit owner-level contract.
+  policy is itself the explicit behavior of the named responsible entity.
 - When wrapping or extending a host framework, preserve the host-framework
   contract unless an explicit, documented divergence has been approved.
-- When a local fix appears to require changes in several sibling layers, treat
-  that as an architectural smell and consult `STYLE-architecture.md` and
-  `STYLE-upstream-contracts.md`.
+- When a local fix appears to require changes in several sibling modules or
+  layers, treat that as an architectural smell and consult
+  `STYLE-architecture.md`, `STYLE-upstream-contracts.md`, and
+  `STYLE-agent-language.md` before planning the change.
 
 ---
 
@@ -1438,7 +1457,7 @@ Does it need to mutate an argument?
           ├── No  → Return a copy instead
           └── Yes → Apply the mutation contract (§4):
                     name it f!, document which arg is mutated,
-                    provide an f wrapper if callers need out-of-place
+                    provide a non-mutating f method if callers need out-of-place
 
 Does it depend on global state?
 ├── Yes → Refactor: pass the state as an argument (§1.9)
@@ -1450,13 +1469,13 @@ Does it repeat logic from another function?
 
 Does this function or type exist to serve a current, concrete requirement?
 ├── No  → Remove it (YAGNI, §1.16.5). Speculative code is maintenance debt.
-└── Yes → Is it as simple as it can be while still being correct?
+└── Yes → Is it as simple as it can be while still satisfying requirements?
           ├── No  → Simplify (KISS, §1.16.3): fewer layers, fewer concepts
           └── Yes → Continue.
 
-Does it have explicit argument annotations at the correct level of abstraction?
+Does it have explicit argument annotations at the required level of abstraction?
 ├── No  → Add ::TypeAnnotation before the function body (§1.13)
-│         Ensure the type is at the correct level of abstraction; if not possible or advisable, discuss
+│         Ensure the type is at the required level of abstraction; if not possible or design-compatible, discuss
 └── Yes → Continue.
 
 Does it have an explicit return type annotation?

@@ -11,9 +11,16 @@ with informal shorthand. Technical prose must name the specific code entity,
 responsibility, rule, and verification condition whenever those details affect
 scope, design, or completion.
 
-This document supplements `STYLE-writing.md`, `STYLE-architecture.md`,
-`STYLE-agent-handoffs.md`, `STYLE-workflow-docs.md`,
-`STYLE-vocabulary.md`, and `STYLE-workflow-vocabulary.md`.
+This document supplements every `STYLE*.md` document that uses technical
+responsibility language. It is especially coupled to `STYLE-writing.md`,
+`STYLE-architecture.md`, `STYLE-agent-handoffs.md`, `STYLE-workflow-docs.md`,
+`STYLE-workflow-vocabulary.md`, `STYLE-upstream-contracts.md`,
+`STYLE-verification.md`, `STYLE-makie.md`, `STYLE-julia.md`, and
+`STYLE-vocabulary.md` when that file is present.
+
+Any downstream workflow document, handoff, review, audit, implementation
+report, or user-facing explanation that cites another style document must also
+apply this document when the prose uses the terms listed below.
 
 ## Core rule
 

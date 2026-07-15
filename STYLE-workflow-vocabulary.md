@@ -1,20 +1,54 @@
+# STYLE-workflow-vocabulary.md
+
+## Mandatory agent-language authority
+
+All agents and contributors must read `STYLE-agent-language.md` line by line
+before creating, revising, reviewing, auditing, or delegating any workflow
+document that uses this vocabulary.
+
+Compliance with `STYLE-agent-language.md` is mandatory, not advisory. A workflow
+document that uses ownership, contract, boundary, layer, invariant,
+compatibility, verification, source, or responsibility language must name the
+exact code entity or external contract involved, its responsibility, the
+consumers that rely on it, any duplicate or bypass paths that must not keep the
+same responsibility, and the verification artifact that fails if the
+responsibility remains unclear.
+
+Agents must not treat vocabulary definitions in this file as permission to use
+architectural shorthand. When a term in this file uses or implies ownership,
+contract, boundary, layer, invariant, compatibility, verification, source, or
+responsibility, downstream prose must expand the term according to
+`STYLE-agent-language.md`.
+
+If an agent cannot state the required concrete entity, behavior, forbidden
+duplicate or bypass path, and verification artifact, the agent must stop and
+request clarification rather than producing a workflow document, handoff,
+review, audit, implementation report, or delegated task that only appears to
+comply.
+
 ### `anti-fix`
 
 **Part of speech:** noun (process and review concept)
 
 **Definition:** A change that appears to address a problem locally but actually
 masks, reroutes, clamps, or cosmetically suppresses the bad state without
-repairing the owning contract, invariant, or root cause.
+repairing the named code entity or external contract responsible for the
+affected invariant, policy, or root cause.
 
 An anti-fix may make tests, logs, or screenshots look better while leaving the
 underlying design wrong.
 
-**Usage notes:** The correct response to a suspected anti-fix is to identify the
-owning layer and repair the invariant there, or explicitly document why the
-local policy is in fact the intended owner-level behavior.
+**Usage notes:** The response to a suspected anti-fix is to identify the exact
+function, type, module, file, public surface, or external contract responsible
+for the invariant; identify the consumers that rely on it; identify any local
+masking or bypass paths that must not keep the same responsibility; and repair
+the invariant there. If the local policy is intended behavior, document the
+named entity responsible for that policy and the verification artifact that
+proves it.
 
 **Proscribed alternates:** using `fix` for known masking changes; `workaround`
-without explicit statement of scope, owner, and temporary/permanent status.
+without explicit statement of scope, responsible entity, permitted behavior,
+forbidden behavior, verification artifact, and temporary/permanent status.
 
 ---
 
@@ -23,15 +57,16 @@ without explicit statement of scope, owner, and temporary/permanent status.
 **Part of speech:** noun (workflow concept)
 
 **Definition:** A tranche that exists to establish, repair, or migrate a shared
-owner, contract, invariant, or architectural boundary before user-facing or
-symptom-level tranches are attempted.
+named implementation, external contract, invariant, or architectural boundary
+before user-facing or symptom-level tranches are attempted.
 
-A foundational tranche is appropriate when multiple visible defects or feature
-requests depend on one shared internal responsibility.
+A foundational tranche applies when multiple visible defects or feature requests
+depend on one shared internal responsibility.
 
 **Proscribed alternates:** `cleanup tranche`; `prep work` when the tranche
-changes a real contract; `horizontal slice` when the work is actually owner-
-establishing.
+changes an internal or externally visible contract; `horizontal slice` when the
+work is actually establishing a named implementation responsible for an
+invariant, contract, policy, or behavior.
 
 ---
 
@@ -49,7 +84,9 @@ documents explicitly designated by the project owner.
 **Usage notes:** Governance documents are not optional background reading.
 Agents and contributors must read applicable governance documents line by line,
 comply with them, and pass their mandates forward into downstream instructions
-and delegated work.
+and delegated work. `STYLE-agent-language.md` is an applicable governance
+document whenever prose uses ownership, contract, boundary, layer, invariant,
+compatibility, verification, source, or responsibility language.
 
 **Proscribed alternates:** `reference` when the document is actually binding;
 `optional guidance` for mandatory governance.
@@ -65,9 +102,13 @@ ownership model, or API semantics imposed by a library or framework the project
 is built on or tightly integrated with.
 
 **Usage notes:** Host-framework contracts must be verified from upstream
-primary sources, not assumed from memory. Local wrappers and abstractions must
-preserve them unless an explicit, documented, user-approved divergence is
-intended.
+primary sources, not assumed from memory. A local compatibility function,
+adapter, or abstraction must preserve the verified contract unless an explicit,
+documented, user-approved divergence is intended. When prose calls a local
+entry point a wrapper, it must name the old local entry point, the new
+implementation or upstream entry point it calls, the adaptation it may perform,
+the behavior it must not reimplement, and the verification artifact that fails
+if it hides the host-framework contract.
 
 **Proscribed alternates:** `upstream behavior` when the specific contract being
 relied on has not been identified; `Makie way` or other informal phrases in
@@ -79,16 +120,18 @@ place of a traced contract.
 
 **Part of speech:** noun (architecture concept)
 
-**Definition:** The explicit boundary that determines which module, type,
-subsystem, or layer owns a given responsibility, invariant, contract, or
-policy, and which adjacent modules merely consume that owned behavior.
+**Definition:** The explicit boundary that identifies the exact module, type,
+function, file, public surface, subsystem, or external contract responsible for
+a given invariant, contract, policy, or behavior, and identifies which adjacent
+modules or public surfaces consume that behavior.
 
 **Usage notes:** If multiple modules appear to be applying the same defensive
-logic, that is evidence the ownership boundary may be wrong or unclear. Fixes
-should move toward clearer ownership, not toward broader duplication.
+logic, the workflow document must name the responsible entity, the consumers,
+the duplicate defensive paths, and the verification artifact that fails if
+duplication remains.
 
 **Proscribed alternates:** `somewhere in the stack`; `handled upstream`
-without naming the owner.
+without naming the exact responsible upstream or local entity.
 
 ---
 
@@ -111,7 +154,7 @@ instruction, or delegated task without carrying forward the relevant mandates,
 that agent has not complied with governance.
 
 **Proscribed alternates:** `implied by context`; `assumed known`; `see above`
-as a substitute for a real downstream governance block.
+as a substitute for a complete downstream governance block.
 
 ---
 
@@ -144,10 +187,10 @@ non-negotiable into a concrete non-completion condition with its own red-state
 repro and proof obligation.
 
 **Usage notes:** A lock item must say what surviving shape is forbidden, how
-the historical or current bad behavior is reproduced, what task or owner closes
-it, and what verification artifact fails the bad implementation or fake-fix
-shape. Use separate lock items whenever one goal could survive while another
-is fixed.
+the historical or current bad behavior is reproduced, what task, tranche
+subsection, or exact responsible code entity closes it, and what verification
+artifact fails the bad implementation or fake-fix shape. Use separate lock items
+whenever one goal could survive while another is fixed.
 
 **Proscribed alternates:** `goal` when a tracked proof obligation is intended;
 `note`; `intent`.
@@ -159,12 +202,12 @@ is fixed.
 **Part of speech:** noun (verification concept)
 
 **Definition:** The direct reproduction of the current or historical bad
-behavior that a real fix must make impossible or explicitly reject.
+behavior that an accepted fix must make impossible or explicitly reject.
 
 **Usage notes:** A red-state repro is stronger than a broad negative test idea.
 It should fail the current bad implementation or forbidden regression shape in
-the same way the real bug, drift, or contract violation fails. Use it as part
-of lock-item verification and handoff packets when a downstream actor must
+the same way the reported bug, drift, or contract violation fails. Use it as
+part of lock-item verification and handoff packets when a downstream actor must
 prove that a known bad shape is gone.
 
 **Proscribed alternates:** `negative case` when the historical bad behavior is
@@ -274,7 +317,7 @@ tool on which the project relies.
 
 Primary sources include official documentation, source files in the upstream
 repository, accepted standards, and project-owned design documents when they
-are the actual source of truth.
+are the authoritative evidence for the project decision.
 
 **Usage notes:** Secondary summaries, memory, or model recollection are not
 substitutes when contract-sensitive behavior is at issue. When a change depends
@@ -290,19 +333,17 @@ forward into downstream planning and execution documents.
 
 **Part of speech:** noun (testing and review concept)
 
-**Definition:** Any concrete artifact used to verify that work is correct at
-the intended contract boundary.
+**Definition:** Any concrete artifact used to verify that work satisfies the
+intended contract boundary.
 
 Verification artifacts may include test results, rendered examples,
 screenshots, pixel comparisons, docs builds, example outputs, migration checks,
-benchmarks, or other reproducible evidence tied to the real acceptance
-condition.
+benchmarks, or other reproducible evidence tied to the acceptance condition.
 
-**Usage notes:** Verification artifacts should match the real failure mode. For
-visual defects, geometry existence alone is often not a sufficient verification
-artifact. For public API changes, docs and example behavior may be part of the
-required artifact set.
+**Usage notes:** Verification artifacts should match the observed failure mode.
+For visual defects, geometry existence alone is often not a sufficient
+verification artifact. For public API changes, docs and example behavior may be
+part of the required artifact set.
 
 **Proscribed alternates:** `proof` when no reproducible artifact is recorded;
 `test coverage` as a substitute for a concrete acceptance artifact.
-

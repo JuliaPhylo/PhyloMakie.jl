@@ -8,12 +8,23 @@ reports.
 
 Its purpose is to prevent loss of context, loss of governance mandates, frozen
 misdiagnoses, and handoffs that preserve a narrow framing while dropping the
-real constraints.
+concrete constraints.
 
 ## Mandatory reading and pass-forward
 
 All contributors, including agents, must read this document line by line
 before generating or revising workflow documents or delegating work.
+
+All contributors, including agents, must also read `STYLE-agent-language.md`
+line by line before generating, revising, reviewing, auditing, or delegating any
+workflow document that uses ownership, contract, boundary, layer, invariant,
+compatibility, verification, source, or responsibility language.
+
+Compliance with `STYLE-agent-language.md` is mandatory. A workflow document is
+not ready for downstream execution if it uses architectural shorthand without
+naming the exact responsible code entity or external contract, the behavior or
+responsibility, the consumers, duplicate or bypass paths, and the verification
+artifact required by `STYLE-agent-language.md`.
 
 If you create any downstream workflow document or dispatch any downstream task,
 you must pass relevant mandates forward explicitly.
@@ -22,8 +33,14 @@ The downstream document must not merely inherit the parent context implicitly.
 It must explicitly restate:
 
 - which governance documents must be read line by line
+- that `STYLE-agent-language.md` must be read line by line whenever the document
+  uses ownership, contract, boundary, layer, invariant, compatibility,
+  verification, source, or responsibility language
 - which upstream primary sources must be read
 - which vocabulary constraints apply
+- which `STYLE-agent-language.md` specificity constraints apply when the
+  document uses ownership, contract, boundary, layer, invariant, compatibility,
+  or verification terms
 - which authorization boundaries apply
 - which verification gates define green state
 
@@ -31,8 +48,8 @@ This pass-forward obligation applies at every handoff boundary.
 
 ## Required sections
 
-Every workflow document should include the sections appropriate to its level,
-but the following obligations must be represented somewhere explicitly.
+Every workflow document should include the sections needed for its level, but
+the following obligations must be represented somewhere explicitly.
 
 ### Governance and required reading
 
@@ -40,13 +57,20 @@ List every applicable governance document that must be read line by line.
 
 If only some documents are relevant, say which ones and why.
 
+If the document uses ownership, contract, boundary, layer, invariant,
+compatibility, verification, source, or responsibility language, list
+`STYLE-agent-language.md` as required reading and state that its concrete
+expansion rules are mandatory for the document.
+
 ### Controlled vocabulary
 
 Name the relevant vocabulary constraints.
 
 If new terms are required or existing terms are ambiguous, say so explicitly
 and route the question through `STYLE-vocabulary.md` for project domain
-terms, or through `STYLE-workflow-vocabulary.md` for workflow-process terms.
+terms, through `STYLE-workflow-vocabulary.md` for workflow-process terms, or
+through `STYLE-agent-language.md` for architectural shorthand that needs
+concrete expansion.
 
 ### Upstream primary sources
 
@@ -63,21 +87,34 @@ If the work addresses a bug or architectural defect, the document must state:
 
 - the observed failure mode
 - the suspected root cause
-- the owning layer or contract involved
+- the exact function, type, module, file, public surface, or external contract
+  suspected to be responsible for the relevant behavior
+- the consumers or public surfaces that depend on that behavior
+- any duplicate, fallback, or bypass paths suspected of keeping the same
+  responsibility
 
 ### Ownership and invariant framing
 
 If the work touches more than one module or layer, the document must identify:
 
-- the owning layer
-- the shared contract or invariant
+- the exact function, type, module, file, public surface, or external contract
+  responsible for each relevant invariant, contract, policy, or behavior
+- the shared contract or invariant in active-voice prose
+- the consumers that must call the responsible entity or receive its output
+- the duplicate, fallback, or defensive paths that must be deleted, demoted, or
+  prevented
+- the verification artifact that fails if the responsibility remains duplicated
+  or assigned to the wrong entity
 - whether a foundational tranche is required before user-facing work
 
 If a public semantic is accepted through more than one entry surface, the
 document must also identify:
 
-- the canonical owner that normalizes that semantic
+- the exact function, type, module, file, or public surface that normalizes that
+  semantic
 - each supported public surface through which it may enter
+- any public surface that may adapt the resolved value but must not recalculate
+  defaults, precedence rules, fallback behavior, or validation
 - which surfaces must be covered by verification
 
 ### Authorization boundary
@@ -85,26 +122,6 @@ document must also identify:
 If disruptive redesign, deep refactor, clean-room replacement, migration, or
 external breakage is in play, the document must state what is authorized and
 what is not.
-
-### Port classification and compatibility stance
-
-If a workflow document describes a port, backend replacement, rewrite,
-reimplementation, API reset, or migration-sensitive redesign, it must classify
-the work explicitly.
-
-At minimum, it must say whether the effort is:
-
-- a compatibility-preserving port
-- a clean port with API redesign
-- a staged migration with temporary compatibility support
-
-It must also say explicitly:
-
-- whether legacy public names are required, optional migration material only,
-  or forbidden
-- whether a runtime compatibility shell is authorized at all
-- whether any temporary bridge is allowed, and if so which owner consumes it
-- the exact tranche or task where that bridge is deleted
 
 ### Verification and green-state gates
 
@@ -132,7 +149,9 @@ At minimum, the handoff packet must include, where applicable:
 - current-state diagnosis
 - primary-goal lock
 - direct red-state repros
-- owner and invariant being repaired or relied on
+- named responsible code entity or external contract, the invariant or policy
+  being repaired or relied on, the consumers that depend on it, and duplicate or
+  bypass paths that must not keep the same responsibility
 - exact files or surfaces in scope
 - exact files or surfaces out of scope
 - required upstream primary sources
@@ -155,16 +174,16 @@ Each lock item must state:
 - the non-completion condition in the form "the work is not complete if..."
 - the direct red-state repro, historical bad behavior, or equivalent observed
   failure mode
-- the task, tranche subsection, or delegated owner that closes it
+- the task, tranche subsection, or exact responsible code entity that closes it
 - the verification artifact that must fail the old implementation or fake-fix
   shape
 
 Do not leave a user-stated primary goal or review finding as descriptive prose
 only.
 
-If multiple lock items share the same owning repair, they may point at the same
-task, but they must still remain separately named if one could survive while
-another is fixed.
+If multiple lock items share the same named repair entity, they may point at the
+same task, but they must still remain separately named if one could survive
+while another is fixed.
 
 Green test suites, docs builds, grep checks, and source-text audits are
 necessary but not sufficient as the only proof for a lock item unless no more
@@ -190,6 +209,13 @@ handoff packet does not waive revalidation.
 Workflow documents must not:
 
 - freeze a known partial diagnosis into downstream execution
+- omit required line-by-line reading and compliance with
+  `STYLE-agent-language.md` when the document uses ownership, contract,
+  boundary, layer, invariant, compatibility, verification, source, or
+  responsibility language
+- use architectural shorthand without naming the responsible entity, behavior,
+  consumers, duplicate or bypass paths, and verification artifact required by
+  `STYLE-agent-language.md`
 - omit architecture concerns merely to make the tranche look thinner
 - omit upstream references when framework semantics matter
 - omit verification gates when user-visible behavior is changing
@@ -201,12 +227,6 @@ Workflow documents must not:
 - let several distinct primary goals collapse into one generic regression if
   one of those goals could still survive behind a green suite
 - strip governance obligations from downstream documents
-- treat legacy public syntax as the product goal after the user has authorized
-  a clean port or API redesign
-- authorize a temporary bridge without naming its consuming owner, kill point,
-  and failing end-state proof
-- defer runtime semantic-center repair into a docs tranche, migration tranche,
-  or other narrative-only closeout
 
 If a downstream document is materially weaker than its parent on these points,
 that is workflow drift and must be corrected before execution proceeds.
@@ -216,9 +236,14 @@ that is workflow drift and must be corrected before execution proceeds.
 Reviews and audits of workflow documents must ask:
 
 - did the mandates actually get passed forward?
-- did the document preserve the real owner and root-cause framing?
+- did the document mandate line-by-line reading of `STYLE-agent-language.md` and
+  comply with its concrete expansion rules wherever responsibility language
+  appears?
+- did the document preserve the exact responsible code entity or external
+  contract, its responsibility, the consumers that depend on it, duplicate or
+  bypass paths, and root-cause framing?
 - did it preserve upstream-reading obligations?
-- did it preserve the correct verification gates?
+- did it preserve the named verification gates?
 - did it create an honest authorization boundary?
 - did it include a usable handoff packet rather than a link-only or
   context-dump handoff?
@@ -227,4 +252,4 @@ Reviews and audits of workflow documents must ask:
 - could a fresh implementing agent still declare success while one of those
   lock items survives behind a green suite?
 
-If not, the workflow document is not safe for downstream execution.
+If not, the workflow document is not ready for downstream execution.
