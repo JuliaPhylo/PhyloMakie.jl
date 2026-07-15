@@ -180,10 +180,12 @@ function _text_graph_outputs(prefix::Symbol)::TextGraphOutputs
 end
 
 function _ref_any(value)::Base.RefValue{Any}
+    # ComputePipeline stores a typed RefValue on first resolution; these graph
+    # outputs can legitimately change concrete type after public keyword updates.
     return Ref{Any}(value)
 end
 
-function _edge_callback_function(edge)
+function _edge_callback_function(edge)::Function
     callback = getfield(edge, :callback)
     if :user_func in propertynames(callback)
         return getfield(callback, :user_func)
@@ -195,14 +197,12 @@ function _edge_input_symbols(edge)::Vector{Symbol}
     return Symbol[getfield(input, :name) for input in getfield(edge, :inputs)]
 end
 
-function _input_conflict_symbols(plot::Makie.Plot, outputs::Tuple{Vararg{Symbol}})::Vector{Symbol}
+function _input_conflict_symbols(plot::PhyloPlot, outputs::Tuple{Vararg{Symbol}})::Vector{Symbol}
     attr = plot.attributes
-    return Symbol[
-        output for output in outputs if output != :data_limits && haskey(attr.inputs, output)
-    ]
+    return Symbol[output for output in outputs if haskey(attr.inputs, output)]
 end
 
-function _release_initial_data_limits_output!(plot::Makie.Plot)::Nothing
+function _release_initial_data_limits_output!(plot::PhyloPlot)::Nothing
     attr = plot.attributes
     if !haskey(attr.inputs, :data_limits) || !haskey(attr.outputs, :data_limits)
         return nothing
@@ -215,27 +215,27 @@ function _release_initial_data_limits_output!(plot::Makie.Plot)::Nothing
         return nothing
     end
 
-    pop!(attr.outputs, :data_limits)
+    delete!(attr, :data_limits)
     return nothing
 end
 
 function _register_outputs_once!(
-        callback,
-        plot::Makie.Plot,
+        callback::Function,
+        plot::PhyloPlot,
         inputs::Tuple{Vararg{Symbol}},
         outputs::Tuple{Vararg{Symbol}},
     )::Nothing
     attr = plot.attributes
-    conflicts = _input_conflict_symbols(plot, outputs)
-    isempty(conflicts) || error("Cannot register graph outputs that are already inputs: $conflicts")
-
     if :data_limits in outputs
         _release_initial_data_limits_output!(plot)
     end
 
+    conflicts = _input_conflict_symbols(plot, outputs)
+    isempty(conflicts) || error("Cannot register graph outputs that are already inputs: $conflicts")
+
     existing_outputs = Symbol[output for output in outputs if haskey(attr.outputs, output)]
     if isempty(existing_outputs)
-        map!(callback, attr, collect(inputs), collect(outputs))
+        map!(callback, attr, Symbol[inputs...], Symbol[outputs...])
         return nothing
     end
     length(existing_outputs) == length(outputs) ||
@@ -249,7 +249,7 @@ function _register_outputs_once!(
     parent_edge = getfield(first(nodes), :parent)
     all(node -> getfield(node, :parent) === parent_edge, nodes) ||
         error("Cannot register graph outputs with different parent compute edges: $outputs")
-    _edge_input_symbols(parent_edge) == collect(inputs) ||
+    _edge_input_symbols(parent_edge) == Symbol[inputs...] ||
         error("Cannot register graph outputs with different input nodes: $outputs")
     _edge_callback_function(parent_edge) === callback ||
         error("Cannot register graph outputs with a different callback: $outputs")
@@ -350,12 +350,7 @@ function _compute_data_limits(channels::PrimitiveChannels)::Tuple{Base.RefValue{
     return (_ref_any(channels.data_limits),)
 end
 
-function _segment_channel_outputs(channel::SegmentChannel)::Tuple{
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-    }
+function _segment_channel_outputs(channel::SegmentChannel)::NTuple{4, Base.RefValue{Any}}
     return (
         _ref_any(channel.points),
         _ref_any(channel.colors),
@@ -364,24 +359,19 @@ function _segment_channel_outputs(channel::SegmentChannel)::Tuple{
     )
 end
 
-function _edge_segment_outputs(channels::PrimitiveChannels)::Tuple
+function _edge_segment_outputs(channels::PrimitiveChannels)::NTuple{4, Base.RefValue{Any}}
     return _segment_channel_outputs(channels.edge_segments)
 end
 
-function _node_bar_outputs(channels::PrimitiveChannels)::Tuple
+function _node_bar_outputs(channels::PrimitiveChannels)::NTuple{4, Base.RefValue{Any}}
     return _segment_channel_outputs(channels.node_bars)
 end
 
-function _minor_edge_shaft_outputs(channels::PrimitiveChannels)::Tuple
+function _minor_edge_shaft_outputs(channels::PrimitiveChannels)::NTuple{4, Base.RefValue{Any}}
     return _segment_channel_outputs(channels.minor_edge_shafts)
 end
 
-function _minor_arrowhead_outputs(channels::PrimitiveChannels)::Tuple{
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-    }
+function _minor_arrowhead_outputs(channels::PrimitiveChannels)::NTuple{4, Base.RefValue{Any}}
     arrowheads = channels.minor_arrowheads
     return (
         _ref_any(arrowheads.meshes),
@@ -391,14 +381,7 @@ function _minor_arrowhead_outputs(channels::PrimitiveChannels)::Tuple{
     )
 end
 
-function _text_channel_outputs(channel::TextChannel)::Tuple{
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-        Base.RefValue{Any},
-    }
+function _text_channel_outputs(channel::TextChannel)::NTuple{6, Base.RefValue{Any}}
     return (
         _ref_any(channel.positions),
         _ref_any(channel.strings),
@@ -409,54 +392,54 @@ function _text_channel_outputs(channel::TextChannel)::Tuple{
     )
 end
 
-function _tip_label_outputs(channels::PrimitiveChannels)::Tuple
+function _tip_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.tip_labels)
 end
 
-function _internal_node_name_outputs(channels::PrimitiveChannels)::Tuple
+function _internal_node_name_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.internal_node_names)
 end
 
-function _node_number_outputs(channels::PrimitiveChannels)::Tuple
+function _node_number_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.node_numbers)
 end
 
-function _node_label_outputs(channels::PrimitiveChannels)::Tuple
+function _node_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.node_labels)
 end
 
-function _edge_label_outputs(channels::PrimitiveChannels)::Tuple
+function _edge_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.edge_labels)
 end
 
-function _edge_length_outputs(channels::PrimitiveChannels)::Tuple
+function _edge_length_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.edge_lengths)
 end
 
-function _minor_gamma_label_outputs(channels::PrimitiveChannels)::Tuple
+function _minor_gamma_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.minor_gamma_labels)
 end
 
-function _major_gamma_label_outputs(channels::PrimitiveChannels)::Tuple
+function _major_gamma_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.major_gamma_labels)
 end
 
-function _edge_number_outputs(channels::PrimitiveChannels)::Tuple
+function _edge_number_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
     return _text_channel_outputs(channels.edge_numbers)
 end
 
-function register_plot_config_node!(plot::Makie.Plot)::Symbol
+function register_plot_config_node!(plot::PhyloPlot)::Symbol
     _register_outputs_once!(_compute_plot_config, plot, PLOT_CONFIG_INPUT_SYMBOLS, (:plot_config,))
     return :plot_config
 end
 
-function register_plot_network_node!(plot::Makie.Plot)::Symbol
+function register_plot_network_node!(plot::PhyloPlot)::Symbol
     _register_outputs_once!(_compute_plot_network, plot, (:net,), (:plot_network,))
     return :plot_network
 end
 
 function register_layout_nodes!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         config_node::Symbol,
         network_node::Symbol,
     )::NamedTuple{(:geometry, :layout), Tuple{Symbol, Symbol}}
@@ -476,7 +459,7 @@ function register_layout_nodes!(
 end
 
 function register_primitive_channel_node!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         network_node::Symbol,
         config_node::Symbol,
         layout_node::Symbol,
@@ -491,7 +474,7 @@ function register_primitive_channel_node!(
 end
 
 function register_data_limits_node!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         primitive_channels_node::Symbol,
     )::Symbol
     _register_outputs_once!(
@@ -504,7 +487,7 @@ function register_data_limits_node!(
 end
 
 function _register_phylo_intermediate_nodes!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
     )::NamedTuple{
         (:config, :network, :geometry, :layout, :primitive_channels, :data_limits),
         NTuple{6, Symbol},
@@ -530,7 +513,7 @@ function _register_phylo_intermediate_nodes!(
 end
 
 function register_segment_output_nodes!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         primitive_channels_node::Symbol,
     )::NamedTuple{
         (:edge_segments, :node_bars, :minor_edge_shafts),
@@ -562,7 +545,7 @@ function register_segment_output_nodes!(
 end
 
 function register_arrowhead_output_nodes!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         primitive_channels_node::Symbol,
     )::ArrowheadGraphOutputs
     _register_outputs_once!(
@@ -574,7 +557,7 @@ function register_arrowhead_output_nodes!(
     return MINOR_ARROWHEAD_GRAPH_OUTPUTS
 end
 
-function register_primitive_graph_outputs!(plot::Makie.Plot)::PhyloGraphOutputs
+function register_primitive_graph_outputs!(plot::PhyloPlot)::PhyloGraphOutputs
     intermediate_nodes = _register_phylo_intermediate_nodes!(plot)
     segment_outputs = register_segment_output_nodes!(plot, intermediate_nodes.primitive_channels)
     arrowhead_outputs = register_arrowhead_output_nodes!(plot, intermediate_nodes.primitive_channels)
@@ -588,7 +571,7 @@ function register_primitive_graph_outputs!(plot::Makie.Plot)::PhyloGraphOutputs
 end
 
 function register_text_output_nodes!(
-        plot::Makie.Plot,
+        plot::PhyloPlot,
         primitive_channels_node::Symbol,
     )::PhyloTextGraphOutputs
     tip_labels = _text_graph_outputs(:tip_label)
@@ -669,12 +652,12 @@ function register_text_output_nodes!(
     )
 end
 
-function register_text_graph_outputs!(plot::Makie.Plot)::PhyloTextGraphOutputs
+function register_text_graph_outputs!(plot::PhyloPlot)::PhyloTextGraphOutputs
     intermediate_nodes = _register_phylo_intermediate_nodes!(plot)
     return register_text_output_nodes!(plot, intermediate_nodes.primitive_channels)
 end
 
-function register_phylo_graph!(plot::Makie.Plot)::NamedTuple{
+function register_phylo_graph!(plot::PhyloPlot)::NamedTuple{
         (:primitive_outputs, :text_outputs),
         Tuple{PhyloGraphOutputs, PhyloTextGraphOutputs},
     }

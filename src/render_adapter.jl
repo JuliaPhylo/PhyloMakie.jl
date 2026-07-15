@@ -189,6 +189,12 @@ function _apply_plot_limits!(target, data_limits::Makie.Rect3d)::Nothing
         return nothing
     end
     if target isa Makie.AbstractPlot
+        # Once graph registration owns this computed output, the old rebuild
+        # path must not recreate a plot input with the same name.
+        if haskey(target.attributes.outputs, :data_limits) &&
+                !haskey(target.attributes.inputs, :data_limits)
+            return nothing
+        end
         target[:data_limits] = data_limits
         return nothing
     end

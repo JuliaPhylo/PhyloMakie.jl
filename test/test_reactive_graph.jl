@@ -1,4 +1,5 @@
 using CairoMakie
+using DataFrames: DataFrame
 using Makie
 using PhyloNetworks
 
@@ -82,6 +83,14 @@ function _assert_text_outputs_match_channel(plot, outputs, channel)::Nothing
     return nothing
 end
 
+function _assert_text_outputs_empty(plot, outputs)::Nothing
+    @test plot[outputs.positions][] == Makie.Point2f[]
+    @test plot[outputs.strings][] == String[]
+    @test plot[outputs.colors][] == Makie.RGBAf[]
+    @test plot[outputs.fontsizes][] == Float32[]
+    return nothing
+end
+
 function _assert_all_outputs_match_channels(plot, outputs)::Nothing
     channels = plot[:primitive_channels][]
     primitive_outputs = outputs.primitive_outputs
@@ -129,6 +138,14 @@ function _assert_all_outputs_match_channels(plot, outputs)::Nothing
     return nothing
 end
 
+function _reactive_annotation_inputs()
+    net = readnewick(REACTIVE_GRAPH_NEWICK)
+    return (
+        nodelabel = DataFrame(node = [first(net.node).number], label = ["node label"]),
+        edgelabel = DataFrame(edge = [first(net.edge).number], label = ["edge label"]),
+    )
+end
+
 @testset "Reactive graph registration" begin
     SegmentGraphOutputs = getfield(PhyloMakie, :SegmentGraphOutputs)
     ArrowheadGraphOutputs = getfield(PhyloMakie, :ArrowheadGraphOutputs)
@@ -137,11 +154,18 @@ end
     PhyloTextGraphOutputs = getfield(PhyloMakie, :PhyloTextGraphOutputs)
     phylo_graph_output_symbols = getfield(PhyloMakie, :phylo_graph_output_symbols)
     register_phylo_graph! = getfield(PhyloMakie, :register_phylo_graph!)
+    _register_phylo_intermediate_nodes! =
+        getfield(PhyloMakie, :_register_phylo_intermediate_nodes!)
+    PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
 
     @testset "output-node inventory and channel field mapping" begin
         plot, outputs = _registered_reactive_plot()
         repeated_outputs = register_phylo_graph!(plot)
 
+        @test hasmethod(register_phylo_graph!, Tuple{PhyloPlot})
+        @test hasmethod(_register_phylo_intermediate_nodes!, Tuple{PhyloPlot})
+        @test !hasmethod(register_phylo_graph!, Tuple{Makie.Plot})
+        @test !hasmethod(_register_phylo_intermediate_nodes!, Tuple{Makie.Plot})
         @test outputs == repeated_outputs
         @test outputs.primitive_outputs isa PhyloGraphOutputs
         @test outputs.primitive_outputs.edge_segments isa SegmentGraphOutputs
@@ -165,6 +189,19 @@ end
             ),
         )
 
+        @test !haskey(plot.attributes.inputs, :data_limits)
+        data_limits_update_error = try
+            Makie.update!(plot; data_limits = Makie.Rect3d())
+            nothing
+        catch err
+            err
+        end
+        @test data_limits_update_error isa ErrorException
+        @test occursin(
+            "Attribute data_limits not found",
+            sprint(showerror, data_limits_update_error),
+        )
+
         _assert_all_outputs_match_channels(plot, outputs)
     end
 
@@ -181,10 +218,80 @@ end
         @test plot[outputs.primitive_outputs.minor_arrowheads.meshes][] ==
             getfield(PhyloMakie, :ArrowheadPolygon)[]
         @test plot[outputs.primitive_outputs.minor_arrowheads.colors][] == Makie.RGBAf[]
-        @test plot[outputs.text_outputs.tip_labels.positions][] == Makie.Point2f[]
-        @test plot[outputs.text_outputs.tip_labels.strings][] == String[]
-        @test plot[outputs.text_outputs.tip_labels.colors][] == Makie.RGBAf[]
-        @test plot[outputs.text_outputs.tip_labels.fontsizes][] == Float32[]
+        _assert_text_outputs_empty(plot, outputs.text_outputs.tip_labels)
+        _assert_text_outputs_empty(plot, outputs.text_outputs.internal_node_names)
+    end
+
+    @testset "hidden text groups keep typed empty final nodes" begin
+        annotations = _reactive_annotation_inputs()
+        base_kwargs = (
+            shownodelabel = true,
+            shownodenumber = true,
+            showedgelength = true,
+            showedgenumber = true,
+            showgamma = true,
+            nodelabel = annotations.nodelabel,
+            edgelabel = annotations.edgelabel,
+        )
+
+        single_group_cases = (
+            (
+                label = "tip labels",
+                update = (showtiplabel = false,),
+                select = text_outputs -> text_outputs.tip_labels,
+            ),
+            (
+                label = "internal node names",
+                update = (shownodelabel = false,),
+                select = text_outputs -> text_outputs.internal_node_names,
+            ),
+            (
+                label = "node numbers",
+                update = (shownodenumber = false,),
+                select = text_outputs -> text_outputs.node_numbers,
+            ),
+            (
+                label = "node labels",
+                update = (nodelabel = DataFrame(),),
+                select = text_outputs -> text_outputs.node_labels,
+            ),
+            (
+                label = "edge labels",
+                update = (edgelabel = DataFrame(),),
+                select = text_outputs -> text_outputs.edge_labels,
+            ),
+            (
+                label = "edge lengths",
+                update = (showedgelength = false,),
+                select = text_outputs -> text_outputs.edge_lengths,
+            ),
+            (
+                label = "edge numbers",
+                update = (showedgenumber = false,),
+                select = text_outputs -> text_outputs.edge_numbers,
+            ),
+        )
+
+        for case in single_group_cases
+            @testset "$(case.label)" begin
+                plot, outputs = _registered_reactive_plot(; base_kwargs...)
+                graph_outputs = case.select(outputs.text_outputs)
+                @test !isempty(plot[graph_outputs.positions][])
+                Makie.update!(plot; case.update...)
+                _assert_text_outputs_empty(plot, graph_outputs)
+            end
+        end
+
+        @testset "gamma labels" begin
+            plot, outputs = _registered_reactive_plot(; base_kwargs...)
+            minor_outputs = outputs.text_outputs.minor_gamma_labels
+            major_outputs = outputs.text_outputs.major_gamma_labels
+            @test !isempty(plot[minor_outputs.positions][])
+            @test !isempty(plot[major_outputs.positions][])
+            Makie.update!(plot; showgamma = false)
+            _assert_text_outputs_empty(plot, minor_outputs)
+            _assert_text_outputs_empty(plot, major_outputs)
+        end
     end
 
     @testset "Makie.update! recomputes public attribute and style outputs" begin
