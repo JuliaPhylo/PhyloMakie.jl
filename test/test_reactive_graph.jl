@@ -1,0 +1,239 @@
+using CairoMakie
+using Makie
+using PhyloNetworks
+
+const REACTIVE_GRAPH_NEWICK =
+    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
+const REACTIVE_GRAPH_ALT_NEWICK =
+    "((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);"
+
+function _reactive_plot(; kwargs...)
+    CairoMakie.activate!()
+    surface = Makie.plot(
+        readnewick(REACTIVE_GRAPH_NEWICK);
+        useedgelength = true,
+        showgamma = true,
+        style = :fulltree,
+        kwargs...,
+    )
+    return surface.plot
+end
+
+function _registered_reactive_plot(; kwargs...)
+    plot = _reactive_plot(; kwargs...)
+    outputs = getfield(PhyloMakie, :register_phylo_graph!)(plot)
+    return plot, outputs
+end
+
+function _reactive_network_snapshot(net::PhyloNetworks.HybridNetwork)
+    return (
+        rooti = net.rooti,
+        node_numbers = [node.number for node in net.node],
+        preorder_numbers = [node.number for node in net.vec_node],
+        edge_state = [
+            (
+                number = edge.number,
+                parent = PhyloNetworks.getparent(edge).number,
+                child = PhyloNetworks.getchild(edge).number,
+                ischild1 = edge.ischild1,
+                containroot = hasfield(typeof(edge), :containroot) ?
+                    getfield(edge, :containroot) : nothing,
+                hybrid = edge.hybrid,
+                ismajor = edge.ismajor,
+                length = edge.length,
+                gamma = edge.gamma,
+            ) for edge in net.edge
+        ],
+    )
+end
+
+function _reactive_limits_tuple(rect::Makie.Rect3d)
+    rect_min = minimum(rect)
+    rect_max = maximum(rect)
+    return (
+        (Float64(rect_min[1]), Float64(rect_max[1])),
+        (Float64(rect_min[2]), Float64(rect_max[2])),
+    )
+end
+
+function _assert_segment_outputs_match_channel(plot, outputs, channel)::Nothing
+    @test plot[outputs.points][] == channel.points
+    @test plot[outputs.colors][] == channel.colors
+    @test plot[outputs.linewidths][] == channel.linewidths
+    @test plot[outputs.linestyle][] == channel.linestyle
+    return nothing
+end
+
+function _assert_arrowhead_outputs_match_channel(plot, outputs, channel)::Nothing
+    @test plot[outputs.meshes][] == channel.meshes
+    @test plot[outputs.colors][] == channel.colors
+    @test plot[outputs.strokecolors][] == channel.strokecolors
+    @test plot[outputs.strokewidth][] == channel.strokewidth
+    return nothing
+end
+
+function _assert_text_outputs_match_channel(plot, outputs, channel)::Nothing
+    @test plot[outputs.positions][] == channel.positions
+    @test plot[outputs.strings][] == channel.strings
+    @test plot[outputs.colors][] == channel.colors
+    @test plot[outputs.fontsizes][] == channel.fontsizes
+    @test plot[outputs.align][] == channel.align
+    @test plot[outputs.font][] == channel.font
+    return nothing
+end
+
+function _assert_all_outputs_match_channels(plot, outputs)::Nothing
+    channels = plot[:primitive_channels][]
+    primitive_outputs = outputs.primitive_outputs
+    text_outputs = outputs.text_outputs
+
+    _assert_segment_outputs_match_channel(
+        plot,
+        primitive_outputs.edge_segments,
+        channels.edge_segments,
+    )
+    _assert_segment_outputs_match_channel(plot, primitive_outputs.node_bars, channels.node_bars)
+    _assert_segment_outputs_match_channel(
+        plot,
+        primitive_outputs.minor_edge_shafts,
+        channels.minor_edge_shafts,
+    )
+    _assert_arrowhead_outputs_match_channel(
+        plot,
+        primitive_outputs.minor_arrowheads,
+        channels.minor_arrowheads,
+    )
+    @test plot[primitive_outputs.data_limits][] == channels.data_limits
+
+    _assert_text_outputs_match_channel(plot, text_outputs.tip_labels, channels.tip_labels)
+    _assert_text_outputs_match_channel(
+        plot,
+        text_outputs.internal_node_names,
+        channels.internal_node_names,
+    )
+    _assert_text_outputs_match_channel(plot, text_outputs.node_numbers, channels.node_numbers)
+    _assert_text_outputs_match_channel(plot, text_outputs.node_labels, channels.node_labels)
+    _assert_text_outputs_match_channel(plot, text_outputs.edge_labels, channels.edge_labels)
+    _assert_text_outputs_match_channel(plot, text_outputs.edge_lengths, channels.edge_lengths)
+    _assert_text_outputs_match_channel(
+        plot,
+        text_outputs.minor_gamma_labels,
+        channels.minor_gamma_labels,
+    )
+    _assert_text_outputs_match_channel(
+        plot,
+        text_outputs.major_gamma_labels,
+        channels.major_gamma_labels,
+    )
+    _assert_text_outputs_match_channel(plot, text_outputs.edge_numbers, channels.edge_numbers)
+    return nothing
+end
+
+@testset "Reactive graph registration" begin
+    SegmentGraphOutputs = getfield(PhyloMakie, :SegmentGraphOutputs)
+    ArrowheadGraphOutputs = getfield(PhyloMakie, :ArrowheadGraphOutputs)
+    PhyloGraphOutputs = getfield(PhyloMakie, :PhyloGraphOutputs)
+    TextGraphOutputs = getfield(PhyloMakie, :TextGraphOutputs)
+    PhyloTextGraphOutputs = getfield(PhyloMakie, :PhyloTextGraphOutputs)
+    phylo_graph_output_symbols = getfield(PhyloMakie, :phylo_graph_output_symbols)
+    register_phylo_graph! = getfield(PhyloMakie, :register_phylo_graph!)
+
+    @testset "output-node inventory and channel field mapping" begin
+        plot, outputs = _registered_reactive_plot()
+        repeated_outputs = register_phylo_graph!(plot)
+
+        @test outputs == repeated_outputs
+        @test outputs.primitive_outputs isa PhyloGraphOutputs
+        @test outputs.primitive_outputs.edge_segments isa SegmentGraphOutputs
+        @test outputs.primitive_outputs.minor_arrowheads isa ArrowheadGraphOutputs
+        @test outputs.text_outputs isa PhyloTextGraphOutputs
+        @test outputs.text_outputs.tip_labels isa TextGraphOutputs
+
+        required_symbols = phylo_graph_output_symbols()
+        @test length(required_symbols) == 71
+        @test allunique(required_symbols)
+        @test all(symbol -> haskey(plot.attributes.outputs, symbol), required_symbols)
+        @test all(
+            symbol -> haskey(plot.attributes.outputs, symbol),
+            (
+                :plot_config,
+                :plot_network,
+                :network_geometry,
+                :layout_computation,
+                :primitive_channels,
+                :data_limits,
+            ),
+        )
+
+        _assert_all_outputs_match_channels(plot, outputs)
+    end
+
+    @testset "hidden layers keep typed empty final nodes" begin
+        plot, outputs = _registered_reactive_plot(
+            showtiplabel = false,
+            shownodelabel = false,
+            minorlinetype = "blank",
+        )
+
+        @test plot[outputs.primitive_outputs.minor_edge_shafts.points][] == Makie.Point2f[]
+        @test plot[outputs.primitive_outputs.minor_edge_shafts.colors][] == Makie.RGBAf[]
+        @test plot[outputs.primitive_outputs.minor_edge_shafts.linewidths][] == Float32[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.meshes][] ==
+            getfield(PhyloMakie, :ArrowheadPolygon)[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.colors][] == Makie.RGBAf[]
+        @test plot[outputs.text_outputs.tip_labels.positions][] == Makie.Point2f[]
+        @test plot[outputs.text_outputs.tip_labels.strings][] == String[]
+        @test plot[outputs.text_outputs.tip_labels.colors][] == Makie.RGBAf[]
+        @test plot[outputs.text_outputs.tip_labels.fontsizes][] == Float32[]
+    end
+
+    @testset "Makie.update! recomputes public attribute and style outputs" begin
+        plot, outputs = _registered_reactive_plot()
+        primitive_outputs = outputs.primitive_outputs
+
+        before_colors = copy(plot[primitive_outputs.edge_segments.colors][])
+        Makie.update!(plot; edgecolor = "firebrick")
+        after_colors = plot[primitive_outputs.edge_segments.colors][]
+        @test after_colors != before_colors
+        @test length(after_colors) == length(plot[primitive_outputs.edge_segments.points][])
+
+        before_arrowheads = copy(plot[primitive_outputs.minor_arrowheads.meshes][])
+        @test !isempty(before_arrowheads)
+        Makie.update!(plot; style = :majortree)
+        after_arrowheads = plot[primitive_outputs.minor_arrowheads.meshes][]
+        @test after_arrowheads != before_arrowheads
+        @test isempty(after_arrowheads)
+    end
+
+    @testset "Makie.update! recomputes limits and text outputs" begin
+        plot, outputs = _registered_reactive_plot()
+
+        before_limits = plot[outputs.primitive_outputs.data_limits][]
+        Makie.update!(plot; xlim = (0.0, 5.0), ylim = (-1.0, 4.0))
+        after_limits = plot[outputs.primitive_outputs.data_limits][]
+        @test after_limits != before_limits
+        @test _reactive_limits_tuple(after_limits) == ((0.0, 5.0), (-1.0, 4.0))
+
+        Makie.update!(plot; showtiplabel = false)
+        @test plot[outputs.text_outputs.tip_labels.positions][] == Makie.Point2f[]
+        @test plot[outputs.text_outputs.tip_labels.strings][] == String[]
+        @test plot[outputs.text_outputs.tip_labels.colors][] == Makie.RGBAf[]
+        @test plot[outputs.text_outputs.tip_labels.fontsizes][] == Float32[]
+    end
+
+    @testset "Makie.update! with arg1 preserves caller-owned networks" begin
+        plot, outputs = _registered_reactive_plot()
+        before_points = copy(plot[outputs.primitive_outputs.edge_segments.points][])
+
+        new_net = readnewick(REACTIVE_GRAPH_ALT_NEWICK)
+        before_snapshot = _reactive_network_snapshot(new_net)
+        Makie.update!(plot; arg1 = new_net)
+
+        after_points = plot[outputs.primitive_outputs.edge_segments.points][]
+        prepared_network = plot[:plot_network][]
+        @test after_points != before_points
+        @test _reactive_network_snapshot(new_net) == before_snapshot
+        @test prepared_network.net !== new_net
+        @test !isempty(prepared_network.net.vec_node)
+    end
+end
