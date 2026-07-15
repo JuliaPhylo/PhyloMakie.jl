@@ -350,6 +350,30 @@ function _compute_data_limits(channels::PrimitiveChannels)::Tuple{Base.RefValue{
     return (_ref_any(channels.data_limits),)
 end
 
+function _plot_output_value(plot::PhyloPlot, symbol::Symbol)
+    return plot.attributes.outputs[symbol][]
+end
+
+function current_plot_config(plot::PhyloPlot)::PhyloPlotConfig
+    input_values = map(symbol -> _plot_output_value(plot, symbol), PLOT_CONFIG_INPUT_SYMBOLS)
+    return resolve_plot_config(; NamedTuple{PLOT_CONFIG_INPUT_SYMBOLS}(input_values)...)
+end
+
+function validate_public_plot_limits(plot::PhyloPlot)::Nothing
+    xlim = _plot_output_value(plot, :xlim)
+    ylim = _plot_output_value(plot, :ylim)
+    if isnothing(xlim) && isnothing(ylim)
+        return nothing
+    end
+
+    config = current_plot_config(plot)
+    plot_network = prepare_plot_network(_plot_output_value(plot, :net))
+    geometry = compute_network_geometry(plot_network, config)
+    layout = compute_layout(plot_network, config, geometry)
+    compute_data_limits(config, layout.extent)
+    return nothing
+end
+
 function _segment_channel_outputs(channel::SegmentChannel)::NTuple{4, Base.RefValue{Any}}
     return (
         _ref_any(channel.points),

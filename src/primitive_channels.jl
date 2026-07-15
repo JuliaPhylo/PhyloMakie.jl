@@ -459,14 +459,14 @@ function compute_text_channel(
     )
 end
 
-function _empty_text_channel(align)::TextChannel
+function _empty_text_channel(align, font = nothing)::TextChannel
     return TextChannel(
         Makie.Point2f[],
         String[],
         Makie.RGBAf[],
         Float32[],
         align,
-        nothing,
+        font,
     )
 end
 
@@ -499,7 +499,7 @@ function compute_text_channels(
         (:left, :center),
         :italic,
         config.tipoffset,
-    ) : _empty_text_channel((:left, :center))
+    ) : _empty_text_channel((:left, :center), :italic)
 
     internal_node_names = config.shownodelabel ? compute_text_channel(
         node_table,
@@ -509,7 +509,7 @@ function compute_text_channels(
         compute_text_sizes(config.tipcex, length(internal_rows)),
         (0.5, 0.0),
         :italic,
-    ) : _empty_text_channel((0.5, 0.0))
+    ) : _empty_text_channel((0.5, 0.0), :italic)
 
     node_number_align = compute_text_align(1)
     node_numbers = config.shownodenumber ? compute_text_channel(

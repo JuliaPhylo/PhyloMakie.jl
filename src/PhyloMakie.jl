@@ -11,6 +11,7 @@ include("plot_layout.jl")
 include("primitive_channels.jl")
 include("recipe_declaration.jl")
 include("reactive_graph.jl")
+include("primitive_assembly.jl")
 include("render_adapter.jl")
 include("recipe.jl")
 

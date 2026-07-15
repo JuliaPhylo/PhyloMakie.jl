@@ -20,6 +20,7 @@ include("support/render_test_helpers.jl")
     include("test_plot_layout.jl")
     include("test_primitive_channels.jl")
     include("test_reactive_graph.jl")
+    include("test_primitive_assembly.jl")
     include("test_render_adapter.jl")
     include("test_recipe.jl")
 

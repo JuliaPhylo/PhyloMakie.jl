@@ -144,6 +144,7 @@ end
         @test x_limit_error isa ErrorException
         @test occursin("xlim needs to contain 2 values", sprint(showerror, x_limit_error))
         @test occursin("defaults: [", sprint(showerror, x_limit_error))
+        @test !occursin("ResolveException", sprint(showerror, x_limit_error))
 
         y_limit_error = try
             phyloplot(readnewick(annotation_case.newick); ylim=(1.0,))
@@ -154,6 +155,7 @@ end
         @test y_limit_error isa ErrorException
         @test occursin("ylim needs to contain 2 values", sprint(showerror, y_limit_error))
         @test occursin("defaults: [", sprint(showerror, y_limit_error))
+        @test !occursin("ResolveException", sprint(showerror, y_limit_error))
     end
 
     @testset "Integration: full pipeline renders without error" begin
@@ -220,18 +222,18 @@ end
         plot_handle = surface.plot
 
         before_color = _plot_colorbuffer(surface.figure)
-        plot_handle[:edgecolor][] = "firebrick"
+        Makie.update!(plot_handle; edgecolor = "firebrick")
         after_color = _plot_colorbuffer(surface.figure)
         @test before_color != after_color
 
         before_style = _plot_colorbuffer(surface.figure)
-        plot_handle[:style][] = :majortree
+        Makie.update!(plot_handle; style = :majortree)
         after_style = _plot_colorbuffer(surface.figure)
         @test before_style != after_style
 
         net2 = readnewick("((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
         before_net = _plot_colorbuffer(surface.figure)
-        plot_handle[:net][] = net2
+        Makie.update!(plot_handle; arg1 = net2)
         after_net = _plot_colorbuffer(surface.figure)
         @test before_net != after_net
 
