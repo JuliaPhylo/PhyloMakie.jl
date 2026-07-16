@@ -1,4 +1,4 @@
-using CairoMakie
+using GLMakie
 using PhyloMakie
 using PhyloNetworks: readnewick
 
