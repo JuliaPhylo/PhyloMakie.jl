@@ -9,30 +9,28 @@ function _render_fixture_dataframe(table_fixture)
     )
 end
 
-function _render_case(
+function _public_render_case(
     newick::AbstractString;
-    figure_size::Tuple{Int, Int}=(640, 400),
     kwargs...,
 )
     CairoMakie.activate!()
-    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
-    prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
-    render_plot! = getfield(PhyloMakie, :render_plot!)
-
-    network = readnewick(newick)
-    attributes = resolve_phylo_plot_attributes(; kwargs...)
-    layout = prepare_plot_layout(network, attributes; preorder=true)
-    figure = Figure(size=figure_size)
-    axis = Axis(figure[1, 1])
-    hidedecorations!(axis)
-    hidespines!(axis)
-    layers = render_plot!(axis, network, attributes, layout)
-    return (; network, attributes, layout, figure, axis, layers)
+    surface = Makie.plot(readnewick(newick); kwargs...)
+    plot = surface.plot
+    return (
+        surface=surface,
+        figure=surface.figure,
+        axis=surface.axis,
+        plot=plot,
+        config=plot[:plot_config][],
+        network=plot[:plot_network][].net,
+        layout=plot[:layout_computation][],
+        channels=plot[:primitive_channels][],
+    )
 end
 
 function _render_colorbuffer(figure)
     CairoMakie.activate!()
-    return Makie.colorbuffer(figure; backend=CairoMakie)
+    return copy(Makie.colorbuffer(figure; backend=CairoMakie))
 end
 
 function _rgba(value)
@@ -45,12 +43,14 @@ end
 
 function _node_channel_positions(layout, rows; x_offset::Real=0.0)
     node_data = layout.annotations.node_data
-    return [
-        (Float64(node_data[row, :x]) + Float64(x_offset), Float64(node_data[row, :y])) for row in rows
+    return Makie.Point2f[
+        Makie.Point2f(Float32(node_data[row, :x]) + Float32(x_offset), Float32(node_data[row, :y])) for row in rows
     ]
 end
 
 function _edge_channel_positions(layout, rows)
     edge_data = layout.annotations.edge_data
-    return [(Float64(edge_data[row, :x]), Float64(edge_data[row, :y])) for row in rows]
+    return Makie.Point2f[
+        Makie.Point2f(Float32(edge_data[row, :x]), Float32(edge_data[row, :y])) for row in rows
+    ]
 end

@@ -13,16 +13,14 @@ include("support/render_test_helpers.jl")
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
     include("test_plot_config.jl")
-    include("test_attribute_schema.jl")
     include("test_network_layout.jl")
-    include("test_layout_engine.jl")
     include("test_annotation_tables.jl")
-    include("test_plot_layout.jl")
     include("test_primitive_channels.jl")
     include("test_reactive_graph.jl")
     include("test_primitive_assembly.jl")
-    include("test_render_adapter.jl")
+    include("test_public_render_contracts.jl")
     include("test_recipe.jl")
+    include("test_architecture_audits.jl")
 
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(
