@@ -1,6 +1,8 @@
 using Makie
 using PhyloNetworks: HybridNetwork, readnewick
 
+_module_symbol(parts::AbstractString...) = Symbol(join(parts))
+
 @testset "PhyloMakie module" begin
     @test !isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
     @test isdefined(PhyloMakie, :PhyloPlotConfig)
@@ -39,6 +41,25 @@ using PhyloNetworks: HybridNetwork, readnewick
     @test !isdefined(PhyloMakie, :PlotKeywordSpec)
     @test !isdefined(PhyloMakie, :normalize_plot_keywords)
     @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)
+    retired_internal_names = (
+        _module_symbol("render", "_", "plot", "!"),
+        _module_symbol("Phylo", "Plot", "Attributes"),
+        _module_symbol("Plot", "Geometry"),
+        _module_symbol("Plot", "Bounds"),
+        _module_symbol("Plot", "Annotation", "Data"),
+        _module_symbol("Plot", "Layout"),
+        _module_symbol("Plot", "Render", "Layers"),
+        _module_symbol("Segment", "Render", "Layer"),
+        _module_symbol("Arrow", "Tip", "Render", "Layer"),
+        _module_symbol("Text", "Render", "Layer"),
+        _module_symbol("resolve", "_", "phylo", "_", "plot", "_", "attributes"),
+        _module_symbol("with", "_", "phylo", "_", "plot", "_", "limits"),
+        _module_symbol("layout", "_", "plot", "_", "geometry"),
+        _module_symbol("prepare", "_", "plot", "_", "layout"),
+    )
+    for name in retired_internal_names
+        @test !isdefined(PhyloMakie, name)
+    end
 
     net = readnewick("(A,B);")
     @test which(Makie.plottype, (HybridNetwork,)) != which(Makie.plottype, (Any,))

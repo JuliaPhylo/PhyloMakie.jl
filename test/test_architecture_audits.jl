@@ -18,6 +18,23 @@ function _audit_test_sources()
     return sources
 end
 
+function _audit_package_sources()
+    repo_root = joinpath(@__DIR__, "..")
+    sources = Pair{String, String}[]
+    for relative_root in ("src",)
+        root = joinpath(repo_root, relative_root)
+        for (walk_root, _, files) in walkdir(root)
+            for file in files
+                endswith(file, ".jl") || continue
+                path = joinpath(walk_root, file)
+                relative_path = relpath(path, repo_root)
+                push!(sources, relative_path => read(path, String))
+            end
+        end
+    end
+    return sources
+end
+
 function _audit_docs_sources()
     repo_root = joinpath(@__DIR__, "..")
     sources = Pair{String, String}[]
@@ -109,7 +126,7 @@ end
 end
 
 @testset "Architecture source audits" begin
-    legacy_test_tokens = (
+    legacy_package_tokens = (
         _audit_token("render", "_", "plot", "!"),
         _audit_token("Plot", "Render", "Layers"),
         _audit_token("Segment", "Render", "Layer"),
@@ -125,10 +142,17 @@ end
         _audit_token("Plot", "Annotation", "Data"),
         _audit_token("Plot", "Layout"),
         _audit_token("prepare", "_", "plot", "_", "layout"),
+        _audit_token("arrows", "2d", "!"),
     )
 
+    for (path, source) in _audit_package_sources()
+        for token in legacy_package_tokens
+            @test !occursin(token, source)
+        end
+    end
+
     for (path, source) in _audit_test_sources()
-        for token in legacy_test_tokens
+        for token in legacy_package_tokens
             @test !occursin(token, source)
         end
     end
