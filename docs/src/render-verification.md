@@ -79,43 +79,74 @@ function render_fixture_dataframe(table_fixture)
     )
 end
 
+function render_limits_tuple(rect::Makie.Rect3d)
+    rect_min = minimum(rect)
+    rect_max = maximum(rect)
+    return (
+        (Float64(rect_min[1]), Float64(rect_max[1])),
+        (Float64(rect_min[2]), Float64(rect_max[2])),
+    )
+end
+
+function render_children(plot)
+    return (
+        edge_segments = plot.plots[1],
+        node_bars = plot.plots[2],
+        minor_edge_shafts = plot.plots[3],
+        minor_arrowheads = plot.plots[4],
+        tip_labels = plot.plots[5],
+        internal_node_names = plot.plots[6],
+        node_numbers = plot.plots[7],
+        node_labels = plot.plots[8],
+        edge_labels = plot.plots[9],
+        edge_lengths = plot.plots[10],
+        minor_gamma_labels = plot.plots[11],
+        major_gamma_labels = plot.plots[12],
+        edge_numbers = plot.plots[13],
+    )
+end
+
+function render_snapshot(network, figure, axis, plot)
+    return (;
+        network,
+        figure,
+        axis,
+        plot,
+        config = plot[:plot_config][],
+        prepared_network = plot[:plot_network][].net,
+        layout = plot[:layout_computation][],
+        channels = plot[:primitive_channels][],
+        children = render_children(plot),
+        child_count = length(plot.plots),
+        child_ids = objectid.(plot.plots),
+    )
+end
+
 function build_render_case(
     newick::AbstractString;
     figure_size::Tuple{Int, Int}=(640, 400),
     kwargs...,
 )
-    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
-    prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
-    render_plot! = getfield(PhyloMakie, :render_plot!)
-
     network = PhyloNetworks.readnewick(newick)
-    attributes = resolve_phylo_plot_attributes(; kwargs...)
-    layout = prepare_plot_layout(network, attributes; preorder=true)
     figure = Figure(size=figure_size)
     axis = Axis(figure[1, 1])
     hidedecorations!(axis)
     hidespines!(axis)
-    layers = render_plot!(axis, network, attributes, layout)
-    return (; network, attributes, layout, figure, axis, layers)
+    plot = Makie.plot!(axis, network; kwargs...)
+    return render_snapshot(network, figure, axis, plot)
 end
 
 function render_into_axis!(axis, newick::AbstractString; kwargs...)
-    resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
-    prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
-    render_plot! = getfield(PhyloMakie, :render_plot!)
-
     network = PhyloNetworks.readnewick(newick)
-    attributes = resolve_phylo_plot_attributes(; kwargs...)
-    layout = prepare_plot_layout(network, attributes; preorder=true)
-    layers = render_plot!(axis, network, attributes, layout)
-    return (; network, attributes, layout, layers)
+    plot = Makie.plot!(axis, network; kwargs...)
+    return render_snapshot(network, nothing, axis, plot)
 end
 ```
 
 ## Style distinction artifact
 
-This live artifact renders the accepted reticulate network through the same
-internal owner under the governed `:fulltree` and `:majortree` style branches.
+This live artifact renders the accepted reticulate network through the public
+Makie path under the governed `:fulltree` and `:majortree` style branches.
 
 ```@example render_docs
 style_fixture = RENDER_CASES # hide
@@ -144,8 +175,8 @@ Markdown.parse(
     """
     | Style | Resolved style | Minor-edge shaft linestyle |
     | --- | --- | --- |
-    | Full-tree | `$(fulltree_case.layers.resolved_style)` | `$(fulltree_case.layers.minor_edge_shafts.linestyle)` |
-    | Major-tree | `$(majortree_case.layers.resolved_style)` | `$(majortree_case.layers.minor_edge_shafts.linestyle)` |
+    | Full-tree | `$(fulltree_case.config.style)` | `$(fulltree_case.channels.minor_edge_shafts.linestyle)` |
+    | Major-tree | `$(majortree_case.config.style)` | `$(majortree_case.channels.minor_edge_shafts.linestyle)` |
     """,
 )
 ```
@@ -174,20 +205,20 @@ Markdown.parse(
     | Proof surface | Live value |
     | --- | --- |
     | Dict override edges | `$(collect(keys(Dict(color_fixture.edgecolor_overrides))))` |
-    | Default edge fallback | `$(unique(color_case.layers.node_bars.colors))` |
-    | Minor edge colors | `$(unique(color_case.layers.minor_edge_shafts.colors))` |
-    | Minor gamma text colors | `$(unique(color_case.layers.minor_gamma_labels.colors))` |
-    | Major gamma text colors | `$(unique(color_case.layers.major_gamma_labels.colors))` |
-    | Edge widths | `$(color_case.layers.edge_segments.linewidths)` |
+    | Stable child count | `$(color_case.child_count)` |
+    | Default edge fallback | `$(unique(color_case.channels.node_bars.colors))` |
+    | Minor edge colors | `$(unique(color_case.channels.minor_edge_shafts.colors))` |
+    | Minor gamma text colors | `$(unique(color_case.channels.minor_gamma_labels.colors))` |
+    | Major gamma text colors | `$(unique(color_case.channels.major_gamma_labels.colors))` |
+    | Edge widths | `$(color_case.channels.edge_segments.linewidths)` |
     """,
 )
 ```
 
 ## Text-layer and explicit-limit artifact
 
-This artifact proves that text layers and final limits are consumed from
-`PlotLayout.annotations` and `PlotBounds` rather than recomputed inside the
-render owner.
+This artifact proves that text channels and final limits are consumed from the
+registered layout, primitive-channel, and data-limit graph outputs.
 
 ```@example render_docs
 annotation_fixture = RENDER_CASES.annotation_and_limits # hide
@@ -209,15 +240,16 @@ Markdown.parse(
     """
     | Proof surface | Live value |
     | --- | --- |
-    | Applied x limits | `$(annotation_case.layers.applied_xlim)` |
-    | Applied y limits | `$(annotation_case.layers.applied_ylim)` |
-    | Tip labels | `$(annotation_case.layers.tip_labels.strings)` |
-    | Internal node names | `$(annotation_case.layers.internal_node_names.strings)` |
-    | Node numbers | `$(annotation_case.layers.node_numbers.strings)` |
-    | Edge numbers | `$(annotation_case.layers.edge_numbers.strings)` |
-    | Edge lengths | `$(annotation_case.layers.edge_lengths.strings)` |
-    | Minor gamma labels | `$(annotation_case.layers.minor_gamma_labels.strings)` |
-    | Major gamma labels | `$(annotation_case.layers.major_gamma_labels.strings)` |
+    | Applied x limits | `$(render_limits_tuple(Makie.data_limits(annotation_case.plot))[1])` |
+    | Applied y limits | `$(render_limits_tuple(Makie.data_limits(annotation_case.plot))[2])` |
+    | Graph data limits match Makie | `$(annotation_case.channels.data_limits == Makie.data_limits(annotation_case.plot))` |
+    | Tip labels | `$(annotation_case.channels.tip_labels.strings)` |
+    | Internal node names | `$(annotation_case.channels.internal_node_names.strings)` |
+    | Node numbers | `$(annotation_case.channels.node_numbers.strings)` |
+    | Edge numbers | `$(annotation_case.channels.edge_numbers.strings)` |
+    | Edge lengths | `$(annotation_case.channels.edge_lengths.strings)` |
+    | Minor gamma labels | `$(annotation_case.channels.minor_gamma_labels.strings)` |
+    | Major gamma labels | `$(annotation_case.channels.major_gamma_labels.strings)` |
     """,
 )
 ```

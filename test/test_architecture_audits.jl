@@ -18,6 +18,96 @@ function _audit_test_sources()
     return sources
 end
 
+function _audit_docs_sources()
+    repo_root = joinpath(@__DIR__, "..")
+    sources = Pair{String, String}[]
+    for relative_root in ("docs/src", "README.md", "examples")
+        root = joinpath(repo_root, relative_root)
+        if isfile(root)
+            push!(sources, relative_root => read(root, String))
+            continue
+        end
+        for (walk_root, _, files) in walkdir(root)
+            for file in files
+                if !(endswith(file, ".md") || endswith(file, ".jl"))
+                    continue
+                end
+                path = joinpath(walk_root, file)
+                relative_path = relpath(path, repo_root)
+                push!(sources, relative_path => read(path, String))
+            end
+        end
+    end
+    return sources
+end
+
+@testset "Architecture docs audits" begin
+    docs_sources = _audit_docs_sources()
+    legacy_docs_tokens = (
+        _audit_token("render", "_", "plot", "!"),
+        _audit_token("Plot", "Render", "Layers"),
+        _audit_token("Segment", "Render", "Layer"),
+        _audit_token("Arrow", "Tip", "Render", "Layer"),
+        _audit_token("Text", "Render", "Layer"),
+        _audit_token("Phylo", "Plot", "Attributes"),
+        _audit_token("resolve", "_", "phylo", "_", "plot", "_", "attributes"),
+        _audit_token("with", "_", "phylo", "_", "plot", "_", "limits"),
+        _audit_token("Plot", "Bounds"),
+        _audit_token("Plot", "Annotation", "Data"),
+        _audit_token("Plot", "Layout"),
+        _audit_token("prepare", "_", "plot", "_", "layout"),
+        _audit_token(".", "layers"),
+        _audit_token("getfield", "(", "Phylo", "Makie"),
+        _audit_token("arrows", "2d", "!"),
+    )
+
+    for (path, source) in docs_sources
+        for token in legacy_docs_tokens
+            @test !occursin(token, source)
+        end
+    end
+
+    public_api_source = _audit_source(joinpath("docs", "src", "public-api.md"))
+    for token in (
+            "SUPPORTED_PHYLOPLOT_ATTRIBUTES",
+            "Makie.update!",
+            "arg1",
+            "showtiplabel",
+            "shownodelabel",
+            "showgamma",
+            "xlim",
+            "ylim",
+        )
+        @test occursin(token, public_api_source)
+    end
+    @test occursin("private `HybridNetwork` copy", public_api_source)
+
+    render_verification_source =
+        _audit_source(joinpath("docs", "src", "render-verification.md"))
+    for token in (
+            "Makie.plot!",
+            "plot[:plot_config][]",
+            "plot[:plot_network][]",
+            "plot[:layout_computation][]",
+            "plot[:primitive_channels][]",
+            "Makie.data_limits",
+        )
+        @test occursin(token, render_verification_source)
+    end
+
+    extending_source = _audit_source(joinpath("docs", "src", "extending-plots.md"))
+    for token in (
+            "resolve_plot_config",
+            "prepare_plot_network",
+            "compute_network_geometry",
+            "compute_layout",
+            "stable public layout-query surface",
+            "public attribute surface",
+        )
+        @test occursin(token, extending_source)
+    end
+end
+
 @testset "Architecture source audits" begin
     legacy_test_tokens = (
         _audit_token("render", "_", "plot", "!"),

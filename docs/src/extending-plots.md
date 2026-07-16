@@ -98,19 +98,21 @@ figure
 
 PhyloMakie does not currently expose node or edge coordinates through a public return
 value.  When taxon y-positions must be determined programmatically --- for example, to
-anchor annotations on a named taxon without knowing its position in advance --- the
-internal `prepare_plot_layout` function provides access to the full `PlotLayout`:
+anchor annotations on a named taxon without knowing its position in advance --- use the
+public plot attributes to make an exploratory plot first.  The current internal
+computation path can be useful for package-development experiments, but it is not a
+stable public layout-query surface:
 
 ```julia
-prepare_plot_layout = getfield(PhyloMakie, :prepare_plot_layout)
-resolve_phylo_plot_attributes = getfield(PhyloMakie, :resolve_phylo_plot_attributes)
+config = PhyloMakie.resolve_plot_config(; useedgelength = true, style = :fulltree)
+plot_network = PhyloMakie.prepare_plot_network(net)
+geometry = PhyloMakie.compute_network_geometry(plot_network, config)
+layout = PhyloMakie.compute_layout(plot_network, config, geometry)
 
-attributes = resolve_phylo_plot_attributes(; useedgelength = true, style = :fulltree)
-layout = prepare_plot_layout(net, attributes; preorder = true)
-
-# layout.geometry.node_x, layout.geometry.node_y  — one value per node in net.node order
-# layout.annotations.node_data                     — DataFrame with :name, :x, :y columns
+# layout.geometry.node_x, layout.geometry.node_y
+# layout.annotations.node_data
 ```
 
-The `render-verification.md` page demonstrates this pattern for docs-internal use.  A
-stable public layout-query surface is not part of the current public attribute surface.
+The [Render verification](render-verification.md) page uses current graph outputs for
+docs-internal proof.  A stable public layout-query surface is not part of the current
+public attribute surface.

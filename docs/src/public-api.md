@@ -4,16 +4,14 @@ CurrentModule = PhyloMakie
 
 # Public API
 
-PhyloMakie exposes one Makie-native public owner for
+PhyloMakie exposes one Makie-native public plot owner for
 `PhyloNetworks.HybridNetwork` plotting. `plot(net)` and `plot!(ax, net)` are
 the primary Makie surfaces, while `phyloplot` and `phyloplot!` remain thin
-generated convenience surfaces over the same owner.
+generated convenience surfaces over the same `PhyloPlot` implementation.
 
-Legacy public spellings such as `showtiplabel`, `xlim`, and `preorder` are
-rejected at the recipe boundary. Internally, the public owner resolves one
-`PhyloPlotAttributes` payload and passes it directly to the helper and render
-owners. The supported attribute set below is rendered from the live package
-constant `SUPPORTED_PHYLOPLOT_ATTRIBUTES`.
+The supported attribute set below is rendered from the live package constant
+`SUPPORTED_PHYLOPLOT_ATTRIBUTES`. These attributes are recipe inputs and can be
+updated on an existing plot with `Makie.update!(plot; keyword = value)`.
 
 
 ## Supported entry surfaces
@@ -22,8 +20,8 @@ constant `SUPPORTED_PHYLOPLOT_ATTRIBUTES`.
 | --- | --- | --- |
 | `plot(net)` | `Makie.FigureAxisPlot` | Primary non-mutating Makie surface |
 | `plot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Primary mutating Makie surface |
-| `phyloplot(net)` | `Makie.FigureAxisPlot` | Thin convenience surface over the same owner |
-| `phyloplot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Thin convenience surface over the same owner |
+| `phyloplot(net)` | `Makie.FigureAxisPlot` | Thin convenience surface over the same `PhyloPlot` implementation |
+| `phyloplot!(ax, net)` | `PhyloPlot` on an existing Makie axis | Thin convenience surface over the same `PhyloPlot` implementation |
 
 ## Live public attribute set
 
@@ -45,8 +43,10 @@ Markdown.parse(join(rows, "\n"))
 
 - `plot(net)` returns a `Makie.FigureAxisPlot`.
 - `plot!(ax, net)` plots into an existing axis and preserves Makie bang semantics.
-- `phyloplot` and `phyloplot!` are convenience surfaces over the same owner.
-- `preorder` stays internal to the package and is not part of the public surface.
+- `phyloplot` and `phyloplot!` are convenience surfaces over the same `PhyloPlot`.
+- Runtime updates use `Makie.update!`; positional plot data are updated with `arg1`.
+- Plotting prepares a private `HybridNetwork` copy, so caller-owned networks are not mutated.
+- Traversal preparation stays internal to the package and is not part of the public surface.
 
 ```@setup public_api
 using CairoMakie
@@ -100,8 +100,8 @@ plot(
 
 This mutating Makie surface plots into an existing axis and accepts the same
 snake_case attribute set. The second axis uses the convenience surface
-`phyloplot!` to show that both public paths share the same owner and remain
-composable.
+`phyloplot!` to show that both public paths share the same `PhyloPlot`
+implementation and remain composable.
 
 ```@example public_api
 annotation_net = PhyloNetworks.readnewick(
@@ -152,6 +152,41 @@ phyloplot!(
 )
 
 figure
+```
+
+## Runtime update example
+
+The returned `PhyloPlot` participates in Makie's compute graph. Keyword
+attributes update by their public names, and the plotted `HybridNetwork` updates
+through the first positional argument name, `arg1`.
+
+```@example public_api
+dynamic_net = PhyloNetworks.readnewick(
+    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
+)
+replacement_net = PhyloNetworks.readnewick(
+    "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);",
+)
+
+surface = plot(
+    dynamic_net;
+    useedgelength = true,
+    showtiplabel = true,
+    showgamma = true,
+    style = :fulltree,
+)
+plot_handle = surface.plot
+
+Makie.update!(
+    plot_handle;
+    edgecolor = "firebrick",
+    edgewidth = 2.0,
+    xlim = (0.0, 6.5),
+    ylim = (0.0, 5.5),
+)
+Makie.update!(plot_handle; arg1 = replacement_net, style = :majortree)
+
+surface.figure
 ```
 
 ## Next steps
