@@ -35,6 +35,24 @@ function _contract_children(plot)::NamedTuple
     )
 end
 
+function _contract_network_snapshot(net::PhyloNetworks.HybridNetwork)
+    return (
+        rooti=net.rooti,
+        isrooted=net.isrooted,
+        preorder_numbers=[node.number for node in net.vec_node],
+        edge_state=[
+            (
+                number=edge.number,
+                parent=PhyloNetworks.getparent(edge).number,
+                child=PhyloNetworks.getchild(edge).number,
+                ischild1=edge.ischild1,
+                containroot=hasfield(typeof(edge), :containroot) ?
+                    getfield(edge, :containroot) : nothing,
+            ) for edge in net.edge
+        ],
+    )
+end
+
 function _repeat_each(values::AbstractVector{T})::Vector{T} where {T}
     repeated = Vector{T}(undef, 2 * length(values))
     for index in eachindex(values)
@@ -350,11 +368,17 @@ end
         @test _contract_child_ids(plot) == original_child_ids
         @test children.edge_segments.color[] == plot[:edge_segment_colors][]
 
+        before_widths = copy(children.edge_segments.linewidth[])
+        Makie.update!(plot; edgewidth=4.0)
+        @test _contract_child_ids(plot) == original_child_ids
+        @test children.edge_segments.linewidth[] != before_widths
+        @test children.edge_segments.linewidth[] == plot[:edge_segment_linewidths][]
+
         new_net = readnewick(FIXTURE_CORPUS.render_regression_cases.style_majortree.newick)
-        before_vec_node = [node.number for node in new_net.vec_node]
+        before_network = _contract_network_snapshot(new_net)
         Makie.update!(plot; arg1=new_net)
         @test _contract_child_ids(plot) == original_child_ids
-        @test [node.number for node in new_net.vec_node] == before_vec_node
+        @test _contract_network_snapshot(new_net) == before_network
         @test plot[:plot_network][].net !== new_net
 
         Makie.update!(plot; showtiplabel=false, minorlinetype="blank")

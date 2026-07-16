@@ -29,6 +29,7 @@ end
 function _reactive_network_snapshot(net::PhyloNetworks.HybridNetwork)
     return (
         rooti = net.rooti,
+        isrooted = net.isrooted,
         node_numbers = [node.number for node in net.node],
         preorder_numbers = [node.number for node in net.vec_node],
         edge_state = [
@@ -303,6 +304,12 @@ end
         after_colors = plot[primitive_outputs.edge_segments.colors][]
         @test after_colors != before_colors
         @test length(after_colors) == length(plot[primitive_outputs.edge_segments.points][])
+
+        before_widths = copy(plot[primitive_outputs.edge_segments.linewidths][])
+        Makie.update!(plot; edgewidth = 4.0)
+        after_widths = plot[primitive_outputs.edge_segments.linewidths][]
+        @test after_widths != before_widths
+        @test all(==(4.0f0), after_widths)
 
         before_arrowheads = copy(plot[primitive_outputs.minor_arrowheads.meshes][])
         @test !isempty(before_arrowheads)

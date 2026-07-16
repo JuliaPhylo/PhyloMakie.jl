@@ -151,6 +151,14 @@ end
         @test children.edge_segments.color[] != before_colors
         _assert_children_match_outputs(plot, outputs)
 
+        before_widths = copy(children.edge_segments.linewidth[])
+        Makie.update!(plot; edgewidth = 4.0)
+        @test _primitive_child_ids(plot) == original_child_ids
+        @test children.edge_segments.linewidth[] != before_widths
+        @test children.edge_segments.linewidth[] ==
+            plot[outputs.primitive_outputs.edge_segments.linewidths][]
+        _assert_children_match_outputs(plot, outputs)
+
         before_arrowheads = copy(children.minor_arrowheads[1][])
         Makie.update!(plot; style = :majortree)
         @test _primitive_child_ids(plot) == original_child_ids

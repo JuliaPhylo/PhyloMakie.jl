@@ -43,6 +43,36 @@ end
         end
     end
 
+    public_input_names = (
+        "edgecolor",
+        "edgewidth",
+        "style",
+        "net",
+        "arg1",
+        "showtiplabel",
+        "shownodelabel",
+        "showgamma",
+        "xlim",
+        "ylim",
+    )
+    direct_input_assignment = Regex(
+        "\\[:($(join(public_input_names, "|")))\\]\\[\\]\\s*=",
+    )
+    pointer_scope_tokens = (
+        _audit_token("hov", "er"),
+        _audit_token("cli", "ck"),
+        _audit_token("dr", "ag"),
+        _audit_token("select", "ion"),
+        _audit_token("Data", "Inspector"),
+    )
+
+    for (_, source) in _audit_test_sources()
+        @test !occursin(direct_input_assignment, source)
+        for token in pointer_scope_tokens
+            @test !occursin(token, source)
+        end
+    end
+
     accepted_runtime = Dict(
         "recipe" => _audit_source(joinpath("src", "recipe.jl")),
         "graph" => _audit_source(joinpath("src", "reactive_graph.jl")),
@@ -57,10 +87,16 @@ end
         _audit_token("render", "_", "plot", "!"),
         _audit_token("Plot", "Render", "Layers"),
         _audit_token("arrows", "2d", "!"),
+        _audit_token("_apply", "_", "plot", "_", "limits", "!"),
+        _audit_token("x", "lims", "!"),
+        _audit_token("y", "lims", "!"),
     )
 
     for (_, source) in accepted_runtime
         for token in forbidden_runtime_tokens
+            @test !occursin(token, source)
+        end
+        for token in pointer_scope_tokens
             @test !occursin(token, source)
         end
     end

@@ -5,6 +5,7 @@ using PhyloNetworks
 function _capture_network_snapshot(net::HybridNetwork)
     return (
         rooti=net.rooti,
+        isrooted=net.isrooted,
         node_numbers=[node.number for node in net.node],
         preorder_numbers=[node.number for node in net.vec_node],
         edge_state=[
