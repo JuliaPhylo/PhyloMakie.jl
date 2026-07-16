@@ -99,7 +99,7 @@ plot(
 ## `plot!(ax, net)` example
 
 This mutating Makie surface plots into an existing axis and accepts the same
-snake_case attribute set. The second axis uses the convenience surface
+public attribute surface. The second axis uses the convenience surface
 `phyloplot!` to show that both public paths share the same `PhyloPlot`
 implementation and remain composable.
 
