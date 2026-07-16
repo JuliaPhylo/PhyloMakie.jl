@@ -642,9 +642,9 @@ and fresh-network caller safety.
 - User story 10: graph mapping tests independent of CairoMakie capture.
 - User story 11: reviewer-visible output-node proof.
 
-## Tranche 5: Documentation and source-audit closeout
+## Tranche 5a: Documentation migration and docs-facing audits
 
-**Type**: HITL
+**Type**: AFK
 **Blocked by**: Tranche 4.
 
 ### Governance and required reading
@@ -667,14 +667,18 @@ and fresh-network caller safety.
   `docs/src/public-api.md`, `docs/src/render-verification.md`,
   `docs/src/edge-controls.md`, `docs/src/annotations.md`,
   `docs/src/extending-plots.md`, and `docs/src/index.md`.
+- Revalidate docs-facing architecture audits:
+  `test/test_architecture_audits.jl` and `test/runtests.jl`.
 
 ### Primary-goal lock
 
-- Finalizes lock item 7 for public documentation and examples.
-- Finalizes lock item 8 by removing old scaffold names from docs, examples, and
-  workflow-facing prose unless explicitly described as historical red state.
-- Preserves lock item 9 by documenting pointer interactions as out of scope.
-- Audits lock items 1 through 10 before closure.
+- Finalizes the documentation and example portion of lock item 7.
+- Finalizes the docs, examples, and user-facing prose portion of lock item 8 by
+  removing old scaffold names unless explicitly described as historical red
+  state.
+- Preserves lock item 9 by avoiding pointer-interaction claims.
+- Prepares a Tranche 5b handoff for source compatibility review, final lock-item
+  evidence, and project-owner or assigned-reviewer acceptance.
 
 Non-completion conditions:
 
@@ -683,22 +687,23 @@ Non-completion conditions:
   architecture.
 - The tranche is not complete if docs omit `Makie.update!` as the supported
   dynamic entrypoint.
-- The tranche is not complete if source audits are absent or are the only proof
-  where runtime/render proof exists.
-- The tranche is not complete until a human reviewer or project owner accepts
-  the closeout evidence or routes requested follow-up.
+- The tranche is not complete if docs-facing audits are absent or if they
+  replace runtime/render proof where runtime/render proof already exists.
+- The tranche is not complete if it edits, deletes, or reviews source
+  compatibility wrappers instead of handing that review to Tranche 5b.
+- The tranche is not complete if it claims final Tranche 5 closeout.
 
 ### What to build
 
 This tranche aligns documentation, examples, render verification pages, and
-source-audit reports with the new architecture. It removes old scaffold
-language from accepted docs, documents `Makie.update!` as the supported
-dynamic entrypoint, keeps public behavior examples honest, records source-audit
-evidence for forbidden red states, and produces a closeout handoff strong
-enough for review or final audit.
+docs-facing architecture audits with the new architecture. It removes old
+scaffold language from accepted docs, documents `Makie.update!` as the
+supported dynamic entrypoint, keeps public behavior examples honest, and adds
+docs-facing audit evidence for forbidden red states.
 
-This tranche is HITL because final closure depends on project-owner or reviewer
-acceptance of the docs, visual artifacts, and lock-item audit.
+This tranche does not perform final closeout. It must leave a handoff for
+Tranche 5b that names the remaining source compatibility review, final
+lock-item evidence, and reviewer acceptance work.
 
 ### Handoff packet
 
@@ -709,44 +714,52 @@ acceptance of the docs, visual artifacts, and lock-item audit.
 - **Settled decisions and non-negotiables**: documentation must describe the
   new computation, reactive graph, and primitive assembly ownership; public
   entrypoints and public attributes remain stable; pointer interactions remain
-  deferred; source audits supplement but do not replace runtime/render proof.
-- **Authorization boundary**: docs may explain internal redesign; docs may not
-  imply public attribute renames or external breaking changes that were not
-  approved.
+  deferred; docs-facing source audits supplement but do not replace
+  runtime/render proof; source compatibility review belongs to Tranche 5b.
+- **Authorization boundary**: docs may explain internal redesign; docs may add
+  docs-facing architecture audits; docs may not imply public attribute renames
+  or external breaking changes that were not approved; this tranche may not
+  delete or review source compatibility wrappers.
 - **Current-state diagnosis**: current docs still reference old render scaffold
   and helper surfaces that are no longer target architecture after this PRD.
-- **Primary-goal lock**: final audit of lock items 1 through 10, with direct
-  docs ownership of lock items 7, 8, and 9.
+- **Primary-goal lock**: documentation and docs-facing audit portions of lock
+  items 7, 8, and 9, plus a handoff to Tranche 5b for final lock-item evidence.
 - **Direct red-state repros**: docs or examples call `render_plot!`; docs
   describe old internal payloads as current owners; docs imply pointer
-  interactions were implemented.
-- **Owner and invariant under repair**: documentation and audit closeout own the
-  public explanation of supported behavior and the reviewable evidence that old
-  architecture is gone.
-- **Exact files or surfaces in scope**: docs pages listed above; source-audit
-  output or notes; final review handoff; render verification artifacts.
+  interactions were implemented; docs-facing audit checks do not yet reject
+  those stale docs.
+- **Owner and invariant under repair**: `docs/src/public-api.md` owns public API
+  explanation; `docs/src/render-verification.md` owns render-verification
+  explanation; `docs/src/extending-plots.md` owns extension-boundary
+  explanation; `test/test_architecture_audits.jl` may own docs-facing audits
+  that supplement runtime and render tests.
+- **Exact files or surfaces in scope**: docs pages listed above;
+  `test/test_architecture_audits.jl`; `test/runtests.jl` only if needed to
+  include a new audit file; render verification artifacts generated by docs.
 - **Exact files or surfaces out of scope**: new pointer interactions; public
   attribute redesign; R interoperability; performance benchmarking beyond the
-  accepted verification gates.
+  accepted verification gates; source compatibility review; source
+  compatibility deletion; final closeout acceptance.
 - **Required upstream primary sources**: Makie/ComputePipeline files listed for
   this tranche and any additional sources cited in docs.
 - **Green-state gates**: `julia --project=docs docs/make.jl`; full tests or
-  recorded test-suite green state from Tranche 4; source audits; reviewer or
-  project-owner acceptance of final closeout evidence.
+  recorded test-suite green state from Tranche 4; docs-facing source audits;
+  Tranche 5a implementation report that names Tranche 5b residual scope.
 - **Stop conditions**: stop if docs require a public behavior change not
   authorized by the PRD; stop if docs cannot be made truthful without reopening
-  implementation; stop if pointer interactions appear in scope; stop if the
-  project owner rejects final lock-item evidence.
+  implementation; stop if pointer interactions appear in scope; stop if source
+  compatibility review or final acceptance appears necessary to finish Tranche
+  5a.
 
 ### How to verify
 
 - **Manual**: review docs and audit notes for old scaffold language, public
   surface stability, accurate `Makie.update!` examples, pointer-interaction
-  deferral, and complete lock-item evidence; obtain project-owner or reviewer
-  acceptance.
-- **Automated**: run `julia --project=docs docs/make.jl`; run source audits for
-  forbidden red-state shapes; confirm render verification examples build from
-  live package code.
+  deferral, and explicit Tranche 5b residual scope.
+- **Automated**: run `julia --project=docs docs/make.jl`; run docs-facing source
+  audits for forbidden red-state shapes; confirm render verification examples
+  build from live package code; run `julia --project=test test/runtests.jl` when
+  docs-facing audits change.
 
 ### Acceptance criteria
 
@@ -756,16 +769,149 @@ acceptance of the docs, visual artifacts, and lock-item audit.
       either removed or explicitly framed as historical red-state names.
 - [ ] Given the render verification docs, when `docs/make.jl` runs, then visual
       artifacts are generated from live new architecture code.
-- [ ] Given source-audit checks, when they run, then broad rebuild callbacks,
-      snapshot primitive arguments, dynamic per-edge `arrows2d!` arrowheads, and
-      target old scaffold names are rejected.
-- [ ] Given final closeout, when the project owner or reviewer evaluates the
-      evidence, then every primary-goal lock item has an honest owner and proof
-      artifact.
+- [ ] Given docs-facing source-audit checks, when they run, then user-facing
+      docs and examples reject old scaffold names as current architecture.
+- [ ] Given Tranche 5a completion, when the implementation report is written,
+      then it names Tranche 5b residual work: source compatibility review,
+      final lock-item evidence, and project-owner or assigned-reviewer
+      acceptance.
 
 ### User stories addressed
 
 - User story 11: reviewer can identify output-node architecture.
 - User story 12: obsolete scaffold names replaced in implementation-facing prose.
+- User story 13: future contributors can add attributes through the new owner path.
+- User story 14: pointer interactions remain deferred.
+
+## Tranche 5b: Source compatibility review and final closeout
+
+**Type**: HITL
+**Blocked by**: Tranche 5a.
+
+### Governance and required reading
+
+- Read line by line all governance documents listed in the governance
+  confirmation, especially `STYLE-agent-language.md`,
+  `STYLE-agent-handoffs.md`, `STYLE-workflow-docs.md`,
+  `STYLE-verification.md`, `STYLE-architecture.md`, and
+  `STYLE-vocabulary.md`.
+- Read line by line `01_prd.md`, `codeplan.md`, completion handoffs from
+  Tranches 1 through 5a, and the approved Tranche 5a tasking and implementation
+  report.
+- Read the Tranche 5a-edited docs, docs-facing architecture audits, and current
+  source compatibility files:
+  `src/attribute_schema.jl`, `src/layout_engine.jl`, `src/plot_layout.jl`,
+  `src/render_adapter.jl`, and `src/PhyloMakie.jl`.
+- A new agent must write the detailed Tranche 5b tasking after Tranche 5a
+  completes. Do not reuse the Tranche 5a tasking as the execution plan for
+  Tranche 5b.
+
+### Primary-goal lock
+
+- Finalizes lock item 8 for source compatibility review by recording the
+  explicit decision for old scaffold names that remain in source.
+- Audits lock items 1 through 10 before closure.
+- Preserves lock item 9 by confirming pointer interactions remain out of scope.
+- Closes the HITL requirement by obtaining project-owner or assigned-reviewer
+  acceptance of the final evidence or routing requested follow-up.
+
+Non-completion conditions:
+
+- The tranche is not complete if `PhyloPlotAttributes`, `PlotGeometry`,
+  `PlotLayout`, `PlotRenderLayers`, `render_plot!`, or related old names remain
+  in source without an explicit retain-or-delete review decision.
+- The tranche is not complete if old compatibility source is deleted without
+  explicit project-owner approval naming the files and public behavior risks.
+- The tranche is not complete if final evidence relies on source audits alone
+  where runtime, render, or docs proof exists.
+- The tranche is not complete until a human reviewer or project owner accepts
+  the closeout evidence or routes requested follow-up.
+
+### What to build
+
+This tranche produces the final source compatibility review and closeout
+evidence. It must inspect the old source names that remain after Tranche 5a,
+record whether each name is retained temporarily or approved for a later
+deletion task, map PRD lock items 1 through 10 to concrete verification
+artifacts, and obtain project-owner or assigned-reviewer acceptance.
+
+This tranche is HITL because final closure depends on project-owner or reviewer
+acceptance of the source compatibility decision, docs state, visual artifacts,
+runtime tests, source audits, and lock-item evidence.
+
+### Handoff packet
+
+- **Active authorities**: all governance authorities; handoffs from Tranches 1
+  through 5a; docs style and vocabulary authorities; Tranche 5a tasking and
+  implementation report.
+- **Parent documents**: `01_prd.md`, `codeplan.md`, all tranche handoffs,
+  Tranche 5a docs and audit results, current compatibility source files.
+- **Settled decisions and non-negotiables**: public entrypoints and public
+  attributes remain stable; pointer interactions remain deferred; source audits
+  supplement but do not replace runtime/render/docs proof; source compatibility
+  deletion requires explicit project-owner approval.
+- **Authorization boundary**: review and closeout evidence are in scope;
+  source deletion is out of scope unless explicitly approved in the Tranche 5b
+  tasking or by the project owner before implementation.
+- **Current-state diagnosis**: after Tranche 5a, user-facing docs should no
+  longer depend on old scaffold names, but source compatibility names may still
+  remain and require explicit review.
+- **Primary-goal lock**: final audit of lock items 1 through 10, source
+  compatibility review for lock item 8, and HITL acceptance.
+- **Direct red-state repros**: old source names remain without review; a final
+  report marks closeout complete without project-owner or reviewer acceptance;
+  source audits are used as the only evidence for behavior that runtime or
+  render tests can prove.
+- **Owner and invariant under review**: `src/attribute_schema.jl`,
+  `src/layout_engine.jl`, `src/plot_layout.jl`, and `src/render_adapter.jl`
+  contain old compatibility names that must either remain with exact limits and
+  a future cleanup path or be removed through an explicitly approved task.
+- **Exact files or surfaces in scope**: final source compatibility review notes;
+  final review handoff; source-audit output or notes; docs and render
+  verification artifacts from Tranche 5a; compatibility source files for
+  review.
+- **Exact files or surfaces out of scope**: new pointer interactions; public
+  attribute redesign; R interoperability; performance benchmarking beyond the
+  accepted verification gates; unapproved source compatibility deletion.
+- **Required upstream primary sources**: Makie/ComputePipeline files listed for
+  Tranche 5a and any additional sources cited in final closeout evidence.
+- **Green-state gates**: `julia --project=docs docs/make.jl`;
+  `julia --project=test test/runtests.jl`; source audits; project-owner or
+  assigned-reviewer acceptance of final closeout evidence.
+- **Stop conditions**: stop if source compatibility deletion is requested
+  without explicit approval; stop if any PRD lock item lacks a direct evidence
+  artifact; stop if pointer interactions appear in scope; stop if the project
+  owner rejects final lock-item evidence.
+
+### How to verify
+
+- **Manual**: review final docs, audit notes, source compatibility review, and
+  lock-item evidence; obtain project-owner or assigned-reviewer acceptance.
+- **Automated**: run `julia --project=docs docs/make.jl`; run
+  `julia --project=test test/runtests.jl`; run source audits for forbidden
+  red-state shapes; confirm render verification examples build from live
+  package code.
+
+### Acceptance criteria
+
+- [ ] Given source compatibility names in `src/attribute_schema.jl`,
+      `src/layout_engine.jl`, `src/plot_layout.jl`, and `src/render_adapter.jl`,
+      when Tranche 5b reviews them, then each name has an explicit retain,
+      delete-later, or approved-delete decision.
+- [ ] Given final closeout evidence, when a reviewer inspects PRD lock items 1
+      through 10, then each lock item has a concrete runtime, render, docs,
+      source-audit, or review artifact.
+- [ ] Given source-audit checks, when they run, then broad rebuild callbacks,
+      snapshot primitive arguments, dynamic per-edge `arrows2d!` arrowheads, and
+      target old scaffold names are rejected in the intended scope.
+- [ ] Given final closeout, when the project owner or assigned reviewer
+      evaluates the evidence, then the reviewer either accepts Tranche 5b or
+      routes exact follow-up work.
+
+### User stories addressed
+
+- User story 11: reviewer can identify output-node architecture.
+- User story 12: obsolete scaffold names are either removed from accepted
+  current prose or recorded as reviewed source compatibility.
 - User story 13: future contributors can add attributes through the new owner path.
 - User story 14: pointer interactions remain deferred.
