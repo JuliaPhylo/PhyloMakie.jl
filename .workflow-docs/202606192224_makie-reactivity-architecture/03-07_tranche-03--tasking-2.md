@@ -1,7 +1,7 @@
 ---
 date-created: 2026-07-23T23:44:04-07:00
 workflow-instrument: Tasking plan
-workflow-status: Proposed
+workflow-status: Approved
 workflow-agent-thread-id: codex/019f6c80-18d9-7642-9da6-936d5eb8ec46
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: reactive-makie-spine
@@ -135,6 +135,7 @@ Required upstream primary sources for this tasking:
 - **Direct red-state repros**: default `arrowlen = 0.1` becomes about `0.1` data units; `_arrowhead_polygon` computes the perpendicular in data coordinates; current tests do not fail oversized or anisotropically distorted heads.
 - **Owner and invariant under repair**: `compute_arrowhead_metrics` in `src/primitive_channels.jl` calculates pixel metrics from public configuration and minor edge widths. `compute_arrowhead_channel` in `src/primitive_channels.jl` must calculate only renderable arrowhead specs from minor hybrid edge shaft data. `register_arrowhead_output_nodes!` in `src/reactive_graph.jl` must register projection-dependent graph outputs and map projected pixel endpoints plus pixel metrics into `:minor_arrowhead_pixel_meshes`. `create_arrowhead_primitive!` in `src/primitive_assembly.jl` must consume the final mesh graph node in one stable `Makie.Poly` child.
 - **Supported public surfaces affected**: `Makie.plot(net; style = :fulltree)`, `Makie.plot!(axis, net; style = :fulltree)`, `phyloplot(net; style = :fulltree)`, `phyloplot!(axis, net; style = :fulltree)`, public updates through `Makie.update!(plot; arrowlen = ...)`, public updates through `Makie.update!(plot; xlim = ..., ylim = ...)`, and current minor hybrid edge rendering under `:fulltree` and `:majortree`.
+- **Axis and camera surfaces affected**: host-owned axis camera changes through `Makie.xlims!(axis, ...)`, `Makie.ylims!(axis, ...)`, non-square `Figure` sizes, and axis layout resizing must update Makie projection nodes used by `:minor_arrowhead_pixel_meshes`. Tests may call `Makie.xlims!` and `Makie.ylims!` on a test `Axis` to force camera-matrix changes. Production `src/primitive_assembly.jl` and `src/reactive_graph.jl` must not use `Makie.xlims!` or `Makie.ylims!` to repair geometry.
 - **Exact files in scope**: `src/arrowhead_geometry.jl`, `src/PhyloMakie.jl`, `src/primitive_channels.jl`, `src/reactive_graph.jl`, `src/primitive_assembly.jl`, `test/test_arrowhead_geometry.jl`, `test/test_primitive_channels.jl`, `test/test_reactive_graph.jl`, `test/test_primitive_assembly.jl`, `test/test_public_render_contracts.jl`, `test/support/render_test_helpers.jl`, and `test/runtests.jl`.
 - **Exact files out of scope**: docs pages, examples, dependency manifests, public recipe declaration, `src/recipe.jl` except source-audit coverage, `src/render_adapter.jl` except source-audit coverage, pointer interaction code, non-`HybridNetwork` plotting support, and performance tuning outside the arrowhead projected-geometry repair.
 - **Required upstream primary sources**: all Makie and ComputePipeline files listed in the Governance section.
@@ -190,6 +191,13 @@ The behavior that must no longer exist when this tasking is complete is final ar
 - A fake fix that uses one `poly!` child but passes data-space polygons must fail pixel-space `Poly` argument and anisotropic-axis tests.
 - Positive render verification must show a nonempty CairoMakie colorbuffer for a full-tree plot with current minor hybrid arrowheads after the projection-aware mesh path is active.
 
+## Fresh-agent durability decisions
+
+- **Review task count**: one final REVIEW task is the complete review structure for this tasking because no unresolved design decision remains. Task 5 is a mandatory lock-closure audit, not a human-design decision point. If a future agent finds that `Makie.poly!` cannot render the graph-owned `:minor_arrowhead_pixel_meshes` as one stable `space = :pixel` child, the stop condition in this file applies and the agent must halt rather than creating an extra REVIEW task that authorizes a geometry design outside this file.
+- **Lock item coverage**: the six lock items cover the full reported issue and compatibility boundary. Lock 1 covers oversized heads from pixel-to-data cancellation; Lock 2 covers anisotropic axes and camera projection; Lock 3 preserves the Tranche 3 stable `Poly` child decision; Lock 4 moves final mesh construction from `PrimitiveChannels` into graph-owned projected outputs; Lock 5 protects public plotting surfaces and `arrowlen`; Lock 6 requires visual and pixel verification that fails the current implementation.
+- **Forbidden passing implementation table**: the table has one row for every lock item. The implementing agent must treat every row as mandatory. A green test suite, docs build, source audit, typed-array assertion, or child-count assertion cannot close a row unless the row's named failing verification artifact also passes and would fail the current or fake-fix implementation named in that row.
+- **Handoff strength**: the handoff packet is intended to be executable by a fresh agent without reopening derivable decisions. The permitted implementation is exactly `ArrowheadSpecChannel` plus projected pixel nodes plus `compute_arrowhead_pixel_meshes` plus one `Makie.poly!` child with `space = :pixel` and `transformation = :nothing`. A fresh agent must not substitute inverse-projected data-space polygons, `Makie.arrows2d!`, `@lift`, dynamic child plots, public default changes, or source-audit-only verification.
+
 ## Tasks
 
 ### 1. Add Pure Pixel Arrowhead Geometry Helper
@@ -235,7 +243,7 @@ In `src/primitive_assembly.jl`, keep one `create_arrowhead_primitive!` helper an
 
 Strengthen `test/test_primitive_assembly.jl` with helpers that extract the one `Makie.Poly` arrowhead child and read `plot[outputs.primitive_outputs.minor_arrowheads.meshes][]`. Measure each polygon directly in pixel coordinates: the first vertex is the tip, the midpoint of the second and third vertices is the base center, `norm(tip - base_center)` is the effective pixel length, and `norm(wing_a - wing_b)` is the effective pixel width. Also compute the projected shaft direction from `:minor_arrowhead_pixel_startpoints` and `:minor_arrowhead_pixel_endpoints`; assert that `tip - base_center` is parallel to the projected shaft and that `wing_a - wing_b` is perpendicular to it in screen coordinates.
 
-Add a regression using a non-square `Figure` and an anisotropic axis condition. The test must construct an actual public plot through `Makie.plot` or `Makie.plot!`, extract `surface.plot`, call `register_phylo_graph!` only to obtain output symbols when required by the current test pattern, force rendering with `Makie.colorbuffer(...; backend = CairoMakie)`, and assert nonempty render output. The test must not inspect only `PrimitiveChannels`, because `PrimitiveChannels` no longer owns final mesh geometry.
+Add a regression using a non-square `Figure` and a host `Axis` with anisotropic camera limits. The test must create `figure = Figure(size = (900, 300))`, create `axis = Axis(figure[1, 1])`, plot the test `HybridNetwork` through `Makie.plot!(axis, net; useedgelength = true, style = :fulltree)`, extract the returned `PhyloPlot`, call `register_phylo_graph!` only to obtain output symbols when required by the current test pattern, force rendering with `Makie.colorbuffer(figure; backend = CairoMakie)`, and assert nonempty render output. Then mutate the test axis with `Makie.xlims!(axis, ...)` and `Makie.ylims!(axis, ...)`, force another colorbuffer render, and assert that the graph-owned pixel mesh still measures the expected pixel length, width, tip anchoring, and screen-space perpendicularity. The test must not inspect only `PrimitiveChannels`, because `PrimitiveChannels` no longer owns final mesh geometry. The test may call host-axis limit functions because it is proving Makie camera projection behavior; production code in this tasking must not call those functions.
 
 ### 4. Preserve Public Surfaces, Hidden States, and Source Shape
 
@@ -253,14 +261,14 @@ Update existing primitive-channel tests so they assert typed arrowhead specs rat
 ### 5. Final Review Against Lock Items and Upstream Contracts
 
 **Type**: REVIEW
-**Output**: A short implementation report or review note records that all six lock items are closed with named verification artifacts.
+**Output**: A final implementation response or project-owner-requested implementation report records that all six lock items are closed with named verification artifacts.
 **Depends on**: 1, 2, 3, 4
-**Positive contract**: The review maps every lock item in this tasking file to a passing test, source audit, render artifact, or upstream-contract check.
-**Negative contract**: The review must not accept a green suite if any lock item lacks a direct failing artifact for the old implementation or a named forbidden passing implementation.
+**Positive contract**: The review includes a six-row lock closure table with columns `Lock item`, `Changed code entity`, `Required verification artifact`, `Observed passing result`, and `Old or fake implementation failed by this artifact`.
+**Negative contract**: The review must not accept a green suite, docs build, source audit, child-count assertion, typed-array assertion, or geometry-exists assertion if any lock item lacks the direct failing artifact named in the Forbidden Passing Implementation Table.
 **Files**: No production files. A reviewer may add an implementation report in `.workflow-docs/202606192224_makie-reactivity-architecture/` only if the project owner requests one.
 **Out of scope**: code changes, docs rewrite, public API changes, new tranche creation.
-**Verification**: Confirm `julia --project=test test/runtests.jl` and `julia --project=docs docs/make.jl` results. Inspect the final diff against the Non-negotiable execution rules and Concrete anti-patterns or removal targets in this tasking file.
+**Verification**: Confirm `julia --project=test test/runtests.jl` and `julia --project=docs docs/make.jl` results. Inspect the final diff against the Non-negotiable execution rules, Concrete anti-patterns or removal targets, Fresh-agent durability decisions, and Forbidden Passing Implementation Table in this tasking file.
 
-Review the implementation against Makie `Arrows2D` pixel-metric semantics, Makie projection utilities, and `Poly` rendering behavior. Confirm that any local inference from upstream source is recorded in the implementation report or final handoff and that no approved divergence from Makie semantics was introduced.
+Review the implementation against Makie `Arrows2D` pixel-metric semantics, Makie projection utilities, and `Poly` rendering behavior. The review must explicitly state that no approved divergence from Makie semantics was introduced. If local inference from upstream source is used, the review must name the upstream file and the exact inferred rule. The review must state whether each of these forbidden shapes is absent: `ArrowheadChannel.meshes`, `_arrowhead_polygon`, final data-space arrowhead polygons, `Makie.arrows2d!`, `@lift`, dynamic arrowhead child plots, public `arrowlen` default changes, and source-audit-only verification.
 
 ---
