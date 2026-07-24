@@ -222,8 +222,24 @@ end
     @test !occursin(_audit_token("plot[outputs.points][]"), assembly_source)
     @test !occursin(_audit_token("plot[outputs.meshes][]"), assembly_source)
     @test !occursin(_audit_token("plot[outputs.strings][]"), assembly_source)
+    @test occursin("space = :pixel", assembly_source)
+    @test occursin("transformation = :nothing", assembly_source)
+    @test occursin("xautolimits = false", assembly_source)
+    @test occursin("yautolimits = false", assembly_source)
 
     graph_source = accepted_runtime["graph"]
     @test occursin(_audit_token("register", "_", "data", "_", "limits", "_", "node!"), graph_source)
     @test occursin(_audit_token("_", "compute", "_", "data", "_", "limits"), graph_source)
+    @test occursin("function Makie.boundingbox", graph_source)
+    @test occursin("register_projected_positions!", graph_source)
+    @test occursin("compute_arrowhead_pixel_meshes", graph_source)
+    @test occursin(":minor_arrowhead_pixel_meshes", graph_source)
+
+    channels_source = accepted_runtime["channels"]
+    @test occursin("struct ArrowheadSpecChannel", channels_source)
+    @test !occursin("struct ArrowheadChannel", channels_source)
+    @test !occursin("meshes::", channels_source)
+    @test !occursin(_audit_token("_", "arrowhead", "_", "polygon"), channels_source)
+    @test !occursin(_audit_token("data", "_", "length"), channels_source)
+    @test !occursin(Regex("/\\s*(?:\\([^\\)]*)?DEFAULT_ARROW_PIXEL_SCALE"), channels_source)
 end

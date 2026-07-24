@@ -13,7 +13,7 @@ end
 @testset "Primitive channel computation" begin
     SegmentChannel = getfield(PhyloMakie, :SegmentChannel)
     TextChannel = getfield(PhyloMakie, :TextChannel)
-    ArrowheadChannel = getfield(PhyloMakie, :ArrowheadChannel)
+    ArrowheadSpecChannel = getfield(PhyloMakie, :ArrowheadSpecChannel)
     PrimitiveChannels = getfield(PhyloMakie, :PrimitiveChannels)
     prepare_plot_network = getfield(PhyloMakie, :prepare_plot_network)
     compute_network_geometry = getfield(PhyloMakie, :compute_network_geometry)
@@ -42,7 +42,7 @@ end
         @test channels isa PrimitiveChannels
         @test channels.edge_segments isa SegmentChannel
         @test channels.tip_labels isa TextChannel
-        @test channels.minor_arrowheads isa ArrowheadChannel
+        @test channels.minor_arrowheads isa ArrowheadSpecChannel
         @test eltype(channels.edge_segments.points) == Makie.Point2f
         @test eltype(channels.edge_segments.colors) == Makie.RGBAf
         @test eltype(channels.edge_segments.linewidths) == Float32
@@ -66,7 +66,10 @@ end
         @test channels.minor_edge_shafts.points == Makie.Point2f[]
         @test channels.minor_edge_shafts.colors == Makie.RGBAf[]
         @test channels.minor_edge_shafts.linewidths == Float32[]
-        @test channels.minor_arrowheads.meshes == getfield(PhyloMakie, :ArrowheadPolygon)[]
+        @test channels.minor_arrowheads.startpoints == Makie.Point2f[]
+        @test channels.minor_arrowheads.endpoints == Makie.Point2f[]
+        @test channels.minor_arrowheads.tiplengths == Float32[]
+        @test channels.minor_arrowheads.tipwidths == Float32[]
         @test channels.minor_arrowheads.colors == Makie.RGBAf[]
         @test channels.minor_arrowheads.source_indices == Int[]
         @test channels.tip_labels.positions == Makie.Point2f[]
@@ -75,23 +78,26 @@ end
         @test channels.tip_labels.fontsizes == Float32[]
     end
 
-    @testset "Hybrid arrowheads are computed polygon payloads" begin
+    @testset "Hybrid arrowheads are computed as pixel-metric specs" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
         channels = primitive_channels_for(
             render_case.newick;
             render_case.attribute_kwargs...,
         )
 
-        @test !isempty(channels.minor_arrowheads.meshes)
-        @test eltype(channels.minor_arrowheads.meshes) == getfield(PhyloMakie, :ArrowheadPolygon)
-        @test length(channels.minor_arrowheads.colors) == length(channels.minor_arrowheads.meshes)
-        @test length(channels.minor_arrowheads.strokecolors) == length(channels.minor_arrowheads.meshes)
+        @test !isempty(channels.minor_arrowheads.startpoints)
+        @test eltype(channels.minor_arrowheads.startpoints) == Makie.Point2f
+        @test eltype(channels.minor_arrowheads.endpoints) == Makie.Point2f
+        @test length(channels.minor_arrowheads.colors) ==
+            length(channels.minor_arrowheads.startpoints)
+        @test length(channels.minor_arrowheads.strokecolors) ==
+            length(channels.minor_arrowheads.startpoints)
         @test length(channels.minor_arrowheads.source_indices) ==
-            length(channels.minor_arrowheads.meshes)
-        @test all(>(0), channels.minor_arrowheads.tiplengths)
-        @test all(>(0), channels.minor_arrowheads.tipwidths)
-        converted = Makie.convert_arguments(Makie.Poly, channels.minor_arrowheads.meshes)
-        @test only(converted) == channels.minor_arrowheads.meshes
+            length(channels.minor_arrowheads.startpoints)
+        @test channels.minor_arrowheads.tiplengths ==
+            fill(8.0f0, length(channels.minor_arrowheads.startpoints))
+        @test channels.minor_arrowheads.tipwidths ==
+            fill(6.4f0, length(channels.minor_arrowheads.startpoints))
     end
 
     @testset "Suppressed arrowheads keep channel arrays aligned" begin
@@ -121,7 +127,6 @@ end
         @test arrowheads.strokecolors == Makie.RGBAf[input_colors[2]]
         @test arrowheads.tiplengths == Float32[8]
         @test arrowheads.tipwidths == Float32[4]
-        @test length(arrowheads.meshes) == 1
         @test length(arrowheads.colors) == length(arrowheads.startpoints)
         @test length(arrowheads.colors) == length(arrowheads.endpoints)
         @test length(arrowheads.colors) == length(arrowheads.tiplengths)

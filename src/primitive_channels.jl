@@ -7,7 +7,6 @@ const DEFAULT_ARROW_PIXEL_SCALE = 80.0f0
 const DEFAULT_ARROW_WIDTH_RATIO = 0.8f0
 const DEFAULT_INVISIBLE_ARROW_SHAFT_WIDTH = 1.0f0
 const DEFAULT_ARROW_STROKEWIDTH = 0.75f0
-const ArrowheadPolygon = Makie.GeometryBasics.Polygon{2, Float32}
 
 struct SegmentChannel{TLineStyle}
     points::Vector{Makie.Point2f}
@@ -25,8 +24,7 @@ struct TextChannel{TAlign, TFont}
     font::TFont
 end
 
-struct ArrowheadChannel{TMesh}
-    meshes::Vector{TMesh}
+struct ArrowheadSpecChannel
     colors::Vector{Makie.RGBAf}
     strokecolors::Vector{Makie.RGBAf}
     strokewidth::Float32
@@ -286,43 +284,19 @@ function _segment_endpoints(channel::SegmentChannel)::Vector{Makie.Point2f}
     return Makie.Point2f[channel.points[index] for index in 2:2:length(channel.points)]
 end
 
-function _arrowhead_polygon(
-        startpoint::Makie.Point2f,
-        endpoint::Makie.Point2f,
-        tiplength::Real,
-        tipwidth::Real,
-    )::ArrowheadPolygon
-    direction = endpoint - startpoint
-    segment_length = sqrt(direction[1]^2 + direction[2]^2)
-    if segment_length <= 0
-        return Makie.Polygon(Makie.Point2f[endpoint, endpoint, endpoint])
-    end
-    unit_direction = direction / segment_length
-    unit_perpendicular = Makie.Vec2f(-unit_direction[2], unit_direction[1])
-    data_length = min(Float32(tiplength) / DEFAULT_ARROW_PIXEL_SCALE, segment_length)
-    half_width = Float32(tipwidth) / (2.0f0 * DEFAULT_ARROW_PIXEL_SCALE)
-    base = endpoint - data_length * unit_direction
-    return Makie.Polygon(Makie.Point2f[
-        endpoint,
-        base + half_width * unit_perpendicular,
-        base - half_width * unit_perpendicular,
-    ])
-end
-
 function compute_arrowhead_channel(
         minor_edge_points::SegmentChannel,
         colors::AbstractVector{Makie.RGBAf},
         tiplengths::AbstractVector{<:Real},
         tipwidths::AbstractVector{<:Real},
         render_visible::Bool,
-    )::ArrowheadChannel
+    )::ArrowheadSpecChannel
     startpoints = _segment_startpoints(minor_edge_points)
     endpoints = _segment_endpoints(minor_edge_points)
     typed_tiplengths = Float32.(tiplengths)
     typed_tipwidths = Float32.(tipwidths)
     if !render_visible || isempty(startpoints)
-        return ArrowheadChannel(
-            ArrowheadPolygon[],
+        return ArrowheadSpecChannel(
             Makie.RGBAf[],
             Makie.RGBAf[],
             DEFAULT_ARROW_STROKEWIDTH,
@@ -334,7 +308,6 @@ function compute_arrowhead_channel(
         )
     end
 
-    meshes = ArrowheadPolygon[]
     render_colors = Makie.RGBAf[]
     render_source_indices = Int[]
     render_startpoints = Makie.Point2f[]
@@ -350,19 +323,9 @@ function compute_arrowhead_channel(
         push!(render_endpoints, endpoints[index])
         push!(render_tiplengths, typed_tiplengths[index])
         push!(render_tipwidths, typed_tipwidths[index])
-        push!(
-            meshes,
-            _arrowhead_polygon(
-                startpoints[index],
-                endpoints[index],
-                typed_tiplengths[index],
-                typed_tipwidths[index],
-            ),
-        )
         push!(render_colors, colors[index])
     end
-    return ArrowheadChannel(
-        meshes,
+    return ArrowheadSpecChannel(
         render_colors,
         copy(render_colors),
         DEFAULT_ARROW_STROKEWIDTH,

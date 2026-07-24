@@ -155,16 +155,24 @@ end
         @test dotted_case.channels.minor_edge_shafts.linestyle == :dot
         @test !isnothing(dotted_children.minor_edge_shafts.linestyle[])
         @test !isempty(dotted_case.channels.minor_edge_shafts.points)
-        @test !isempty(dotted_case.channels.minor_arrowheads.meshes)
-        @test dotted_children.minor_arrowheads[1][] ==
-            dotted_case.channels.minor_arrowheads.meshes
+        @test !isempty(dotted_case.channels.minor_arrowheads.startpoints)
+        @test dotted_children.minor_arrowheads.space[] == :pixel
+        dotted_arrowhead_meshes = dotted_children.minor_arrowheads[1][]
+        @test dotted_arrowhead_meshes == dotted_case.plot[:minor_arrowhead_pixel_meshes][]
+        @test any(dotted_arrowhead_meshes) do polygon
+            metrics = _arrowhead_pixel_metrics(polygon)
+            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
+                isapprox(metrics.width, 6.4f0; atol=0.25f0)
+        end
 
         blank_children = _contract_children(blank_case.plot)
         @test blank_case.channels.minor_edge_shafts.points == Makie.Point2f[]
         @test blank_case.channels.minor_edge_shafts.colors == Makie.RGBAf[]
         @test blank_case.channels.minor_edge_shafts.linewidths == Float32[]
-        @test blank_case.channels.minor_arrowheads.meshes ==
-            getfield(PhyloMakie, :ArrowheadPolygon)[]
+        @test blank_case.channels.minor_arrowheads.startpoints == Makie.Point2f[]
+        @test blank_case.channels.minor_arrowheads.tiplengths == Float32[]
+        @test blank_case.plot[:minor_arrowhead_pixel_meshes][] ==
+            getfield(PhyloMakie, :ArrowheadPixelPolygon)[]
         @test isempty(blank_children.minor_edge_shafts[1][])
         @test isempty(blank_children.minor_arrowheads[1][])
     end
@@ -221,6 +229,7 @@ end
         @test children.edge_segments.color[] == case.channels.edge_segments.colors
         @test children.edge_segments.linewidth[] == case.channels.edge_segments.linewidths
         @test children.minor_arrowheads.color[] == case.channels.minor_arrowheads.colors
+        @test children.minor_arrowheads[1][] == case.plot[:minor_arrowhead_pixel_meshes][]
     end
 
     @testset "Text size, position, and limit channels match accepted tables" begin
@@ -385,6 +394,6 @@ end
         @test _contract_child_ids(plot) == original_child_ids
         @test children.tip_labels[1][] == Makie.Point2f[]
         @test children.minor_edge_shafts[1][] == Makie.Point2f[]
-        @test children.minor_arrowheads[1][] == getfield(PhyloMakie, :ArrowheadPolygon)[]
+        @test children.minor_arrowheads[1][] == getfield(PhyloMakie, :ArrowheadPixelPolygon)[]
     end
 end

@@ -67,10 +67,20 @@ function _assert_segment_outputs_match_channel(plot, outputs, channel)::Nothing
 end
 
 function _assert_arrowhead_outputs_match_channel(plot, outputs, channel)::Nothing
-    @test plot[outputs.meshes][] == channel.meshes
+    compute_arrowhead_pixel_meshes = getfield(PhyloMakie, :compute_arrowhead_pixel_meshes)
+    @test plot[outputs.startpoints][] == channel.startpoints
+    @test plot[outputs.endpoints][] == channel.endpoints
+    @test plot[outputs.tiplengths][] == channel.tiplengths
+    @test plot[outputs.tipwidths][] == channel.tipwidths
     @test plot[outputs.colors][] == channel.colors
     @test plot[outputs.strokecolors][] == channel.strokecolors
     @test plot[outputs.strokewidth][] == channel.strokewidth
+    @test plot[outputs.meshes][] == compute_arrowhead_pixel_meshes(
+        plot[:minor_arrowhead_pixel_startpoints][],
+        plot[:minor_arrowhead_pixel_endpoints][],
+        channel.tiplengths,
+        channel.tipwidths,
+    )
     return nothing
 end
 
@@ -175,9 +185,13 @@ end
         @test outputs.text_outputs.tip_labels isa TextGraphOutputs
 
         required_symbols = phylo_graph_output_symbols()
-        @test length(required_symbols) == 71
+        @test length(required_symbols) == 75
         @test allunique(required_symbols)
         @test all(symbol -> haskey(plot.attributes.outputs, symbol), required_symbols)
+        @test !(:minor_arrowhead_pixel_startpoints in required_symbols)
+        @test !(:minor_arrowhead_pixel_endpoints in required_symbols)
+        @test outputs.primitive_outputs.minor_arrowheads.meshes ==
+            :minor_arrowhead_pixel_meshes
         @test all(
             symbol -> haskey(plot.attributes.outputs, symbol),
             (
@@ -187,6 +201,8 @@ end
                 :layout_computation,
                 :primitive_channels,
                 :data_limits,
+                :minor_arrowhead_pixel_startpoints,
+                :minor_arrowhead_pixel_endpoints,
             ),
         )
 
@@ -216,11 +232,62 @@ end
         @test plot[outputs.primitive_outputs.minor_edge_shafts.points][] == Makie.Point2f[]
         @test plot[outputs.primitive_outputs.minor_edge_shafts.colors][] == Makie.RGBAf[]
         @test plot[outputs.primitive_outputs.minor_edge_shafts.linewidths][] == Float32[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.startpoints][] == Makie.Point2f[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.endpoints][] == Makie.Point2f[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.tiplengths][] == Float32[]
+        @test plot[outputs.primitive_outputs.minor_arrowheads.tipwidths][] == Float32[]
         @test plot[outputs.primitive_outputs.minor_arrowheads.meshes][] ==
-            getfield(PhyloMakie, :ArrowheadPolygon)[]
+            getfield(PhyloMakie, :ArrowheadPixelPolygon)[]
         @test plot[outputs.primitive_outputs.minor_arrowheads.colors][] == Makie.RGBAf[]
         _assert_text_outputs_empty(plot, outputs.text_outputs.tip_labels)
         _assert_text_outputs_empty(plot, outputs.text_outputs.internal_node_names)
+    end
+
+    @testset "arrowhead meshes follow projected pixel positions" begin
+        figure = Figure(size=(900, 300))
+        axis = Axis(figure[1, 1])
+        plot = Makie.plot!(
+            axis,
+            readnewick(REACTIVE_GRAPH_NEWICK);
+            useedgelength=true,
+            showgamma=true,
+            style=:fulltree,
+        )
+        outputs = register_phylo_graph!(plot).primitive_outputs.minor_arrowheads
+
+        @test !isempty(_render_colorbuffer(figure))
+        startpoints_before = copy(plot[:minor_arrowhead_pixel_startpoints][])
+        meshes_before = copy(plot[outputs.meshes][])
+        @test !isempty(meshes_before)
+        @test meshes_before == getfield(PhyloMakie, :compute_arrowhead_pixel_meshes)(
+            startpoints_before,
+            plot[:minor_arrowhead_pixel_endpoints][],
+            plot[outputs.tiplengths][],
+            plot[outputs.tipwidths][],
+        )
+        @test any(meshes_before) do polygon
+            metrics = _arrowhead_pixel_metrics(polygon)
+            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
+                isapprox(metrics.width, 6.4f0; atol=0.25f0)
+        end
+        @test all(meshes_before) do polygon
+            return isapprox(_arrowhead_axis_wing_dot(polygon), 0.0f0; atol=0.25f0)
+        end
+
+        Makie.resize!(figure, 300, 900)
+        @test !isempty(_render_colorbuffer(figure))
+        startpoints_after = plot[:minor_arrowhead_pixel_startpoints][]
+        meshes_after = plot[outputs.meshes][]
+        @test startpoints_after != startpoints_before
+        @test meshes_after != meshes_before
+        @test any(meshes_after) do polygon
+            metrics = _arrowhead_pixel_metrics(polygon)
+            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
+                isapprox(metrics.width, 6.4f0; atol=0.25f0)
+        end
+        @test all(meshes_after) do polygon
+            return isapprox(_arrowhead_axis_wing_dot(polygon), 0.0f0; atol=0.25f0)
+        end
     end
 
     @testset "hidden text groups keep typed empty final nodes" begin

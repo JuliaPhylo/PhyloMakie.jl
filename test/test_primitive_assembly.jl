@@ -130,6 +130,10 @@ end
         @test children.minor_arrowheads isa Makie.Poly
         @test all(child -> child isa Makie.Text, plot.plots[5:13])
         @test !any(child -> child isa Makie.Arrows2D, plot.plots)
+        @test children.minor_arrowheads.space[] == :pixel
+        @test children.minor_arrowheads.xautolimits[] == false
+        @test children.minor_arrowheads.yautolimits[] == false
+        @test Makie.boundingbox(plot) == Makie.data_limits(plot)
 
         _assert_children_match_outputs(plot, outputs)
         @test children.tip_labels.font[] == plot[outputs.text_outputs.tip_labels.font][]

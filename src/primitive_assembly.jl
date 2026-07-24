@@ -51,6 +51,10 @@ function create_arrowhead_primitive!(
         color = plot[outputs.colors],
         strokecolor = plot[outputs.strokecolors],
         strokewidth = plot[outputs.strokewidth],
+        space = :pixel,
+        transformation = :nothing,
+        xautolimits = false,
+        yautolimits = false,
     )
 end
 

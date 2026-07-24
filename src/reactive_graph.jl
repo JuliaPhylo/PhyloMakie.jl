@@ -6,6 +6,10 @@ struct SegmentGraphOutputs
 end
 
 struct ArrowheadGraphOutputs
+    startpoints::Symbol
+    endpoints::Symbol
+    tiplengths::Symbol
+    tipwidths::Symbol
     meshes::Symbol
     colors::Symbol
     strokecolors::Symbol
@@ -91,7 +95,11 @@ const MINOR_EDGE_SHAFT_GRAPH_OUTPUTS = SegmentGraphOutputs(
     :minor_edge_shaft_linestyle,
 )
 const MINOR_ARROWHEAD_GRAPH_OUTPUTS = ArrowheadGraphOutputs(
-    :minor_arrowhead_meshes,
+    :minor_arrowhead_startpoints,
+    :minor_arrowhead_endpoints,
+    :minor_arrowhead_tiplengths,
+    :minor_arrowhead_tipwidths,
+    :minor_arrowhead_pixel_meshes,
     :minor_arrowhead_colors,
     :minor_arrowhead_strokecolors,
     :minor_arrowhead_strokewidth,
@@ -110,6 +118,10 @@ const NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS = (
     MINOR_EDGE_SHAFT_GRAPH_OUTPUTS.colors,
     MINOR_EDGE_SHAFT_GRAPH_OUTPUTS.linewidths,
     MINOR_EDGE_SHAFT_GRAPH_OUTPUTS.linestyle,
+    MINOR_ARROWHEAD_GRAPH_OUTPUTS.startpoints,
+    MINOR_ARROWHEAD_GRAPH_OUTPUTS.endpoints,
+    MINOR_ARROWHEAD_GRAPH_OUTPUTS.tiplengths,
+    MINOR_ARROWHEAD_GRAPH_OUTPUTS.tipwidths,
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.meshes,
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.colors,
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.strokecolors,
@@ -153,8 +165,29 @@ function _segment_output_symbols(outputs::SegmentGraphOutputs)::NTuple{4, Symbol
     return (outputs.points, outputs.colors, outputs.linewidths, outputs.linestyle)
 end
 
-function _arrowhead_output_symbols(outputs::ArrowheadGraphOutputs)::NTuple{4, Symbol}
-    return (outputs.meshes, outputs.colors, outputs.strokecolors, outputs.strokewidth)
+function _arrowhead_spec_output_symbols(outputs::ArrowheadGraphOutputs)::NTuple{7, Symbol}
+    return (
+        outputs.startpoints,
+        outputs.endpoints,
+        outputs.tiplengths,
+        outputs.tipwidths,
+        outputs.colors,
+        outputs.strokecolors,
+        outputs.strokewidth,
+    )
+end
+
+function _arrowhead_output_symbols(outputs::ArrowheadGraphOutputs)::NTuple{8, Symbol}
+    return (
+        outputs.startpoints,
+        outputs.endpoints,
+        outputs.tiplengths,
+        outputs.tipwidths,
+        outputs.meshes,
+        outputs.colors,
+        outputs.strokecolors,
+        outputs.strokewidth,
+    )
 end
 
 function _text_output_symbols(outputs::TextGraphOutputs)::NTuple{6, Symbol}
@@ -374,6 +407,10 @@ function validate_public_plot_limits(plot::PhyloPlot)::Nothing
     return nothing
 end
 
+function Makie.boundingbox(plot::PhyloPlot, space::Symbol = :data)::Makie.Rect3d
+    return Makie.data_limits(plot)
+end
+
 function _segment_channel_outputs(channel::SegmentChannel)::NTuple{4, Base.RefValue{Any}}
     return (
         _ref_any(channel.points),
@@ -395,13 +432,34 @@ function _minor_edge_shaft_outputs(channels::PrimitiveChannels)::NTuple{4, Base.
     return _segment_channel_outputs(channels.minor_edge_shafts)
 end
 
-function _minor_arrowhead_outputs(channels::PrimitiveChannels)::NTuple{4, Base.RefValue{Any}}
+function _minor_arrowhead_outputs(channels::PrimitiveChannels)::NTuple{7, Base.RefValue{Any}}
     arrowheads = channels.minor_arrowheads
     return (
-        _ref_any(arrowheads.meshes),
+        _ref_any(arrowheads.startpoints),
+        _ref_any(arrowheads.endpoints),
+        _ref_any(arrowheads.tiplengths),
+        _ref_any(arrowheads.tipwidths),
         _ref_any(arrowheads.colors),
         _ref_any(arrowheads.strokecolors),
         _ref_any(arrowheads.strokewidth),
+    )
+end
+
+function _compute_minor_arrowhead_pixel_meshes(
+        pixel_startpoints::AbstractVector,
+        pixel_endpoints::AbstractVector,
+        tiplengths::AbstractVector{<:Real},
+        tipwidths::AbstractVector{<:Real},
+    )::Tuple{Base.RefValue{Any}}
+    return (
+        _ref_any(
+            compute_arrowhead_pixel_meshes(
+                pixel_startpoints,
+                pixel_endpoints,
+                tiplengths,
+                tipwidths,
+            ),
+        ),
     )
 end
 
@@ -576,7 +634,34 @@ function register_arrowhead_output_nodes!(
         _minor_arrowhead_outputs,
         plot,
         (primitive_channels_node,),
-        _arrowhead_output_symbols(MINOR_ARROWHEAD_GRAPH_OUTPUTS),
+        _arrowhead_spec_output_symbols(MINOR_ARROWHEAD_GRAPH_OUTPUTS),
+    )
+    Makie.register_projected_positions!(
+        plot,
+        Makie.Point3f;
+        input_space = :data,
+        input_name = :minor_arrowhead_startpoints,
+        output_name = :minor_arrowhead_pixel_startpoints,
+        output_space = :pixel,
+    )
+    Makie.register_projected_positions!(
+        plot,
+        Makie.Point3f;
+        input_space = :data,
+        input_name = :minor_arrowhead_endpoints,
+        output_name = :minor_arrowhead_pixel_endpoints,
+        output_space = :pixel,
+    )
+    _register_outputs_once!(
+        _compute_minor_arrowhead_pixel_meshes,
+        plot,
+        (
+            :minor_arrowhead_pixel_startpoints,
+            :minor_arrowhead_pixel_endpoints,
+            :minor_arrowhead_tiplengths,
+            :minor_arrowhead_tipwidths,
+        ),
+        (MINOR_ARROWHEAD_GRAPH_OUTPUTS.meshes,),
     )
     return MINOR_ARROWHEAD_GRAPH_OUTPUTS
 end

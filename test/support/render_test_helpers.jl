@@ -37,6 +37,40 @@ function _rgba(value)
     return convert(Makie.RGBAf, Makie.to_color(value))
 end
 
+function _arrowhead_vertices(polygon)
+    return collect(polygon.exterior)
+end
+
+function _point_distance(first_point, second_point)::Float32
+    dx = Float32(first_point[1]) - Float32(second_point[1])
+    dy = Float32(first_point[2]) - Float32(second_point[2])
+    return sqrt(dx^2 + dy^2)
+end
+
+function _arrowhead_base_center(vertices::AbstractVector)::Makie.Point2f
+    return Makie.Point2f(
+        0.5f0 * (Float32(vertices[2][1]) + Float32(vertices[3][1])),
+        0.5f0 * (Float32(vertices[2][2]) + Float32(vertices[3][2])),
+    )
+end
+
+function _arrowhead_pixel_metrics(polygon)::NamedTuple{(:length, :width), Tuple{Float32, Float32}}
+    vertices = _arrowhead_vertices(polygon)
+    base_center = _arrowhead_base_center(vertices)
+    return (
+        length = _point_distance(vertices[1], base_center),
+        width = _point_distance(vertices[2], vertices[3]),
+    )
+end
+
+function _arrowhead_axis_wing_dot(polygon)::Float32
+    vertices = _arrowhead_vertices(polygon)
+    base_center = _arrowhead_base_center(vertices)
+    axis = vertices[1] - base_center
+    wing = vertices[2] - vertices[3]
+    return axis[1] * wing[1] + axis[2] * wing[2]
+end
+
 function _rows_with_flag(flags::AbstractVector{Bool})
     return findall(flags)
 end
