@@ -1,5 +1,6 @@
 using CairoMakie
 using DataFrames: DataFrame
+using LinearAlgebra: dot, norm
 using Makie
 using PhyloNetworks
 
@@ -69,6 +70,61 @@ function _arrowhead_axis_wing_dot(polygon)::Float32
     axis = vertices[1] - base_center
     wing = vertices[2] - vertices[3]
     return axis[1] * wing[1] + axis[2] * wing[2]
+end
+
+function _projected_point2(point)::Makie.Point2f
+    return Makie.Point2f(Float32(point[1]), Float32(point[2]))
+end
+
+function _assert_arrowhead_matches_projected_shaft(
+        polygon,
+        pixel_startpoint,
+        pixel_endpoint,
+        requested_tiplength,
+        requested_tipwidth;
+        atol::Float32 = 0.75f0,
+        unit_atol::Float32 = 0.03f0,
+    )::Nothing
+    vertices = _arrowhead_vertices(polygon)
+    @test length(vertices) == 3
+
+    startpoint = _projected_point2(pixel_startpoint)
+    endpoint = _projected_point2(pixel_endpoint)
+    tip = _projected_point2(vertices[1])
+    wing_start = _projected_point2(vertices[2])
+    wing_end = _projected_point2(vertices[3])
+    base_center = _arrowhead_base_center(vertices)
+
+    shaft = endpoint - startpoint
+    axis = tip - base_center
+    wing = wing_start - wing_end
+    shaft_length = Float32(norm(shaft))
+    measured_length = Float32(norm(axis))
+    measured_width = Float32(norm(wing))
+    requested_length = Float32(requested_tiplength)
+    requested_width = Float32(requested_tipwidth)
+
+    if shaft_length <= 0.0f0 || requested_length <= 0.0f0 || requested_width <= 0.0f0
+        @test measured_length <= atol
+        @test measured_width <= atol
+        @test all(vertex -> norm(_projected_point2(vertex) - endpoint) <= atol, vertices)
+        return nothing
+    end
+
+    scale = min(1.0f0, shaft_length / requested_length)
+    expected_length = requested_length * scale
+    expected_width = requested_width * scale
+
+    @test norm(tip - endpoint) <= atol
+    @test isapprox(measured_length, expected_length; atol = atol)
+    @test isapprox(measured_width, expected_width; atol = atol)
+    @test isapprox(dot(axis / measured_length, shaft / shaft_length), 1.0f0; atol = unit_atol)
+    @test isapprox(
+        abs(dot(wing / measured_width, shaft / shaft_length)),
+        0.0f0;
+        atol = unit_atol,
+    )
+    return nothing
 end
 
 function _rows_with_flag(flags::AbstractVector{Bool})

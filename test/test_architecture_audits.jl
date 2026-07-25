@@ -232,6 +232,8 @@ end
     @test occursin(_audit_token("_", "compute", "_", "data", "_", "limits"), graph_source)
     @test occursin("function Makie.boundingbox", graph_source)
     @test occursin("register_projected_positions!", graph_source)
+    @test length(collect(eachmatch(r"input_space\s*=\s*:space", graph_source))) >= 2
+    @test !occursin(r"input_space\s*=\s*:data", graph_source)
     @test occursin("compute_arrowhead_pixel_meshes", graph_source)
     @test occursin(":minor_arrowhead_pixel_meshes", graph_source)
 

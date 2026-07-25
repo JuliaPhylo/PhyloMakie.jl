@@ -84,6 +84,36 @@ function _assert_arrowhead_outputs_match_channel(plot, outputs, channel)::Nothin
     return nothing
 end
 
+function _assert_arrowhead_meshes_match_projected_shafts(plot, outputs)::Nothing
+    compute_arrowhead_pixel_meshes = getfield(PhyloMakie, :compute_arrowhead_pixel_meshes)
+    startpoints = plot[:minor_arrowhead_pixel_startpoints][]
+    endpoints = plot[:minor_arrowhead_pixel_endpoints][]
+    tiplengths = plot[outputs.tiplengths][]
+    tipwidths = plot[outputs.tipwidths][]
+    meshes = plot[outputs.meshes][]
+
+    @test length(endpoints) == length(startpoints)
+    @test length(tiplengths) == length(startpoints)
+    @test length(tipwidths) == length(startpoints)
+    @test length(meshes) == length(startpoints)
+    @test meshes == compute_arrowhead_pixel_meshes(
+        startpoints,
+        endpoints,
+        tiplengths,
+        tipwidths,
+    )
+    for index in eachindex(meshes)
+        _assert_arrowhead_matches_projected_shaft(
+            meshes[index],
+            startpoints[index],
+            endpoints[index],
+            tiplengths[index],
+            tipwidths[index],
+        )
+    end
+    return nothing
+end
+
 function _assert_text_outputs_match_channel(plot, outputs, channel)::Nothing
     @test plot[outputs.positions][] == channel.positions
     @test plot[outputs.strings][] == channel.strings
@@ -257,37 +287,51 @@ end
 
         @test !isempty(_render_colorbuffer(figure))
         startpoints_before = copy(plot[:minor_arrowhead_pixel_startpoints][])
+        endpoints_before = copy(plot[:minor_arrowhead_pixel_endpoints][])
         meshes_before = copy(plot[outputs.meshes][])
         @test !isempty(meshes_before)
-        @test meshes_before == getfield(PhyloMakie, :compute_arrowhead_pixel_meshes)(
-            startpoints_before,
-            plot[:minor_arrowhead_pixel_endpoints][],
-            plot[outputs.tiplengths][],
-            plot[outputs.tipwidths][],
-        )
-        @test any(meshes_before) do polygon
-            metrics = _arrowhead_pixel_metrics(polygon)
-            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
-                isapprox(metrics.width, 6.4f0; atol=0.25f0)
-        end
-        @test all(meshes_before) do polygon
-            return isapprox(_arrowhead_axis_wing_dot(polygon), 0.0f0; atol=0.25f0)
-        end
+        _assert_arrowhead_meshes_match_projected_shafts(plot, outputs)
 
-        Makie.resize!(figure, 300, 900)
+        Makie.xlims!(axis, -1, 3)
+        Makie.ylims!(axis, -2, 5)
         @test !isempty(_render_colorbuffer(figure))
         startpoints_after = plot[:minor_arrowhead_pixel_startpoints][]
+        endpoints_after = plot[:minor_arrowhead_pixel_endpoints][]
         meshes_after = plot[outputs.meshes][]
         @test startpoints_after != startpoints_before
+        @test endpoints_after != endpoints_before
         @test meshes_after != meshes_before
-        @test any(meshes_after) do polygon
-            metrics = _arrowhead_pixel_metrics(polygon)
-            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
-                isapprox(metrics.width, 6.4f0; atol=0.25f0)
-        end
-        @test all(meshes_after) do polygon
-            return isapprox(_arrowhead_axis_wing_dot(polygon), 0.0f0; atol=0.25f0)
-        end
+        _assert_arrowhead_meshes_match_projected_shafts(plot, outputs)
+    end
+
+    @testset "arrowhead projection follows plot model transforms" begin
+        figure = Figure(size=(600, 400))
+        axis = Axis(figure[1, 1])
+        plot = Makie.plot!(
+            axis,
+            readnewick(REACTIVE_GRAPH_NEWICK);
+            useedgelength=true,
+            showgamma=true,
+            style=:fulltree,
+        )
+        outputs = register_phylo_graph!(plot).primitive_outputs.minor_arrowheads
+
+        @test !isempty(_render_colorbuffer(figure))
+        startpoints_before = copy(plot[:minor_arrowhead_pixel_startpoints][])
+        endpoints_before = copy(plot[:minor_arrowhead_pixel_endpoints][])
+        meshes_before = copy(plot[outputs.meshes][])
+        @test !isempty(meshes_before)
+
+        Makie.translate!(plot, 10, 0, 0)
+        @test !isempty(_render_colorbuffer(figure))
+        startpoints_after = plot[:minor_arrowhead_pixel_startpoints][]
+        endpoints_after = plot[:minor_arrowhead_pixel_endpoints][]
+        meshes_after = plot[outputs.meshes][]
+
+        @test startpoints_after != startpoints_before
+        @test endpoints_after != endpoints_before
+        @test meshes_after != meshes_before
+        _assert_arrowhead_meshes_match_projected_shafts(plot, outputs)
     end
 
     @testset "hidden text groups keep typed empty final nodes" begin

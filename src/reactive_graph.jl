@@ -235,6 +235,12 @@ function _input_conflict_symbols(plot::PhyloPlot, outputs::Tuple{Vararg{Symbol}}
     return Symbol[output for output in outputs if haskey(attr.inputs, output)]
 end
 
+function _ensure_plot_space_node!(plot::PhyloPlot)::Nothing
+    haskey(plot.attributes, :space) && return nothing
+    Makie.ComputePipeline.add_constant!(plot.attributes, :space, :data)
+    return nothing
+end
+
 function _release_initial_data_limits_output!(plot::PhyloPlot)::Nothing
     attr = plot.attributes
     if !haskey(attr.inputs, :data_limits) || !haskey(attr.outputs, :data_limits)
@@ -636,10 +642,11 @@ function register_arrowhead_output_nodes!(
         (primitive_channels_node,),
         _arrowhead_spec_output_symbols(MINOR_ARROWHEAD_GRAPH_OUTPUTS),
     )
+    _ensure_plot_space_node!(plot)
     Makie.register_projected_positions!(
         plot,
         Makie.Point3f;
-        input_space = :data,
+        input_space = :space,
         input_name = :minor_arrowhead_startpoints,
         output_name = :minor_arrowhead_pixel_startpoints,
         output_space = :pixel,
@@ -647,7 +654,7 @@ function register_arrowhead_output_nodes!(
     Makie.register_projected_positions!(
         plot,
         Makie.Point3f;
-        input_space = :data,
+        input_space = :space,
         input_name = :minor_arrowhead_endpoints,
         output_name = :minor_arrowhead_pixel_endpoints,
         output_space = :pixel,
