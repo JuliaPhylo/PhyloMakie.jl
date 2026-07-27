@@ -1,7 +1,7 @@
 ---
 date-created: 2026-07-26T03:56:50-0700
 workflow-instrument: PRD
-workflow-status: Proposed
+workflow-status: Approved
 workflow-agent-thread-id: codex/019f9dc8-4ccf-73c0-a391-69f235eea9d8
 workflow-location: /home/jeetsukumaran/site/storage/local/computing/research/20260508_phylogenetic-graph-visualization/phylomakie-workspace/PhyloMakie.jl
 workflow-production-id: reactive-tree-viewer
@@ -206,9 +206,9 @@ Required widget mapping:
 - `defaultedgecolor` must support empty input as `nothing`.
 - Invalid color or numeric input must leave the last valid value active and show a status message instead of crashing the UI callback.
 
-Recommended extra control:
+Required additional control:
 
-- Include a `style` menu with `:fulltree` and `:majortree`. This attribute is not in the user's initial list, but it is part of the current public attribute surface and materially affects hybrid-edge visualization. If the user rejects this assumption before approval, remove it from the PRD or mark it as optional.
+- Include a `style` menu with `:fulltree` and `:majortree`. The user approved this addition on 2026-07-27. This control is part of the job, part of the current public attribute surface, and materially affects hybrid-edge visualization.
 
 Out-of-scope control complexity:
 
@@ -441,9 +441,12 @@ If headless GLMakie is not available in the implementation environment, the impl
 ## Assumptions to ratify before approval
 
 - No positional arguments open built-in demo records instead of exiting with usage. This follows the existing example convention that numbered examples are runnable without extra data.
-- `style` is included as an extra control because it is part of the current public attribute surface and is central to hybrid-network visualization.
 - Multi-Newick files support one topology per line, matching the upstream `readmultinewick(file)` contract.
 - The example remains a single file unless a small focused test file is needed for loader or callback verification.
+
+## Settled user decisions
+
+- The `style` control is required. It must expose `:fulltree` and `:majortree` and update the existing plot handle through `Makie.update!`.
 
 ## Handoff packet for tranche planning
 
@@ -464,6 +467,5 @@ Any tranche document produced from this PRD must pass forward:
 Before trancheing, the owner should confirm:
 
 - The no-argument demo fallback is accepted.
-- The extra `style` control is accepted or explicitly removed.
 - The multi-Newick one-topology-per-line limitation is acceptable for this example.
 - `workflow-status` may be changed from `Proposed` to `Approved`.
