@@ -212,9 +212,15 @@ function initial_status_text(warnings::AbstractVector{LoadWarning})::String
     return "Loaded with $(skipped) skipped $(noun). See stderr for details."
 end
 
+function display_source_label(source::AbstractString)::String
+    basename_value = basename(source)
+    return isempty(basename_value) ? String(source) : basename_value
+end
+
 function record_label(records::AbstractVector{ViewerRecord}, index::Integer)::String
     record = records[index]
-    return "$(index) / $(length(records)): $(record.source) [record $(record.record_index)]"
+    source_label = display_source_label(record.source)
+    return "$(index) / $(length(records)): $(source_label) [record $(record.record_index)]"
 end
 
 function set_status!(status_label, message::AbstractString)::Nothing
@@ -774,10 +780,10 @@ function build_viewer(
 
     GLMakie.activate!()
     state = default_viewer_state()
-    fig = Figure(size = (1400, 900))
+    fig = Figure(size = (1700, 950))
     controls = GridLayout(fig[1, 1])
     axis = Axis(fig[1, 2])
-    colsize!(fig.layout, 1, Fixed(500))
+    colsize!(fig.layout, 1, Fixed(720))
     colsize!(fig.layout, 2, Relative(1))
     rowgap!(controls, 4)
     colgap!(controls, 6)
@@ -802,11 +808,11 @@ function build_viewer(
 
     plot_handle = phyloplot!(axis, records[state.current_index].network; viewer_attributes(state)...)
     add_sidebar_controls!(controls, plot_handle, axis, state, status_label)
-    colsize!(controls, 1, Fixed(105))
-    colsize!(controls, 2, Fixed(105))
-    colsize!(controls, 3, Fixed(100))
-    colsize!(controls, 4, Fixed(110))
-    colsize!(controls, 5, Fixed(45))
+    colsize!(controls, 1, Fixed(145))
+    colsize!(controls, 2, Fixed(180))
+    colsize!(controls, 3, Fixed(125))
+    colsize!(controls, 4, Fixed(190))
+    colsize!(controls, 5, Fixed(55))
 
     on(previous_button.clicks) do _
         select_record!(
