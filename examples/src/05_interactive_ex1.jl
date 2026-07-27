@@ -95,8 +95,9 @@ function viewer_attributes(state::ViewerState)
     )
 end
 
-function apply_viewer_state!(plot_handle, state::ViewerState)::Nothing
+function apply_viewer_state!(plot_handle, state::ViewerState; axis = nothing)::Nothing
     Makie.update!(plot_handle; viewer_attributes(state)...)
+    isnothing(axis) || Makie.autolimits!(axis)
     return nothing
 end
 
@@ -137,11 +138,11 @@ end
 
 function demo_records()::Vector{ViewerRecord}
     demo_newicks = (
-        ("Demo tree", "(A:1,(B:1,C:1):1);"),
         (
             "Demo network",
             "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
         ),
+        ("Demo tree", "(A:1,(B:1,C:1):1);"),
     )
     return [
         ViewerRecord(readnewick(newick), source, index) for
@@ -228,6 +229,7 @@ function try_update_numeric_state!(
     text::AbstractString,
     status_label;
     optional::Bool = false,
+    axis = nothing,
 )::Bool
     try
         value = if optional
@@ -236,7 +238,7 @@ function try_update_numeric_state!(
             parse_positive_float(text, String(field))
         end
         setproperty!(state, field, value)
-        apply_viewer_state!(plot_handle, state)
+        apply_viewer_state!(plot_handle, state; axis = axis)
         set_status!(status_label, "$(field) updated.")
         return true
     catch err
@@ -251,12 +253,13 @@ function try_update_color_state!(
     field::Symbol,
     text::AbstractString,
     allow_nothing::Bool,
-    status_label,
+    status_label;
+    axis = nothing,
 )::Bool
     try
         value = parse_color_text(text, allow_nothing)
         setproperty!(state, field, value)
-        apply_viewer_state!(plot_handle, state)
+        apply_viewer_state!(plot_handle, state; axis = axis)
         set_status!(status_label, "$(field) updated.")
         return true
     catch err
@@ -267,6 +270,7 @@ end
 
 function select_record!(
     plot_handle,
+    axis,
     state::ViewerState,
     records::AbstractVector{ViewerRecord},
     index::Integer,
@@ -276,10 +280,22 @@ function select_record!(
     selected_index = mod1(index, length(records))
     selected_network = records[selected_index].network
     Makie.update!(plot_handle; arg1 = selected_network)
+    isnothing(axis) || Makie.autolimits!(axis)
     state.current_index = selected_index
     current_label.text[] = record_label(records, selected_index)
     status_label.text[] = "Showing $(record_label(records, selected_index))."
     return nothing
+end
+
+function select_record!(
+    plot_handle,
+    state::ViewerState,
+    records::AbstractVector{ViewerRecord},
+    index::Integer,
+    current_label,
+    status_label,
+)::Nothing
+    return select_record!(plot_handle, nothing, state, records, index, current_label, status_label)
 end
 
 function add_boolean_control!(
@@ -287,15 +303,18 @@ function add_boolean_control!(
     row::Integer,
     label::AbstractString,
     plot_handle,
+    axis,
     state::ViewerState,
     field::Symbol,
-    status_label,
+    status_label;
+    label_col::Integer = 1,
+    control_col::Integer = 2,
 )::Int
-    Label(controls[row, 1], label; halign = :left, tellwidth = false)
-    checkbox = Checkbox(controls[row, 2], checked = getproperty(state, field))
+    Label(controls[row, label_col], label; halign = :left, tellwidth = false)
+    checkbox = Checkbox(controls[row, control_col], checked = getproperty(state, field))
     on(checkbox.checked) do checked
         setproperty!(state, field, checked)
-        apply_viewer_state!(plot_handle, state)
+        apply_viewer_state!(plot_handle, state; axis = axis)
         set_status!(status_label, "$(label) updated.")
     end
     return row + 1
@@ -306,17 +325,20 @@ function add_menu_control!(
     row::Integer,
     label::AbstractString,
     plot_handle,
+    axis,
     state::ViewerState,
     field::Symbol,
     options,
     default_label::AbstractString,
-    status_label,
+    status_label;
+    label_col::Integer = 1,
+    control_cols = 2:3,
 )::Int
-    Label(controls[row, 1], label; halign = :left, tellwidth = false)
-    menu = Menu(controls[row, 2:3], options = options, default = default_label)
+    Label(controls[row, label_col], label; halign = :left, tellwidth = false)
+    menu = Menu(controls[row, control_cols], options = options, default = default_label)
     on(menu.selection) do selection
         setproperty!(state, field, selection)
-        apply_viewer_state!(plot_handle, state)
+        apply_viewer_state!(plot_handle, state; axis = axis)
         set_status!(status_label, "$(label) updated.")
     end
     return row + 1
@@ -331,22 +353,33 @@ function add_slider_control!(
     row::Integer,
     label::AbstractString,
     plot_handle,
+    axis,
     state::ViewerState,
     field::Symbol,
     values,
-    status_label,
+    status_label;
+    label_col::Integer = 1,
+    slider_col::Integer = 2,
+    value_col::Integer = 3,
 )::Int
-    Label(controls[row, 1], label; halign = :left, tellwidth = false)
-    slider = Slider(controls[row, 2], range = values, startvalue = getproperty(state, field))
+    Label(controls[row, label_col], label; halign = :left, tellwidth = false)
+    slider = Slider(controls[row, slider_col], range = values, startvalue = getproperty(state, field))
     value_label = Label(
-        controls[row, 3],
+        controls[row, value_col],
         format_slider_value(slider.value[]);
         halign = :right,
         tellwidth = false,
     )
     on(slider.value) do value
         value_label.text[] = format_slider_value(value)
-        try_update_numeric_state!(plot_handle, state, field, string(value), status_label)
+        try_update_numeric_state!(
+            plot_handle,
+            state,
+            field,
+            string(value),
+            status_label;
+            axis = axis,
+        )
     end
     return row + 1
 end
@@ -355,17 +388,21 @@ function add_arrow_controls!(
     controls,
     row::Integer,
     plot_handle,
+    axis,
     state::ViewerState,
-    status_label,
+    status_label;
+    label_col::Integer = 1,
+    control_col::Integer = 2,
+    value_col::Integer = 3,
 )::Int
-    Label(controls[row, 1], "Arrow auto"; halign = :left, tellwidth = false)
-    automatic = Checkbox(controls[row, 2], checked = isnothing(state.arrowlen))
+    Label(controls[row, label_col], "Arrow auto"; halign = :left, tellwidth = false)
+    automatic = Checkbox(controls[row, control_col], checked = isnothing(state.arrowlen))
     row += 1
 
-    Label(controls[row, 1], "Arrow length"; halign = :left, tellwidth = false)
-    slider = Slider(controls[row, 2], range = 0.05:0.05:2.0, startvalue = 0.2)
+    Label(controls[row, label_col], "Arrow length"; halign = :left, tellwidth = false)
+    slider = Slider(controls[row, control_col], range = 0.05:0.05:2.0, startvalue = 0.2)
     value_label = Label(
-        controls[row, 3],
+        controls[row, value_col],
         format_slider_value(slider.value[]);
         halign = :right,
         tellwidth = false,
@@ -380,6 +417,7 @@ function add_arrow_controls!(
                 "",
                 status_label;
                 optional = true,
+                axis = axis,
             )
         else
             try_update_numeric_state!(
@@ -387,7 +425,8 @@ function add_arrow_controls!(
                 state,
                 :arrowlen,
                 string(slider.value[]),
-                status_label,
+                status_label;
+                axis = axis,
             )
         end
     end
@@ -398,7 +437,8 @@ function add_arrow_controls!(
             state,
             :arrowlen,
             string(value),
-            status_label,
+            status_label;
+            axis = axis,
         )
     end
     return row + 1
@@ -414,14 +454,17 @@ function add_color_control!(
     row::Integer,
     label::AbstractString,
     plot_handle,
+    axis,
     state::ViewerState,
     field::Symbol,
     allow_nothing::Bool,
-    status_label,
+    status_label;
+    label_col::Integer = 1,
+    control_cols = 2:3,
 )::Int
-    Label(controls[row, 1], label; halign = :left, tellwidth = false)
+    Label(controls[row, label_col], label; halign = :left, tellwidth = false)
     textbox = Textbox(
-        controls[row, 2:3],
+        controls[row, control_cols],
         stored_string = color_text(state, field),
         placeholder = allow_nothing ? "automatic" : "color",
     )
@@ -433,99 +476,125 @@ function add_color_control!(
             field,
             next_text,
             allow_nothing,
-            status_label,
+            status_label;
+            axis = axis,
         )
     end
     return row + 1
 end
 
-function add_sidebar_controls!(controls, plot_handle, state::ViewerState, status_label)::Nothing
+function add_sidebar_controls!(controls, plot_handle, axis, state::ViewerState, status_label)::Nothing
     row = 6
-    Label(controls[row, 1:3], "Display"; halign = :left, tellwidth = false)
-    row += 1
-    row = add_boolean_control!(
+    Label(controls[row, 1:2], "Display"; halign = :left, tellwidth = false)
+    Label(controls[row, 3:5], "Topology"; halign = :left, tellwidth = false)
+    left_row = row + 1
+    right_row = row + 1
+
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Edge lengths",
         plot_handle,
+        axis,
         state,
         :useedgelength,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Tip labels",
         plot_handle,
+        axis,
         state,
         :showtiplabel,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Node labels",
         plot_handle,
+        axis,
         state,
         :shownodelabel,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Node numbers",
         plot_handle,
+        axis,
         state,
         :shownodenumber,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Length labels",
         plot_handle,
+        axis,
         state,
         :showedgelength,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Edge numbers",
         plot_handle,
+        axis,
         state,
         :showedgenumber,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
-    row = add_boolean_control!(
+    left_row = add_boolean_control!(
         controls,
-        row,
+        left_row,
         "Gamma labels",
         plot_handle,
+        axis,
         state,
         :showgamma,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_col = 2,
     )
 
-    row += 1
-    Label(controls[row, 1:3], "Topology"; halign = :left, tellwidth = false)
-    row += 1
-    row = add_menu_control!(
+    right_row = add_menu_control!(
         controls,
-        row,
+        right_row,
         "Style",
         plot_handle,
+        axis,
         state,
         :style,
         [("fulltree", :fulltree), ("majortree", :majortree)],
         "fulltree",
-        status_label,
+        status_label;
+        label_col = 3,
+        control_cols = 4:5,
     )
-    row = add_menu_control!(
+    right_row = add_menu_control!(
         controls,
-        row,
+        right_row,
         "Minor line",
         plot_handle,
+        axis,
         state,
         :minorlinetype,
         [
@@ -538,116 +607,161 @@ function add_sidebar_controls!(controls, plot_handle, state::ViewerState, status
             ("blank", "blank"),
         ],
         "nothing",
-        status_label,
+        status_label;
+        label_col = 3,
+        control_cols = 4:5,
     )
 
-    row += 1
-    Label(controls[row, 1:3], "Scale"; halign = :left, tellwidth = false)
-    row += 1
-    row = add_slider_control!(
+    right_row += 1
+    Label(controls[right_row, 3:5], "Scale"; halign = :left, tellwidth = false)
+    right_row += 1
+    right_row = add_slider_control!(
         controls,
-        row,
+        right_row,
         "Edge width",
         plot_handle,
+        axis,
         state,
         :edgewidth,
         0.25:0.25:5.0,
-        status_label,
+        status_label;
+        label_col = 3,
+        slider_col = 4,
+        value_col = 5,
     )
-    row = add_slider_control!(
+    right_row = add_slider_control!(
         controls,
-        row,
+        right_row,
         "Node scale",
         plot_handle,
+        axis,
         state,
         :nodecex,
         0.5:0.1:3.0,
-        status_label,
+        status_label;
+        label_col = 3,
+        slider_col = 4,
+        value_col = 5,
     )
-    row = add_slider_control!(
+    right_row = add_slider_control!(
         controls,
-        row,
+        right_row,
         "Edge scale",
         plot_handle,
+        axis,
         state,
         :edgecex,
         0.5:0.1:3.0,
-        status_label,
+        status_label;
+        label_col = 3,
+        slider_col = 4,
+        value_col = 5,
     )
-    row = add_arrow_controls!(controls, row, plot_handle, state, status_label)
-
-    row += 1
-    Label(controls[row, 1:3], "Colors"; halign = :left, tellwidth = false)
-    row += 1
-    row = add_color_control!(
+    right_row = add_arrow_controls!(
         controls,
-        row,
+        right_row,
+        plot_handle,
+        axis,
+        state,
+        status_label;
+        label_col = 3,
+        control_col = 4,
+        value_col = 5,
+    )
+
+    left_row += 1
+    Label(controls[left_row, 1:2], "Colors"; halign = :left, tellwidth = false)
+    left_row += 1
+    left_row = add_color_control!(
+        controls,
+        left_row,
         "Edges",
         plot_handle,
+        axis,
         state,
         :edgecolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
-    row = add_color_control!(
+    left_row = add_color_control!(
         controls,
-        row,
+        left_row,
         "Default edge",
         plot_handle,
+        axis,
         state,
         :defaultedgecolor,
         true,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
-    row = add_color_control!(
+    left_row = add_color_control!(
         controls,
-        row,
+        left_row,
         "Major hybrid",
         plot_handle,
+        axis,
         state,
         :majorhybridedgecolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
-    row = add_color_control!(
+    left_row = add_color_control!(
         controls,
-        row,
+        left_row,
         "Minor hybrid",
         plot_handle,
+        axis,
         state,
         :minorhybridedgecolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
-    row = add_color_control!(
+    left_row = add_color_control!(
         controls,
-        row,
+        left_row,
         "Node label",
         plot_handle,
+        axis,
         state,
         :nodelabelcolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
-    row = add_color_control!(
+    left_row = add_color_control!(
         controls,
-        row,
+        left_row,
         "Edge label",
         plot_handle,
+        axis,
         state,
         :edgelabelcolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
     add_color_control!(
         controls,
-        row,
+        left_row,
         "Edge number",
         plot_handle,
+        axis,
         state,
         :edgenumbercolor,
         false,
-        status_label,
+        status_label;
+        label_col = 1,
+        control_cols = 2:2,
     )
     return nothing
 end
@@ -663,36 +777,41 @@ function build_viewer(
     fig = Figure(size = (1400, 900))
     controls = GridLayout(fig[1, 1])
     axis = Axis(fig[1, 2])
-    colsize!(fig.layout, 1, Fixed(360))
+    colsize!(fig.layout, 1, Fixed(500))
     colsize!(fig.layout, 2, Relative(1))
-    rowgap!(controls, 8)
-    colgap!(controls, 8)
+    rowgap!(controls, 4)
+    colgap!(controls, 6)
 
-    Label(controls[1, 1:3], "PhyloMakie viewer"; halign = :left, tellwidth = false)
+    Label(controls[1, 1:5], "PhyloMakie viewer"; halign = :left, tellwidth = false)
     current_label = Label(
-        controls[2, 1:3],
+        controls[2, 1:5],
         record_label(records, state.current_index);
         halign = :left,
         tellwidth = false,
+        fontsize = 12,
     )
-    previous_button = Button(controls[3, 1], label = "Previous")
-    next_button = Button(controls[3, 2:3], label = "Next")
+    previous_button = Button(controls[3, 1:2], label = "Previous")
+    next_button = Button(controls[3, 3:5], label = "Next")
     status_label = Label(
-        controls[4, 1:3],
+        controls[4, 1:5],
         initial_status_text(warnings);
         halign = :left,
         tellwidth = false,
+        fontsize = 12,
     )
 
     plot_handle = phyloplot!(axis, records[state.current_index].network; viewer_attributes(state)...)
-    add_sidebar_controls!(controls, plot_handle, state, status_label)
-    colsize!(controls, 1, Fixed(150))
-    colsize!(controls, 2, Fixed(120))
-    colsize!(controls, 3, Fixed(60))
+    add_sidebar_controls!(controls, plot_handle, axis, state, status_label)
+    colsize!(controls, 1, Fixed(105))
+    colsize!(controls, 2, Fixed(105))
+    colsize!(controls, 3, Fixed(100))
+    colsize!(controls, 4, Fixed(110))
+    colsize!(controls, 5, Fixed(45))
 
     on(previous_button.clicks) do _
         select_record!(
             plot_handle,
+            axis,
             state,
             records,
             state.current_index - 1,
@@ -703,6 +822,7 @@ function build_viewer(
     on(next_button.clicks) do _
         select_record!(
             plot_handle,
+            axis,
             state,
             records,
             state.current_index + 1,
