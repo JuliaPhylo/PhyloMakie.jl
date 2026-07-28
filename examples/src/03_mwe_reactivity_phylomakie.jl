@@ -16,8 +16,11 @@ update!(
     plot_handle;
     edgecolor = "firebrick",
     edgewidth = 2.0,
-    xlim = (0.0, 1.0),
-    ylim = (0.0, 4.0),
+    # xlim = (0.0, 1.0),
+    # ylim = (0.0, 4.0),
 )
+
+rootonedge!(net, 4) # nothing happens
+preorder!(net)
 
 surface.figure
