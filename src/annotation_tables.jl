@@ -106,15 +106,16 @@ function _prepare_edge_annotation_data(
         style::Symbol,
         geometry::NetworkGeometry,
     )::Tuple{Bool, DataFrames.DataFrame}
+    Ne = numedges(net)
     edge_data = DataFrames.DataFrame(
-        :len => Vector{String}(undef, net.numedges),
-        :gam => Vector{String}(undef, net.numedges),
-        :num => Vector{String}(undef, net.numedges),
-        :lab => fill(""::String, net.numedges),
-        :hyb => Vector{Bool}(undef, net.numedges),
-        :min => Vector{Bool}(undef, net.numedges),
-        :x => Vector{Float64}(undef, net.numedges),
-        :y => Vector{Float64}(undef, net.numedges);
+        :len => Vector{String}(undef, Ne),
+        :gam => Vector{String}(undef, Ne),
+        :num => Vector{String}(undef, Ne),
+        :lab => fill(""::String, Ne),
+        :hyb => Vector{Bool}(undef, Ne),
+        :min => Vector{Bool}(undef, Ne),
+        :x => Vector{Float64}(undef, Ne),
+        :y => Vector{Float64}(undef, Ne);
         copycols = false,
     )
 

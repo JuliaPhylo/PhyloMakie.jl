@@ -2,7 +2,7 @@
 
 numtaxa(net::PhyloNetworks.HybridNetwork) = net.numtaxa
 numnodes(net::PhyloNetworks.HybridNetwork) = net.numnodes
-numedges(net::PhyloNetworks.HybridNetwork) = length(net.edge)
+numedges(net::PhyloNetworks.HybridNetwork) = net.numedges
 getroot(net::PhyloNetworks.HybridNetwork) = PhyloNetworks.getroot(net)
 
 # iterable vectors, not lazy iterators

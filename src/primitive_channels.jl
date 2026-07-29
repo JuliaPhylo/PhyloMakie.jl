@@ -84,7 +84,7 @@ function compute_edge_colors(
             edgecolor_mode,
         ),
     )
-    edgecolors = Vector{Makie.RGBAf}(undef, net.numedges)
+    edgecolors = Vector{Makie.RGBAf}(undef, numedges(net))
     minor_edgecolors = Makie.RGBAf[]
 
     if edgecolor_mode == :by_edge

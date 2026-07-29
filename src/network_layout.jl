@@ -74,7 +74,7 @@ function _resolve_edge_lengths(
 
     edge_lengths = Float64[]
     if calculate_edge_lengths
-        edge_lengths = zeros(Float64, net.numedges)
+        edge_lengths = zeros(Float64, numedges(net))
         node_age = zeros(Float64, numnodes(net))
         for preorder_index in numnodes(net):-1:1
             current_node = getnode_preorder(net, preorder_index)
@@ -120,7 +120,7 @@ function compute_network_geometry(
     node_y = zeros(Float64, numnodes(net))
     node_y_lo = zeros(Float64, numnodes(net))
     node_y_hi = zeros(Float64, numnodes(net))
-    edge_y_lo = zeros(Float64, net.numedges)
+    edge_y_lo = zeros(Float64, numedges(net))
 
     nexty = ymax
     cladewise_queue = copy(getroot(net).edge)
@@ -205,8 +205,8 @@ function compute_network_geometry(
     xmin = 1.0
     xmax = xmin
     node_x = zeros(Float64, numnodes(net))
-    edge_x_lo = zeros(Float64, net.numedges)
-    edge_x_hi = zeros(Float64, net.numedges)
+    edge_x_lo = zeros(Float64, numedges(net))
+    edge_x_hi = zeros(Float64, numedges(net))
     node_x[rootindex(net)] = xmin
     for preorder_index in 2:numnodes(net)
         current_node = getnode_preorder(net, preorder_index)
