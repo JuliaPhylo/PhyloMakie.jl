@@ -24,3 +24,18 @@ rootonedge!(net, 4) # nothing happens
 preorder!(net)
 
 surface.figure
+
+writenewick(plot_handle.attributes.inputs[:arg1].value) # was modified
+
+# "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
+update!(plot_handle) # but the viz didn't change
+writenewick(plot_handle.attributes.outputs[:plot_network].value[].net) # did *not* change
+
+# "(((A:0.2,(B:0.1)#H1:0.1::0.9):0.1,(C:0.11,#H1:0.01::0.1):0.19):0.1,D:0.4);"
+# yet its parent has changed, marked as not dirty:
+
+writenewick(plot_handle.attributes.outputs[:plot_network].parent.inputs[1].value[])
+
+# "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
+
+plot_handle.attributes.outputs[:plot_network].parent.inputs_dirty[1] # false

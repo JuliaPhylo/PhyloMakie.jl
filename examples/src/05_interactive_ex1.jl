@@ -783,8 +783,12 @@ function build_viewer(
     fig = Figure(size = (1700, 950))
     controls = GridLayout(fig[1, 1])
     axis = Axis(fig[1, 2])
-    colsize!(fig.layout, 1, Fixed(720))
-    colsize!(fig.layout, 2, Relative(1))
+    # Auto(), not Relative(1): Relative(x) is x * the *total* column budget, not
+    # the space left after Fixed siblings, so Fixed+Relative(1) silently overflows
+    # by the Fixed column's width (GridLayoutBase.compute_col_row_sizes). Auto()
+    # is the size that means "whatever space remains".
+    colsize!(fig.layout, 1, Fixed(740))
+    colsize!(fig.layout, 2, Auto())
     rowgap!(controls, 4)
     colgap!(controls, 6)
 
