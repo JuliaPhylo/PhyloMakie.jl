@@ -1,6 +1,3 @@
-using DataFrames: DataFrame
-using Makie
-
 @testset "Plot config computation" begin
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
     PhyloPlotConfig = getfield(PhyloMakie, :PhyloPlotConfig)

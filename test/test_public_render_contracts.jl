@@ -1,8 +1,3 @@
-using CairoMakie
-using DataFrames: DataFrame
-using Makie
-using PhyloNetworks
-
 function _render_limits_tuple(rect::Makie.Rect3d)
     rect_min = minimum(rect)
     rect_max = maximum(rect)

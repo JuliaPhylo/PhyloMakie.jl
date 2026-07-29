@@ -26,16 +26,19 @@ preorder!(net)
 surface.figure
 
 writenewick(plot_handle.attributes.inputs[:arg1].value) # was modified
-
 # "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
 update!(plot_handle) # but the viz didn't change
 writenewick(plot_handle.attributes.outputs[:plot_network].value[].net) # did *not* change
-
 # "(((A:0.2,(B:0.1)#H1:0.1::0.9):0.1,(C:0.11,#H1:0.01::0.1):0.19):0.1,D:0.4);"
-# yet its parent has changed, marked as not dirty:
-
+# yet its parent has changed:
 writenewick(plot_handle.attributes.outputs[:plot_network].parent.inputs[1].value[])
-
 # "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
-
+# and is marked as not dirty:
 plot_handle.attributes.outputs[:plot_network].parent.inputs_dirty[1] # false
+
+xlims!(surface.axis, 0.9, 2) # works
+update!(plot_handle; xlim=(0.9, 1.6)) # changes nothing: does not work
+surface.figure # even after re-plotting
+
+xlims!(surface.axis, 2, 0) # beautiful: flips the network, time from right to left
+update!(plot_handle, tipoffset = 0.05)

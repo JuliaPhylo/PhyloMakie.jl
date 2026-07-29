@@ -1,6 +1,5 @@
-import DataFrames
-import PhyloNetworks
-
+_format_sig3(v) = string(v) # default
+_format_sig3(::Missing)::String = ""
 function _format_sig3(value::Real)::String
     rounded_value = round(Float64(value); sigdigits = 3)
     if isinteger(rounded_value)
@@ -31,19 +30,6 @@ struct LayoutComputation
     annotations::AnnotationTables
 end
 
-function _format_annotation_value(
-        table::DataFrames.AbstractDataFrame,
-        row_index::Int,
-    )::String
-    if ismissing(table[row_index, 2])
-        return ""
-    end
-    if nonmissingtype(eltype(table[!, 2])) <: AbstractFloat
-        return _format_sig3(table[row_index, 2])
-    end
-    return string(table[row_index, 2])
-end
-
 function _validate_node_data(
         net::PhyloNetworks.HybridNetwork,
         nodelabel::DataFrames.DataFrame,
@@ -59,7 +45,7 @@ function _validate_node_data(
         labelnodes = size(nodelabel, 1) > 0
     end
     if labelnodes
-        missing_nodes = setdiff(nodelabel[!, 1], [node.number for node in net.node])
+        missing_nodes = setdiff(nodelabel[!, 1], [uniqueid(node) for node in getnodes(net)])
         if !isempty(missing_nodes)
             message =
                 "Some node numbers in the nodelabel data frame are not found in the network:\n"
@@ -81,9 +67,9 @@ function _prepare_node_annotation_data(
         geometry::NetworkGeometry,
     )::DataFrames.DataFrame
     row_count = if shownodenumber || shownodelabel || labelnodes
-        net.numnodes
+        numnodes(net)
     else
-        net.numtaxa
+        numtaxa(net)
     end
     node_data = DataFrames.DataFrame(
         :name => Vector{String}(undef, row_count),
@@ -96,17 +82,16 @@ function _prepare_node_annotation_data(
     )
 
     row_index = 1
-    for node_index in 1:net.numnodes
-        current_node = net.node[node_index]
-        if current_node.leaf || shownodenumber || shownodelabel || labelnodes
-            node_data[row_index, :name] = current_node.name
-            node_data[row_index, :num] = string(current_node.number)
+    for (node_index, current_node) in enumerate(getnodes(net))
+        if isleaf(current_node) || shownodenumber || shownodelabel || labelnodes
+            node_data[row_index, :name] = namelabel(current_node)
+            node_data[row_index, :num] = string(uniqueid(current_node))
             if labelnodes
-                label_index = findfirst(isequal(current_node.number), nodelabel[!, 1])
+                label_index = findfirst(isequal(uniqueid(current_node)), nodelabel[!, 1])
                 node_data[row_index, :lab] =
-                    isnothing(label_index) ? "" : _format_annotation_value(nodelabel, label_index)
+                    isnothing(label_index) ? "" : _format_sig3(nodelabel[label_index, 2])
             end
-            node_data[row_index, :lea] = current_node.leaf
+            node_data[row_index, :lea] = isleaf(current_node)
             node_data[row_index, :x] = geometry.node_x[node_index]
             node_data[row_index, :y] = geometry.node_y[node_index]
             row_index += 1
@@ -144,7 +129,7 @@ function _prepare_edge_annotation_data(
         labeledges = size(edgelabel, 1) > 0
     end
     if labeledges
-        missing_edges = setdiff(edgelabel[!, 1], [edge.number for edge in net.edge])
+        missing_edges = setdiff(edgelabel[!, 1], [uniqueid(edge) for edge in getedges(net)])
         if !isempty(missing_edges)
             message =
                 "Some edge numbers in the edgelabel data frame are not found in the network:\n"
@@ -156,25 +141,22 @@ function _prepare_edge_annotation_data(
     end
 
     minor_edge_index = 1
-    for edge_index in eachindex(net.edge)
-        current_edge = net.edge[edge_index]
-        edge_data[edge_index, :len] =
-            current_edge.length == -1.0 ? "" : _format_sig3(current_edge.length)
-        edge_data[edge_index, :gam] =
-            current_edge.gamma == -1.0 ? "" : _format_sig3(current_edge.gamma)
-        edge_data[edge_index, :num] = string(current_edge.number)
+    for (edge_index, current_edge) in enumerate(getedges(net))
+        edge_data[edge_index, :len] = _format_sig3(elength(current_edge))
+        edge_data[edge_index, :gam] = _format_sig3(egamma(current_edge))
+        edge_data[edge_index, :num] = string(uniqueid(current_edge))
         if labeledges
-            label_index = findfirst(isequal(current_edge.number), edgelabel[!, 1])
+            label_index = findfirst(isequal(uniqueid(current_edge)), edgelabel[!, 1])
             edge_data[edge_index, :lab] =
-                isnothing(label_index) ? "" : _format_annotation_value(edgelabel, label_index)
+                isnothing(label_index) ? "" : _format_sig3(edgelabel[label_index, 2])
         end
-        edge_data[edge_index, :hyb] = current_edge.hybrid
-        edge_data[edge_index, :min] = !current_edge.ismajor
+        edge_data[edge_index, :hyb] = ishybrid(current_edge)
+        edge_data[edge_index, :min] = !ismajor(current_edge)
         edge_data[edge_index, :x] =
             (geometry.edge_x_lo[edge_index] + geometry.edge_x_hi[edge_index]) / 2
         edge_data[edge_index, :y] =
             (geometry.edge_y_lo[edge_index] + geometry.edge_y_hi[edge_index]) / 2
-        if style == :majortree && !current_edge.ismajor
+        if style == :majortree && !ismajor(current_edge)
             edge_data[edge_index, :x] =
                 (geometry.arrow_x_lo[minor_edge_index] + geometry.arrow_x_hi[minor_edge_index]) / 2
             edge_data[edge_index, :y] =

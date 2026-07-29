@@ -1,6 +1,3 @@
-import DataFrames
-import PhyloNetworks
-
 const DEFAULT_NODE_BAR_WIDTH = 1.0f0
 const DEFAULT_TEXT_SIZE = 16.0f0
 const DEFAULT_ARROW_PIXEL_SCALE = 80.0f0
@@ -74,10 +71,6 @@ function _transparent_color(color::Makie.RGBAf)::Makie.RGBAf
     return Makie.RGBAf(color.r, color.g, color.b, 0.0f0)
 end
 
-function _repeat_color(color::Makie.RGBAf, count::Integer)::Vector{Makie.RGBAf}
-    return fill(color, count)
-end
-
 function compute_edge_colors(
         plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
         config::PhyloPlotConfig,
@@ -95,11 +88,11 @@ function compute_edge_colors(
     minor_edgecolors = Makie.RGBAf[]
 
     if edgecolor_mode == :by_edge
-        for (edge_index, edge) in enumerate(net.edge)
+        for (edge_index, edge) in enumerate(getedges(net))
             edgecolor = _resolve_color(
                 get(
                     config.edgecolor,
-                    edge.number,
+                    uniqueid(edge),
                     _resolve_defaultedgecolor(
                         config.edgecolor,
                         config.defaultedgecolor,
@@ -108,7 +101,7 @@ function compute_edge_colors(
                 ),
             )
             edgecolors[edge_index] = edgecolor
-            !edge.ismajor && push!(minor_edgecolors, edgecolor)
+            !ismajor(edge) && push!(minor_edgecolors, edgecolor)
         end
         return (edgecolors = edgecolors, minor_edgecolors = minor_edgecolors, defaultedgecolor = defaultedgecolor)
     end
@@ -117,12 +110,12 @@ function compute_edge_colors(
     majorhybridedgecolor = _resolve_color(config.majorhybridedgecolor)
     minorhybridedgecolor = _resolve_color(config.minorhybridedgecolor)
 
-    for (edge_index, edge) in enumerate(net.edge)
+    for (edge_index, edge) in enumerate(getedges(net))
         edgecolor = uniform_edgecolor
-        edge.hybrid && (edgecolor = majorhybridedgecolor)
-        !edge.ismajor && (edgecolor = minorhybridedgecolor)
+        ishybrid(edge) && (edgecolor = majorhybridedgecolor)
+        !ismajor(edge) && (edgecolor = minorhybridedgecolor)
         edgecolors[edge_index] = edgecolor
-        !edge.ismajor && push!(minor_edgecolors, edgecolor)
+        !ismajor(edge) && push!(minor_edgecolors, edgecolor)
     end
     return (edgecolors = edgecolors, minor_edgecolors = minor_edgecolors, defaultedgecolor = defaultedgecolor)
 end
@@ -137,18 +130,18 @@ function compute_edge_widths(
 
     if _resolve_edgewidth_mode(config.edgewidth) == :uniform
         resolved_width = Float32(config.edgewidth)
-        for edge in net.edge
+        for edge in getedges(net)
             push!(edgewidths, resolved_width)
-            !edge.ismajor && push!(minor_edgewidths, resolved_width)
+            !ismajor(edge) && push!(minor_edgewidths, resolved_width)
         end
         return (edgewidths = edgewidths, minor_edgewidths = minor_edgewidths)
     end
 
-    for edge in net.edge
-        resolved_width = haskey(config.edgewidth, edge.number) ?
-            Float32(config.edgewidth[edge.number]) : 1.0f0
+    for edge in getedges(net)
+        resolved_width = haskey(config.edgewidth, uniqueid(edge)) ?
+            Float32(config.edgewidth[uniqueid(edge)]) : 1.0f0
         push!(edgewidths, resolved_width)
-        !edge.ismajor && push!(minor_edgewidths, resolved_width)
+        !ismajor(edge) && push!(minor_edgewidths, resolved_width)
     end
     return (edgewidths = edgewidths, minor_edgewidths = minor_edgewidths)
 end
@@ -194,15 +187,6 @@ function compute_minor_edge_style(minorlinetype)
     return (linestyle = minorlinetype, render_visible = true)
 end
 
-function _repeat_payload(values::AbstractVector{T})::Vector{T} where {T}
-    repeated = Vector{T}(undef, 2 * length(values))
-    for index in eachindex(values)
-        repeated[(2 * index) - 1] = values[index]
-        repeated[2 * index] = values[index]
-    end
-    return repeated
-end
-
 function _segment_channel(
         points::Vector{Makie.Point2f},
         colors::Vector{Makie.RGBAf},
@@ -213,7 +197,7 @@ function _segment_channel(
     if !render_visible || isempty(points)
         return SegmentChannel(Makie.Point2f[], Makie.RGBAf[], Float32[], linestyle)
     end
-    return SegmentChannel(points, _repeat_payload(colors), _repeat_payload(linewidths), linestyle)
+    return SegmentChannel(points, repeat(colors, inner=2), repeat(linewidths, inner=2), linestyle)
 end
 
 function compute_segment_channels(
@@ -247,7 +231,7 @@ function compute_segment_channels(
         edge_segments = _segment_channel(edge_points, colors.edgecolors, widths.edgewidths, :solid),
         node_bars = _segment_channel(
             node_bar_points,
-            _repeat_color(colors.defaultedgecolor, length(geometry.node_x)),
+            fill(colors.defaultedgecolor, length(geometry.node_x)),
             fill(DEFAULT_NODE_BAR_WIDTH, length(geometry.node_x)),
             :solid,
         ),
@@ -337,20 +321,14 @@ function compute_arrowhead_channel(
     )
 end
 
-function _coerce_align_value(value)
-    return value isa Integer ? Float64(value) : value
+compute_xy_alignment(adj) = (convert(Float32, adj), 0.5) # default method
+function compute_xy_alignment(adj::AbstractVector)
+    length(adj) == 2 || error("adjustment vectors must contain exactly 2 values")
+    return (convert(Float32, adj[1]), convert(Float32, adj[2]))
 end
-
-function compute_text_align(adjustment)
-    if adjustment isa AbstractVector
-        length(adjustment) == 2 || error("adjustment vectors must contain exactly 2 values")
-        return (_coerce_align_value(adjustment[1]), _coerce_align_value(adjustment[2]))
-    end
-    if adjustment isa Tuple
-        length(adjustment) == 2 || error("adjustment tuples must contain exactly 2 values")
-        return (_coerce_align_value(adjustment[1]), _coerce_align_value(adjustment[2]))
-    end
-    return (_coerce_align_value(adjustment), 0.5)
+function compute_xy_alignment(adj::Tuple)
+    length(adj) == 2 || error("adjustment tuples must contain exactly 2 values")
+    return (convert(Float32, adj[1]), convert(Float32, adj[2]))
 end
 
 function compute_text_sizes(text_cex, count::Integer)::Vector{Float32}
@@ -415,7 +393,7 @@ function compute_text_channel(
     return TextChannel(
         _table_positions(table, rows, x_offset),
         strings,
-        _repeat_color(color, length(strings)),
+        fill(color, length(strings)),
         Float32.(fontsize),
         align,
         font,
@@ -474,7 +452,7 @@ function compute_text_channels(
         :italic,
     ) : _empty_text_channel((0.5, 0.0), :italic)
 
-    node_number_align = compute_text_align(1)
+    node_number_align = compute_xy_alignment(1)
     node_numbers = config.shownodenumber ? compute_text_channel(
         node_table,
         axes(node_table, 1),
@@ -485,7 +463,7 @@ function compute_text_channels(
         nothing,
     ) : _empty_text_channel(node_number_align)
 
-    nodelabeladj = compute_text_align(config.nodelabeladj)
+    nodelabeladj = compute_xy_alignment(config.nodelabeladj)
     node_labels = layout.annotations.labelnodes ? compute_text_channel(
         node_table,
         axes(node_table, 1),
@@ -496,7 +474,7 @@ function compute_text_channels(
         nothing,
     ) : _empty_text_channel(nodelabeladj)
 
-    edgelabeladj = compute_text_align(config.edgelabeladj)
+    edgelabeladj = compute_xy_alignment(config.edgelabeladj)
     edge_labels = layout.annotations.labeledges ? compute_text_channel(
         edge_table,
         axes(edge_table, 1),
@@ -564,18 +542,18 @@ function compute_data_limits(
         config::PhyloPlotConfig,
         extent::PlotExtent,
     )::Makie.Rect3d
-    xlim = isnothing(config.xlim) ?
-        (extent.xmin, extent.xmax) :
-        (
-            Float64(validate_limit_pair(config.xlim, extent.xlim_error_message)[1]),
-            Float64(validate_limit_pair(config.xlim, extent.xlim_error_message)[2]),
-        )
-    ylim = isnothing(config.ylim) ?
-        (extent.ymin, extent.ymax) :
-        (
-            Float64(validate_limit_pair(config.ylim, extent.ylim_error_message)[1]),
-            Float64(validate_limit_pair(config.ylim, extent.ylim_error_message)[2]),
-        )
+    if isnothing(config.xlim)
+        xlim = (extent.xmin, extent.xmax)
+    else
+        res = validate_limit_pair(config.xlim, extent.xlim_error_message)
+        xlim = (Float64(res[1]), Float64(res[2]))
+    end
+    if isnothing(config.ylim)
+        ylim = (extent.ymin, extent.ymax)
+    else
+        res = validate_limit_pair(config.ylim, extent.ylim_error_message)
+        ylim = (Float64(res[1]), Float64(res[2]))
+    end
     return Makie.Rect3d(
         Makie.Point3d(xlim[1], ylim[1], 0.0),
         Makie.Vec3d(xlim[2] - xlim[1], ylim[2] - ylim[1], 0.0),

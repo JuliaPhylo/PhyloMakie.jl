@@ -1,5 +1,3 @@
-import PhyloNetworks
-
 struct PlotNetwork{TNet}
     net::TNet
 end
@@ -21,24 +19,6 @@ struct NetworkGeometry
     xmax::Float64
     ymin::Float64
     ymax::Float64
-end
-
-function _node_index(
-        net::PhyloNetworks.HybridNetwork,
-        node::PhyloNetworks.Node,
-    )::Int
-    node_index = findfirst(candidate -> candidate === node, net.node)
-    isnothing(node_index) && error("node $(node.number) is not part of the network")
-    return node_index
-end
-
-function _edge_index(
-        net::PhyloNetworks.HybridNetwork,
-        edge::PhyloNetworks.Edge,
-    )::Int
-    edge_index = findfirst(candidate -> candidate === edge, net.edge)
-    isnothing(edge_index) && error("edge $(edge.number) is not part of the network")
-    return edge_index
 end
 
 function _prepare_traversal!(net::PhyloNetworks.HybridNetwork)::Nothing
@@ -75,11 +55,11 @@ function _resolve_edge_lengths(
     if useedgelength
         all_edge_lengths_missing = true
         no_edge_lengths_missing = true
-        for edge in net.edge
-            if no_edge_lengths_missing && edge.length == -1.0
+        for edge in getedges(net)
+            if no_edge_lengths_missing && ismissing(elength(edge))
                 no_edge_lengths_missing = false
             end
-            if all_edge_lengths_missing && edge.length != -1.0
+            if all_edge_lengths_missing && !ismissing(elength(edge))
                 all_edge_lengths_missing = false
             end
         end
@@ -95,34 +75,30 @@ function _resolve_edge_lengths(
     edge_lengths = Float64[]
     if calculate_edge_lengths
         edge_lengths = zeros(Float64, net.numedges)
-        node_age = zeros(Float64, net.numnodes)
-        for preorder_index in length(net.node):-1:1
-            current_node = net.vec_node[preorder_index]
-            current_node.leaf && continue
+        node_age = zeros(Float64, numnodes(net))
+        for preorder_index in numnodes(net):-1:1
+            current_node = getnode_preorder(net, preorder_index)
+            isleaf(current_node) && continue
             node_index = _node_index(net, current_node)
             for edge in current_node.edge
-                if current_node === PhyloNetworks.getparent(edge)
-                    child_index = _node_index(net, PhyloNetworks.getchild(edge))
+                if isparentof(current_node, edge)
+                    child_index = _node_index(net, getchild(edge))
                     node_age[node_index] = max(node_age[node_index], 1 + node_age[child_index])
                 end
             end
         end
-        for preorder_index in 2:length(net.node)
-            current_node = net.vec_node[preorder_index]
+        for preorder_index in 2:numnodes(net)
+            current_node = getnode_preorder(net, preorder_index)
             node_index = _node_index(net, current_node)
-            major_parent_edge_index = findfirst(
-                edge -> edge.ismajor && current_node === PhyloNetworks.getchild(edge),
-                current_node.edge,
-            )
-            isnothing(major_parent_edge_index) &&
-                error("oops, could not find major parent edge of node number $node_index.")
-            edge_index = _edge_index(net, current_node.edge[major_parent_edge_index])
-            parent_index = _node_index(net, PhyloNetworks.getparent(net.edge[edge_index]))
+            major_parent_edge = getmajorparentedge(current_node)
+            edge_index = _edge_index(net, major_parent_edge)
+            parent_index = _node_index(net, getparent(getedge(net, edge_index)))
             edge_lengths[edge_index] = node_age[parent_index] - node_age[node_index]
         end
     else
-        for edge in net.edge
-            push!(edge_lengths, edge.length == -1.0 ? 1.0 : edge.length)
+        for edge in getedges(net)
+            len = elength(edge)
+            push!(edge_lengths, ismissing(len) ? 1.0 : len)
         end
     end
     return calculate_edge_lengths, edge_lengths
@@ -136,22 +112,22 @@ function compute_network_geometry(
     usedirecthybridline = config.style == :majortree
 
     ymin = 1.0
-    ymax = Float64(net.numtaxa)
+    ymax = Float64(numtaxa(net))
     if !usedirecthybridline
-        ymax += sum(!edge.ismajor for edge in net.edge)
+        ymax += sum(!ismajor(edge) for edge in getedges(net))
     end
 
-    node_y = zeros(Float64, net.numnodes)
-    node_y_lo = zeros(Float64, net.numnodes)
-    node_y_hi = zeros(Float64, net.numnodes)
+    node_y = zeros(Float64, numnodes(net))
+    node_y_lo = zeros(Float64, numnodes(net))
+    node_y_hi = zeros(Float64, numnodes(net))
     edge_y_lo = zeros(Float64, net.numedges)
 
     nexty = ymax
-    cladewise_queue = copy(PhyloNetworks.getroot(net).edge)
+    cladewise_queue = copy(getroot(net).edge)
     while !isempty(cladewise_queue)
         current_edge = pop!(cladewise_queue)
-        current_child = PhyloNetworks.getchild(current_edge)
-        if current_child.leaf
+        current_child = getchild(current_edge)
+        if isleaf(current_child)
             node_index = _node_index(net, current_child)
             node_y[node_index] = nexty
             node_y_lo[node_index] = nexty
@@ -159,23 +135,23 @@ function compute_network_geometry(
             nexty -= 1
         end
 
-        if !current_edge.ismajor && !usedirecthybridline
+        if !ismajor(current_edge) && !usedirecthybridline
             edge_y_lo[_edge_index(net, current_edge)] = nexty
             nexty -= 1
         end
 
-        if current_edge.ismajor
+        if ismajor(current_edge)
             for child_edge in current_child.edge
-                if PhyloNetworks.getparent(child_edge) === current_child
+                if isparentof(current_child, child_edge)
                     push!(cladewise_queue, child_edge)
                 end
             end
         end
     end
 
-    for preorder_index in length(net.node):-1:1
-        current_node = net.vec_node[preorder_index]
-        current_node.leaf && continue
+    for preorder_index in numnodes(net):-1:1
+        current_node = getnode_preorder(net, preorder_index)
+        isleaf(current_node) && continue
         node_index = _node_index(net, current_node)
         node_y_lo[node_index] = ymax
         node_y_hi[node_index] = ymin
@@ -183,23 +159,23 @@ function compute_network_geometry(
         minor_y_hi = ymin
         no_major_child = usedirecthybridline
         for edge in current_node.edge
-            if current_node === PhyloNetworks.getparent(edge)
+            if isparentof(current_node, edge)
                 if usedirecthybridline
-                    if edge.ismajor
-                        child_index = _node_index(net, PhyloNetworks.getchild(edge))
+                    if ismajor(edge)
+                        child_index = _node_index(net, getchild(edge))
                         child_y = node_y[child_index]
                         no_major_child = false
                         node_y_lo[node_index] = min(node_y_lo[node_index], child_y)
                         node_y_hi[node_index] = max(node_y_hi[node_index], child_y)
                     elseif no_major_child
-                        child_index = _node_index(net, PhyloNetworks.getchild(edge))
+                        child_index = _node_index(net, getchild(edge))
                         child_y = node_y[child_index]
                         minor_y_lo = min(minor_y_lo, child_y)
                         minor_y_hi = max(minor_y_hi, child_y)
                     end
                 else
-                    child_y = if edge.ismajor
-                        child_index = _node_index(net, PhyloNetworks.getchild(edge))
+                    child_y = if ismajor(edge)
+                        child_index = _node_index(net, getchild(edge))
                         node_y[child_index]
                     else
                         edge_y_lo[_edge_index(net, edge)]
@@ -228,22 +204,17 @@ function compute_network_geometry(
 
     xmin = 1.0
     xmax = xmin
-    node_x = zeros(Float64, net.numnodes)
+    node_x = zeros(Float64, numnodes(net))
     edge_x_lo = zeros(Float64, net.numedges)
     edge_x_hi = zeros(Float64, net.numedges)
-    node_x[net.rooti] = xmin
-    for preorder_index in 2:length(net.node)
-        current_node = net.vec_node[preorder_index]
+    node_x[rootindex(net)] = xmin
+    for preorder_index in 2:numnodes(net)
+        current_node = getnode_preorder(net, preorder_index)
         node_index = _node_index(net, current_node)
-        major_parent_edge = findfirst(
-            edge -> edge.ismajor && current_node === PhyloNetworks.getchild(edge),
-            current_node.edge,
-        )
-        isnothing(major_parent_edge) &&
-            error("oops, could not find major parent edge of node number $node_index.")
-        edge_index = _edge_index(net, current_node.edge[major_parent_edge])
+        major_parent_edge = getmajorparentedge(current_node)
+        edge_index = _edge_index(net, major_parent_edge)
         edge_y_lo[edge_index] = node_y[node_index]
-        parent_index = _node_index(net, PhyloNetworks.getparent(net.edge[edge_index]))
+        parent_index = _node_index(net, getparent(major_parent_edge))
         edge_x_lo[edge_index] = node_x[parent_index]
         edge_x_hi[edge_index] = edge_x_lo[edge_index] + edge_lengths[edge_index]
         node_x[node_index] = edge_x_hi[edge_index]
@@ -254,11 +225,10 @@ function compute_network_geometry(
     arrow_x_hi = Float64[]
     arrow_y_lo = Float64[]
     arrow_y_hi = Float64[]
-    for edge_index in 1:net.numedges
-        edge = net.edge[edge_index]
-        edge.ismajor && continue
-        child_index = _node_index(net, PhyloNetworks.getchild(edge))
-        parent_index = _node_index(net, PhyloNetworks.getparent(edge))
+    for (edge_index, edge) in enumerate(getedges(net))
+        ismajor(edge) && continue
+        child_index = _node_index(net, getchild(edge))
+        parent_index = _node_index(net, getparent(edge))
 
         edge_x_lo[edge_index] = node_x[parent_index]
         edge_x_hi[edge_index] = usedirecthybridline ?

@@ -1,5 +1,3 @@
-using DataFrames: AbstractDataFrame, DataFrame
-
 const SUPPORTED_STYLE_SYMBOLS = (:fulltree, :majortree)
 
 const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
@@ -188,9 +186,6 @@ function resolve_plot_config(;
 end
 
 function validate_limit_pair(limit, helper_message::AbstractString)
-    if isnothing(limit)
-        return nothing
-    end
     if !applicable(length, limit) || length(limit) != 2
         error(helper_message)
     end
