@@ -780,7 +780,7 @@ function build_viewer(
 
     GLMakie.activate!()
     state = default_viewer_state()
-    fig = Figure(size = (1700, 950))
+    fig = Figure(size = (1700, 950), figure_padding = 28)
     controls = GridLayout(fig[1, 1])
     axis = Axis(fig[1, 2])
     # Auto(), not Relative(1): Relative(x) is x * the *total* column budget, not
