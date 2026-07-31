@@ -1,6 +1,3 @@
-using DataFrames: DataFrame
-using PhyloNetworks
-
 function _annotation_fixture_dataframe(table_fixture)
     return DataFrame(
         [column => [row[column] for row in table_fixture.rows] for column in table_fixture.columns]...,

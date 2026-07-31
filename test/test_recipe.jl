@@ -1,7 +1,3 @@
-using CairoMakie
-using Makie
-using PhyloNetworks
-
 function _capture_network_snapshot(net::HybridNetwork)
     return (
         rooti=net.rooti,

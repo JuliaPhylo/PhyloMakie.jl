@@ -1,6 +1,3 @@
-using Makie
-using PhyloNetworks: HybridNetwork, readnewick
-
 _module_symbol(parts::AbstractString...) = Symbol(join(parts))
 
 @testset "PhyloMakie module" begin

@@ -1,7 +1,3 @@
-using CairoMakie
-using Makie
-using PhyloNetworks
-
 const PRIMITIVE_ASSEMBLY_NEWICK =
     "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
 const PRIMITIVE_ASSEMBLY_ALT_NEWICK =

@@ -1,5 +1,3 @@
-import PhyloNetworks
-
 Makie.@recipe PhyloPlot (net,) begin
     clip_planes = @inherit clip_planes Makie.automatic
     useedgelength = false

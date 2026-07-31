@@ -1,5 +1,3 @@
-using Makie
-
 @testset "Pixel arrowhead geometry" begin
     ArrowheadPixelPolygon = getfield(PhyloMakie, :ArrowheadPixelPolygon)
     compute_arrowhead_pixel_meshes = getfield(PhyloMakie, :compute_arrowhead_pixel_meshes)

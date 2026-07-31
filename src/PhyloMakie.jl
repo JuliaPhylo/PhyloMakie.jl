@@ -1,7 +1,11 @@
 module PhyloMakie
 
+import DataFrames
+using DataFrames: AbstractDataFrame, DataFrame
 import Makie
+import PhyloNetworks
 
+include("networkaccessors.jl")
 include("plot_config.jl")
 include("network_layout.jl")
 include("annotation_tables.jl")

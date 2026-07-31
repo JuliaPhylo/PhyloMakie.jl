@@ -1,5 +1,3 @@
-using PhyloNetworks
-
 function _plot_network_snapshot(net::HybridNetwork)
     return (
         rooti=net.rooti,

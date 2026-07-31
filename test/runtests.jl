@@ -2,8 +2,10 @@ using Aqua
 using DataFrames: DataFrame
 using JET
 using Makie
+using CairoMakie
 using PhyloMakie
-using PhyloNetworks
+import PhyloNetworks # not "using" to avoid importing accessor names
+using PhyloNetworks: HybridNetwork, readnewick
 using Test
 
 include("support/fixture_corpus.jl")

@@ -1,6 +1,3 @@
-using Makie
-using PhyloNetworks
-
 function _plot_data_limits_value(rect::Makie.Rect3d)
     rect_min = minimum(rect)
     rect_max = maximum(rect)
