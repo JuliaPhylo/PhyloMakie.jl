@@ -6,9 +6,8 @@
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks stored as `PhyloNetworks.HybridNetwork`. It provides a pure Julia
-plotting path with no R dependency, using the standard Makie `plot` / `plot!`
-interface.
+networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
+`plot` / `plot!` interface.
 
 ## Features
 
