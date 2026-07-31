@@ -94,6 +94,9 @@ end
             "showgamma",
             "xlim",
             "ylim",
+            "node_positions",
+            "edge_positions",
+            "Makie.data_limits",
         )
         @test occursin(token, public_api_source)
     end

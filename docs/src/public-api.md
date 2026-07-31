@@ -189,6 +189,23 @@ Makie.update!(plot_handle; arg1 = replacement_net, style = :majortree)
 surface.figure
 ```
 
+## Coordinate query example
+
+`node_positions` and `edge_positions` read node/edge coordinates directly off
+an already-rendered `PhyloPlot`, for composing custom annotations (points,
+pie charts, bars, text) with native Makie primitives. They are part of the
+stable public layout-query surface: unlike the plot's own on-screen text
+toggles, they always cover every node/edge, and they read live compute-graph
+state so they stay in sync with `Makie.update!`. Overall plot extent is
+available the standard Makie way, via `Makie.data_limits(plot_handle)`.
+
+```@example public_api
+plot_handle = surface.plot
+node_positions(plot_handle)
+edge_positions(plot_handle)
+Makie.data_limits(plot_handle)
+```
+
 ## Next steps
 
 - Use [Render verification](render-verification.md) for live CairoMakie-backed capability artifacts.
@@ -199,4 +216,6 @@ surface.figure
 phyloplot
 phyloplot!
 PhyloPlot
+node_positions
+edge_positions
 ```

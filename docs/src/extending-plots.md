@@ -96,12 +96,30 @@ figure
 
 ## Design boundary
 
-PhyloMakie does not currently expose node or edge coordinates through a public return
-value.  When taxon y-positions must be determined programmatically --- for example, to
-anchor annotations on a named taxon without knowing its position in advance --- use the
-public plot attributes to make an exploratory plot first.  The current internal
-computation path can be useful for package-development experiments, but it is not a
-stable public layout-query surface:
+`node_positions(plot)` and `edge_positions(plot)` are now part of the stable public layout-query surface.
+When taxon y-positions must be determined programmatically ---
+for example, to anchor annotations on a named taxon without knowing its position in
+advance --- render the plot, then call `node_positions`/`edge_positions` on the
+returned handle:
+
+```julia
+plot_handle = plot!(ax, net; useedgelength = true, style = :fulltree)
+node_positions(plot_handle)   # number, name, isleaf, x, y --- one row per node
+edge_positions(plot_handle)   # number, ishybrid, ismajor, gamma, x, y --- one row per edge
+```
+
+Both functions read the plot's live compute graph rather than recomputing layout, so
+their values always match what is on screen and stay current after `Makie.update!`.
+Unlike the plot's on-screen text toggles, they unconditionally cover every node/edge.
+Overall plot extent is available separately, the standard Makie way, via
+`Makie.data_limits(plot)`.
+
+The lower-level computation path that these two functions are themselves built on ---
+`PhyloMakie.resolve_plot_config`, `PhyloMakie.prepare_plot_network`,
+`PhyloMakie.compute_network_geometry`, `PhyloMakie.compute_layout` --- remains
+reachable for package-development experiments, but it is not the supported entry point
+for reading coordinates off a plot you have already rendered; use `node_positions`/
+`edge_positions` for that instead:
 
 ```julia
 config = PhyloMakie.resolve_plot_config(; useedgelength = true, style = :fulltree)
@@ -114,5 +132,5 @@ layout = PhyloMakie.compute_layout(plot_network, config, geometry)
 ```
 
 The [Render verification](render-verification.md) page uses current graph outputs for
-docs-internal proof.  A stable public layout-query surface is not part of the current
-public attribute surface.
+docs-internal proof. `node_positions`/`edge_positions` are documented alongside the
+rest of the public attribute surface in [Public API](public-api.md).

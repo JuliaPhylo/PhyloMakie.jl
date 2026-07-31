@@ -21,6 +21,7 @@ include("support/render_test_helpers.jl")
     include("test_primitive_assembly.jl")
     include("test_public_render_contracts.jl")
     include("test_recipe.jl")
+    include("test_coordinate_queries.jl")
     include("test_architecture_audits.jl")
 
     @testset "Code quality (Aqua.jl)" begin

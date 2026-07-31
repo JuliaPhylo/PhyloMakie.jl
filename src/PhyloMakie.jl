@@ -11,7 +11,8 @@ include("recipe_declaration.jl")
 include("reactive_graph.jl")
 include("primitive_assembly.jl")
 include("recipe.jl")
+include("coordinate_queries.jl")
 
-export phyloplot, phyloplot!, PhyloPlot
+export phyloplot, phyloplot!, PhyloPlot, node_positions, edge_positions
 
 end

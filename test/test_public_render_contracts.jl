@@ -363,6 +363,45 @@ end
             )
     end
 
+    @testset "Coordinate query functions agree with rendered channels" begin
+        render_case = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits
+        case = _public_render_case(
+            render_case.newick;
+            render_case.attribute_kwargs...,
+            xlim=render_case.xlim,
+            ylim=render_case.ylim,
+        )
+
+        node_table = node_positions(case.plot)
+        edge_table = edge_positions(case.plot)
+        node_data = case.layout.annotations.node_data
+        edge_data = case.layout.annotations.edge_data
+
+        @test size(node_table, 1) == size(node_data, 1)
+        @test node_table.x == node_data.x
+        @test node_table.y == node_data.y
+        @test edge_table.x == edge_data.x
+        @test edge_table.y == edge_data.y
+
+        internal_node_positions = Makie.Point2f[
+            Makie.Point2f(Float32(row.x), Float32(row.y))
+            for row in eachrow(node_table) if !row.isleaf
+        ]
+        @test internal_node_positions == case.channels.internal_node_names.positions
+
+        minor_gamma_positions = Makie.Point2f[
+            Makie.Point2f(Float32(row.x), Float32(row.y))
+            for row in eachrow(edge_table) if row.ishybrid && !row.ismajor
+        ]
+        @test minor_gamma_positions == case.channels.minor_gamma_labels.positions
+
+        major_gamma_positions = Makie.Point2f[
+            Makie.Point2f(Float32(row.x), Float32(row.y))
+            for row in eachrow(edge_table) if row.ishybrid && row.ismajor
+        ]
+        @test major_gamma_positions == case.channels.major_gamma_labels.positions
+    end
+
     @testset "Public updates preserve child identity and caller-owned networks" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
         surface = Makie.plot(readnewick(render_case.newick); render_case.attribute_kwargs...)
