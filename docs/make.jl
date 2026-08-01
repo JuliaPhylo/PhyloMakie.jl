@@ -1,28 +1,42 @@
-using PhyloMakie
 using Documenter
 
-DocMeta.setdocmeta!(PhyloMakie, :DocTestSetup, :(using PhyloMakie); recursive=true)
+using Pkg
+Pkg.add(PackageSpec(name="PhyloNetworks", rev="master"))
 
-makedocs(;
-    modules=[PhyloMakie],
-    authors="Jeet Sukumaran <jeetsukumaran@gmail.com>",
-    sitename="PhyloMakie.jl",
-    format=Documenter.HTML(;
-        canonical="https://jeetsukumaran.github.io/PhyloMakie.jl",
-        edit_link="main",
-        assets=String[],
-    ),
-    pages=[
-        "Home" => "index.md",
-        "Public API" => "public-api.md",
-        "Edge controls" => "edge-controls.md",
-        "Annotations" => "annotations.md",
-        "Extending plots" => "extending-plots.md",
-        "Render verification" => "render-verification.md",
+using DocumenterInterLinks
+links = InterLinks(
+    "PhyloNetworks" => "https://juliaphylo.github.io/PhyloNetworks.jl/stable/objects.inv"
+)
+using PhyloNetworks
+using PhyloPlots
+# default loading of interlinked packages in all docstring examples
+DocMeta.setdocmeta!(PhyloPlots, :DocTestSetup,
+    :(using PhyloNetworks, PhyloPlots);
+    recursive=true)
+
+makedocs(
+    sitename = "PhyloPlots.jl",
+    authors = "Cécile Ané and Guilhem Ané",
+    modules = [PhyloPlots], # to list plot() methods from PhyloPlots only, not from Gadfly etc.
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"), # easier local build
+    pages = [
+        "home" => "index.md",
+        "manual" => [
+            "installation" => "man/installation.md",
+            "getting started" => "man/getting_started.md",
+            "untangling edges" => "man/untangling_edges.md",
+            "better edges" => "man/better_edges.md",
+            "adding data" => "man/adding_data.md",
+        ],
+        "library" => [
+            "public" => "lib/public.md",
+            "internals" => "lib/internals.md",
+        ]
     ],
 )
 
-deploydocs(;
-    repo="github.com/jeetsukumaran/PhyloMakie.jl",
-    devbranch="main",
+deploydocs(
+    repo = "github.com/JuliaPhylo/PhyloPlots.jl.git",
+    push_preview = true,
+    devbranch = "master",
 )
