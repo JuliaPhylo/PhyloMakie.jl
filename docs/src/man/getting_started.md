@@ -1,42 +1,58 @@
 ```@setup getting_started
-using PhyloNetworks, PhyloPlots, RCall, DataFrames
-mkpath("../assets/figures")
-figname(x) = joinpath("..", "assets", "figures", x)
+using CairoMakie
+using PhyloMakie
+using PhyloNetworks: readnewick
+CairoMakie.activate!()
 ```
 
 # Getting started
 
-To demonstrate, we will plot the simple network: `(A,((B,#H1),(C,(D)#H1)));`
+Start with a `PhyloNetworks.HybridNetwork`. This example reads a small network
+from an extended Newick string:
 
-To start plotting, use the packages:
-
-```@repl getting_started
-using PhyloNetworks
-using PhyloPlots
-```
-Then read the topology
 ```@repl getting_started
 net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
 ```
-and call `plot`, as shown below.
+
+Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:
 
 ```@example getting_started
-R"svg"(figname("gettingstarted.svg"), width=3, height=3) # hide
-R"par"(mar=[.1,.1,.1,.1]) # hide
-net = readnewick("(A,((B,#H1),(C,(D)#H1)));") # hide
-plot(net);
-R"dev.off()" # hide
-nothing # hide
+surface = plot(net)
+surface.figure
 ```
-![example1](../assets/figures/gettingstarted.svg)
 
-For the function's full documentation, see here: [`plot`](@ref).
+The returned value is a `Makie.FigureAxisPlot`. Its `plot` field is the live
+`PhyloPlot` object. Use that object when you want to update attributes or query
+the rendered coordinates.
 
-!!! note "version history"
-    Compared to v0.3, v1 does not support the Gadfly-based plots,
-    and uses small-case-only argument names.
+```@example getting_started
+plot_handle = surface.plot
+typeof(plot_handle)
+```
 
-    The v0.3 syntax `plot(net, :R; ...)` still works in v1.0 but is
-    **deprecated**, and will be removed in a future release. For example,
-    you can still use `plot(net, :R; showNodeNumber=true)`,
-    but you should instead start using `plot(net; shownodenumber=true)`.
+PhyloMakie also provides `phyloplot` as a package-specific alias for `plot`:
+
+```@example getting_started
+alias_surface = phyloplot(
+    net;
+    showgamma = true,
+    showtiplabel = true,
+)
+alias_surface.figure
+```
+
+To draw into an existing Makie axis, use `plot!` or `phyloplot!`:
+
+```@example getting_started
+figure = Figure(size = (700, 320))
+axis = Axis(figure[1, 1])
+hidedecorations!(axis)
+hidespines!(axis)
+phyloplot!(
+    axis,
+    net;
+    showgamma = true,
+    useedgelength = false,
+)
+figure
+```

@@ -1,19 +1,18 @@
-# internal documentation
+# Internal API
 
-Documentation for `PhyloPlots`'s internal functions.
-Those functions are not exported, but can still be used
-(like: `PhyloPlots.foo()` for a function named `foo()`).
+This page lists non-public docstrings from `PhyloMakie`. Internal names may
+change without notice.
 
-## index
+## Index
 
 ```@index
 Pages = ["internals.md"]
 ```
 
-## functions
+## Docstrings
 
 ```@autodocs
-Modules = [PhyloPlots]
+Modules = [PhyloMakie]
 Public = false
-Order   = [:function]
+Order   = [:type, :function]
 ```

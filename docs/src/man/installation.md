@@ -1,20 +1,31 @@
-
 # Installation
 
-For information on how to install Julia and PhyloNetworks, see
-[here](https://juliaphylo.github.io/PhyloNetworks.jl/dev/man/installation/#Installation).
-PhyloPlots depends on PhyloNetworks, and has further dependencies
-like
-[RCall](https://github.com/JuliaInterop/RCall.jl).
+PhyloMakie is a Julia package. Install Julia first, then install PhyloMakie in
+the Julia package manager.
 
-To install PhyloPlots in the Julia REPL, enter package mode with `]`, and:
-
-```
-add PhyloPlots
-```
-Or in julian mode:
+PhyloMakie is not currently registered in the Julia General registry. Install
+it directly from GitHub:
 
 ```julia
 using Pkg
-Pkg.add("PhyloPlots")
+Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
+```
+
+PhyloMakie depends on Makie and PhyloNetworks. Examples in this manual also use
+CairoMakie for static rendering:
+
+```julia
+using Pkg
+Pkg.add([
+    "CairoMakie",
+    "PhyloNetworks",
+])
+```
+
+Load the packages needed for most examples with:
+
+```julia
+using CairoMakie
+using PhyloMakie
+using PhyloNetworks
 ```

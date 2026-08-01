@@ -1,15 +1,22 @@
-# PhyloPlots.jl
+# PhyloMakie.jl
 
-[PhyloPlots](https://github.com/juliaphylo/PhyloPlots.jl) is a
-[Julia](http://julialang.org) package to
-plot phylogenetic trees and networks.
+PhyloMakie is a Makie-native plotting package for phylogenetic trees and
+networks stored as `PhyloNetworks.HybridNetwork` values.
 
-[PhyloNetworks](https://github.com/juliaphylo/PhyloNetworks.jl)
-objects can be displayed
-through [R](https://www.r-project.org)
-via [RCall](https://github.com/JuliaInterop/RCall.jl).
+PhyloMakie registers a Makie recipe for `HybridNetwork`, so the standard Makie
+entry points work directly:
 
-## manual outline
+```julia
+plot(net)
+plot!(axis, net)
+```
+
+The package also exports `phyloplot` and `phyloplot!` as package-specific
+aliases for the same plotting behavior.
+
+![PhyloMakie logo](assets/logo.png)
+
+## Manual outline
 
 ```@contents
 Pages = [
@@ -22,14 +29,14 @@ Pages = [
 Depth = 3
 ```
 
-## library outline
+## Library outline
 
 ```@contents
 Pages = ["lib/public.md", "lib/internals.md"]
 Depth = 1
 ```
 
-## functions
+## Function index
 
 ```@index
 Pages = ["lib/public.md", "lib/internals.md"]

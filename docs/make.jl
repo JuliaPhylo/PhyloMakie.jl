@@ -1,42 +1,41 @@
-using Documenter
+import CairoMakie
+import DataFrames
+import PhyloMakie
+import PhyloNetworks
+using Documenter: DocMeta, HTML, deploydocs, makedocs
 
-using Pkg
-Pkg.add(PackageSpec(name="PhyloNetworks", rev="master"))
+CairoMakie.activate!()
 
-using DocumenterInterLinks
-links = InterLinks(
-    "PhyloNetworks" => "https://juliaphylo.github.io/PhyloNetworks.jl/stable/objects.inv"
+DocMeta.setdocmeta!(
+    PhyloMakie,
+    :DocTestSetup,
+    :(using CairoMakie, DataFrames, PhyloMakie, PhyloNetworks);
+    recursive = true,
 )
-using PhyloNetworks
-using PhyloPlots
-# default loading of interlinked packages in all docstring examples
-DocMeta.setdocmeta!(PhyloPlots, :DocTestSetup,
-    :(using PhyloNetworks, PhyloPlots);
-    recursive=true)
 
 makedocs(
-    sitename = "PhyloPlots.jl",
-    authors = "Cécile Ané and Guilhem Ané",
-    modules = [PhyloPlots], # to list plot() methods from PhyloPlots only, not from Gadfly etc.
-    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"), # easier local build
+    sitename = "PhyloMakie.jl",
+    authors = "Cecile Ane, Jeet Sukumaran, and Matthew Andres Moreno",
+    modules = [PhyloMakie],
+    format = HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
-        "home" => "index.md",
-        "manual" => [
-            "installation" => "man/installation.md",
-            "getting started" => "man/getting_started.md",
-            "untangling edges" => "man/untangling_edges.md",
-            "better edges" => "man/better_edges.md",
-            "adding data" => "man/adding_data.md",
+        "Home" => "index.md",
+        "Manual" => [
+            "Installation" => "man/installation.md",
+            "Getting started" => "man/getting_started.md",
+            "Untangling edges" => "man/untangling_edges.md",
+            "Better edges" => "man/better_edges.md",
+            "Adding data" => "man/adding_data.md",
         ],
-        "library" => [
-            "public" => "lib/public.md",
-            "internals" => "lib/internals.md",
-        ]
+        "Library" => [
+            "Public API" => "lib/public.md",
+            "Internal API" => "lib/internals.md",
+        ],
     ],
 )
 
 deploydocs(
-    repo = "github.com/JuliaPhylo/PhyloPlots.jl.git",
+    repo = "github.com/jeetsukumaran/PhyloMakie.jl.git",
     push_preview = true,
-    devbranch = "master",
+    devbranch = "main",
 )
