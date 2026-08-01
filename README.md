@@ -68,5 +68,4 @@ plot(
 ## Documentation
 
 - [Home](docs/src/index.md)
-- [Public API](docs/src/public-api.md)
-- [Render verification](docs/src/render-verification.md)
+- [Public API](docs/src/lib/public.md)
