@@ -84,48 +84,11 @@ end
         end
     end
 
-    public_api_source = _audit_source(joinpath("docs", "src", "public-api.md"))
-    for token in (
-            "SUPPORTED_PHYLOPLOT_ATTRIBUTES",
-            "Makie.update!",
-            "arg1",
-            "showtiplabel",
-            "shownodelabel",
-            "showgamma",
-            "xlim",
-            "ylim",
-            "node_positions",
-            "edge_positions",
-            "Makie.data_limits",
-        )
-        @test occursin(token, public_api_source)
-    end
-    @test occursin("private `HybridNetwork` copy", public_api_source)
-
-    render_verification_source =
-        _audit_source(joinpath("docs", "src", "render-verification.md"))
-    for token in (
-            "Makie.plot!",
-            "plot[:plot_config][]",
-            "plot[:plot_network][]",
-            "plot[:layout_computation][]",
-            "plot[:primitive_channels][]",
-            "Makie.data_limits",
-        )
-        @test occursin(token, render_verification_source)
-    end
-
-    extending_source = _audit_source(joinpath("docs", "src", "extending-plots.md"))
-    for token in (
-            "resolve_plot_config",
-            "prepare_plot_network",
-            "compute_network_geometry",
-            "compute_layout",
-            "stable public layout-query surface",
-            "public attribute surface",
-        )
-        @test occursin(token, extending_source)
-    end
+    # public-api.md, render-verification.md, extending-plots.md (Locks 1-3,
+    # tranche 202606192224) were deleted in b8d04f2 and not restored; project
+    # owner ratified 2026-08-01 to retire these doc-content audits, relying on
+    # test_reactive_graph.jl / test_primitive_assembly.jl /
+    # test_public_render_contracts.jl as the surviving proof.
 end
 
 @testset "Architecture source audits" begin
