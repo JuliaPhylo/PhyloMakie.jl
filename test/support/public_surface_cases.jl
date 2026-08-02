@@ -1,4 +1,5 @@
 const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
+    :clip_planes,
     :useedgelength,
     :showtiplabel,
     :shownodelabel,
