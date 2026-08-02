@@ -9,8 +9,8 @@ PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
 PhyloNetworks = "33ad39ac-ed31-50eb-9b15-43d0656eaa72"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[sources]
-PhyloMakie = {path = ".."}
-
 [compat]
 Makie = "0.24.10"
+
+[sources]
+PhyloMakie = {path = ".."}
