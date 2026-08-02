@@ -1,25 +1,41 @@
-using PhyloMakie
-using Documenter
+import CairoMakie
+import DataFrames
+import PhyloMakie
+import PhyloNetworks
+using Documenter: DocMeta, HTML, deploydocs, makedocs
 
-DocMeta.setdocmeta!(PhyloMakie, :DocTestSetup, :(using PhyloMakie); recursive=true)
+CairoMakie.activate!()
 
-makedocs(;
-    modules=[PhyloMakie],
-    authors="Jeet Sukumaran <jeetsukumaran@gmail.com>",
-    sitename="PhyloMakie.jl",
-    format=Documenter.HTML(;
-        canonical="https://jeetsukumaran.github.io/PhyloMakie.jl",
-        edit_link="main",
-        assets=String[],
-    ),
-    pages=[
+DocMeta.setdocmeta!(
+    PhyloMakie,
+    :DocTestSetup,
+    :(using CairoMakie, DataFrames, PhyloMakie, PhyloNetworks);
+    recursive = true,
+)
+
+makedocs(
+    sitename = "PhyloMakie.jl",
+    authors = "Cecile Ane, Jeet Sukumaran, and Matthew Andres Moreno",
+    modules = [PhyloMakie],
+    format = HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
+    pages = [
         "Home" => "index.md",
-        "Public API" => "public-api.md",
-        "Render verification" => "render-verification.md",
+        "Manual" => [
+            "Installation" => "man/installation.md",
+            "Getting started" => "man/getting_started.md",
+            "Untangling edges" => "man/untangling_edges.md",
+            "Better edges" => "man/better_edges.md",
+            "Adding data" => "man/adding_data.md",
+        ],
+        "Library" => [
+            "Public API" => "lib/public.md",
+            "Internal API" => "lib/internals.md",
+        ],
     ],
 )
 
-deploydocs(;
-    repo="github.com/jeetsukumaran/PhyloMakie.jl",
-    devbranch="main",
+deploydocs(
+    repo = "github.com/jeetsukumaran/PhyloMakie.jl.git",
+    push_preview = true,
+    devbranch = "main",
 )
