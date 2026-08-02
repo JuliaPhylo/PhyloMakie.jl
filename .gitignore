@@ -4,6 +4,7 @@
 # =====================================
 
 .vscode/*
+.supplemental-agent-resources/*
 
 # =====================================
 # Quarto: output directories and formats

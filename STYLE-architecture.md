@@ -4,7 +4,7 @@
 
 This document governs architectural ownership, invariant repair, deep-module
 design, authorization boundaries for disruptive change, and the difference
-between real fixes and anti-fixes.
+between contract-level fixes and anti-fixes.
 
 Use this document whenever work touches more than one module, repairs a shared
 contract, changes layout or rendering ownership, restructures a subsystem,
@@ -24,87 +24,70 @@ you must pass the relevant mandates forward explicitly.
 Passing this document forward means:
 
 - naming it as required reading downstream
+- naming `STYLE-agent-language.md` as required reading whenever downstream prose
+  uses ownership, contract, boundary, layer, invariant, or compatibility terms
 - restating the applicable ownership and invariant rules downstream
 - restating any authorization boundaries downstream
 - restating the required verification gates downstream
+- naming the responsible code entity or external contract, its responsibility,
+  the consumers that rely on it, the duplicate or bypass paths that must not
+  keep that responsibility, and the verification artifact that fails if the
+  responsibility remains unclear
 
 It is not acceptable to assume that a later contributor or agent will infer
 these constraints from context.
 
 ## Core rules
 
-### Fix the owner, not the symptom site
+### Repair the responsible entity before the symptom site
 
-If multiple symptoms depend on the same underlying contract, owner, or
-invariant, repair that owner first.
+If multiple symptoms depend on the same underlying external contract, internal
+invariant, or policy, identify the exact function, type, module, file, public
+surface, or external contract responsible for that behavior. Repair that entity
+before changing the symptom sites.
 
 Do not solve a cross-cutting problem by stacking local compensations at the
 symptom sites.
 
 If a proposed change requires the same defensive logic to be repeated in
-several sibling layers, stop and locate the real owner.
+several sibling modules or layers, stop before implementation. The plan must
+name the entity that should enforce the rule, the consumers that should rely on
+that entity, the repeated defensive paths that must be removed or prevented, and
+the verification artifact that fails if the duplication remains.
 
-### One invariant, one owner
+### One invariant, one responsible entity
 
-Each important invariant should have a clearly identifiable owner.
+Each important invariant should have one named responsible entity.
 
 Consumers may rely on an invariant, but they should not each be responsible for
 reconstructing or re-enforcing it independently.
 
 If an invariant seems to be partially enforced in many places, that is a design
-smell and should trigger architectural review.
+smell. Architectural review must identify the entity that should enforce the
+invariant and the verification artifact that proves consumers no longer
+reconstruct it independently.
 
 ### One public semantic, one normalization point
 
 If the same public semantic can be supplied from more than one API surface,
-one canonical owner must normalize it once and forward the resolved value
-downstream explicitly.
+one named function, type, module, or public surface must normalize it once and
+forward the resolved value downstream explicitly.
 
 Consumers may accept the resolved value, but they should not each infer
 independent defaults, precedence rules, or fallback behavior for that same
 semantic.
 
 If a contributor finds the same semantic being reconciled separately in more
-than one layer, that is evidence the ownership boundary is still too weak or
-too implicit.
-
-### Clean ports preserve capabilities, not inherited shells
-
-When a project is authorized as a clean port, backend replacement, or
-ground-up rewrite with public API redesign allowed, the upstream package is a
-capability and behavior reference, not the required public interface or
-runtime shape.
-
-Do not preserve a legacy keyword shell, compatibility payload, translation
-struct, or wrapper stack as the semantic center merely because it is easier to
-stage.
-
-If a temporary bridge is explicitly authorized for sequencing reasons, the
-bridge must name:
-
-- the single owner that consumes it
-- the exact tranche or task where it is deleted
-- the verification artifact that must fail if it survives past the accepted
-  end state
-
-If those conditions are missing, the bridge is not scaffolding. It is
-architecture drift.
-
-### Do not defer semantic-center repair into narrative cleanup
-
-Once a new public owner exists, the remaining work must drive the runtime
-through that owner directly.
-
-Do not leave the wrong semantic center in place and classify its removal as
-optional polish, migration prose, or late documentation cleanup.
-
-Docs and migration tranches may explain a redesign, but they must not be the
-first place where the real runtime architecture becomes honest.
+than one module or layer, that is evidence the normalization responsibility is
+incompletely specified. The next planning artifact must name the normalization
+entity, the public surfaces that feed it, the duplicate reconciliation paths
+that must stop, and the verification artifacts that cover each supported public
+surface.
 
 ### Prefer foundational tranches when ownership is wrong
 
 If several user-visible defects or requested features depend on one unclear or
-misowned responsibility, create a foundational tranche first.
+misassigned responsibility, create a foundational tranche first.
 
 Do not force thin user-facing slices when that would lock the wrong
 architecture into place.
@@ -117,12 +100,13 @@ A foundational tranche must still be:
 
 ### Deep modules over shallow coordination
 
-Prefer modules that own real complexity behind a small, stable interface.
+Prefer modules that keep domain complexity behind a small, stable interface.
 
 Avoid shallow modules that merely pass state around while exposing the true
 complexity to all callers.
 
-The more cross-cutting the behavior, the stronger the case for a deep owner.
+The more cross-cutting the behavior, the stronger the case for a module with a
+named responsibility and a small public interface.
 
 ### Anti-fixes are prohibited
 
@@ -131,8 +115,9 @@ make the output look plausible or to make a weak test pass.
 
 A local masking change is acceptable only if:
 
-- the masking policy is itself the correct owner-level behavior
-- that ownership is explicitly identified
+- the masking policy is itself the intended behavior of the named responsible
+  entity
+- that responsible entity and policy are explicitly identified
 - the policy is documented and verified as such
 
 Otherwise, the change is an anti-fix and must not be presented as resolution.
@@ -173,8 +158,8 @@ scope. Required gates may include tests, docs builds, example renders,
 integration checks, migration verification, or other project-specific
 artifacts.
 
-If a tranche cannot do this safely, it is too large or incorrectly framed and
-must be split or escalated.
+If a tranche cannot satisfy those gates, it is too large or incorrectly framed
+and must be split or escalated.
 
 ## Required planning artifacts
 
@@ -184,7 +169,11 @@ must explicitly include:
 - the current-state problem, not just the desired feature
 - the target-state ownership model
 - the shared contracts and invariants involved
-- the owner that must be repaired or established
+- the exact function, type, module, file, public surface, or external contract
+  that must enforce each responsibility being repaired or established
+- the consumers that must call that entity or receive its output
+- the duplicate, fallback, or defensive paths that must be deleted, demoted, or
+  prevented
 - any areas that must not be solved by local patches
 - the user authorization boundary
 - the verification gates required before the work is considered complete
@@ -193,8 +182,10 @@ must explicitly include:
 
 Architecture reviews and audits must ask:
 
-- did the change repair the owning layer?
-- did it preserve or improve ownership clarity?
+- did the change repair the named entity responsible for the invariant,
+  contract, policy, or behavior?
+- did it preserve or improve ownership clarity by naming the responsible entity,
+  consumers, duplicate paths, and verification artifact?
 - did it create or remove duplicated invariant logic?
 - did it introduce any anti-fixes?
 - did it respect the authorization boundary and migration obligations?

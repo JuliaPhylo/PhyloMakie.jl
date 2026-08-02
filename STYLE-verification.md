@@ -9,7 +9,8 @@ contract-breaking, or misleading behavior.
 
 Use this document whenever work affects rendering, layout, public APIs,
 display behavior, documentation examples, migrations, architecture, or any bug
-whose real failure mode can be observed more directly than the current tests do.
+whose observed failure mode can be checked more directly than the current tests
+do.
 
 ## Mandatory reading and pass-forward
 
@@ -24,13 +25,16 @@ verification obligations forward explicitly. Downstream work must be told:
 - which artifacts count as verification artifacts
 - which gates must be green at tranche end
 - which weak proxies are not sufficient
+- when architectural ownership is involved, which exact function, type, module,
+  file, public surface, or external contract is responsible for the behavior and
+  which verification artifact fails if that responsibility remains duplicated
 
 Linking a parent document is not enough. The verification obligations must be
 restated in the downstream document or task description.
 
 ## Core rules
 
-### Verify the real contract boundary
+### Verify the externally meaningful contract boundary
 
 Tests and other checks must verify externally meaningful behavior, not merely
 internal implementation-adjacent proxies.
@@ -38,8 +42,9 @@ internal implementation-adjacent proxies.
 If the defect is visual, readable, or compositional, a test that only asserts
 that geometry exists is often insufficient.
 
-If the defect is a public API or display contract, a test that only exercises
-internal helpers is often insufficient.
+If the defect is a public API or display contract, the verification artifact
+must name the public surface, documented behavior, or display behavior being
+checked. A test that only exercises internal helpers is often insufficient.
 
 ### Reproduce the reported failure mode directly
 
@@ -63,7 +68,7 @@ verification artifacts may include:
 - contract-level assertions about text placement or visibility
 
 Smoke tests and geometry-only checks may be supplemental, but they are not
-sufficient on their own when the real defect is visual.
+sufficient on their own when the observed defect is visual.
 
 ### Public API work requires contract-level verification
 
@@ -81,19 +86,23 @@ surface, verification must include at least one regression for each supported
 surface.
 
 Testing only one path is insufficient when the semantic can be supplied
-through constructor attributes, mutating calls, non-mutating convenience
-wrappers, or other public entry points with different ownership boundaries.
+through constructor attributes, mutating calls, non-mutating convenience entry
+points, or other public entry points with different ownership boundaries. The
+verification plan must name the normalization entity and the public entry points
+that consume or adapt the normalized value.
 
 When a public example is the clearest artifact for one of those surfaces, keep
 at least one integration or render check aligned with that example shape.
 
-### Architecture work requires owner-level verification
+### Architecture work requires responsible-entity verification
 
 When a change repairs or establishes an owner, contract, or invariant,
 verification must show that:
 
-- the owner now enforces the rule
-- sibling layers no longer need to re-enforce it defensively
+- the exact function, type, module, file, public surface, or external contract
+  responsible for the rule now enforces it
+- named sibling modules, public surfaces, or fallback paths no longer
+  re-enforce it defensively
 - the historical bug is actually prevented
 - existing unaffected behavior still works
 
@@ -108,7 +117,7 @@ The following are often insufficient on their own:
 - "the docs build"
 
 These may all be part of verification, but they do not by themselves prove that
-the original contract is correct.
+the reported contract is satisfied.
 
 ### Every bug fix should add or strengthen verification
 
@@ -144,7 +153,7 @@ If this is not stated explicitly, the verification plan is incomplete.
 Reviews and audits must ask:
 
 - does this verification fail for the old bug?
-- does it verify the real external behavior?
+- does it verify the externally observable behavior?
 - does it rely on a weak proxy where a stronger artifact is available?
 - does the green state for this work actually cover the reported contract?
 
