@@ -35,7 +35,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/jeetsukumaran/PhyloMakie.jl.git",
+    repo = "github.com/JuliaPhylo/PhyloMakie.jl.git",
     push_preview = true,
     devbranch = "main",
 )

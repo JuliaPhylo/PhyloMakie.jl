@@ -8,7 +8,7 @@ it directly from GitHub:
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
+Pkg.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
 ```
 
 PhyloMakie depends on Makie and PhyloNetworks. Examples in this manual also use
