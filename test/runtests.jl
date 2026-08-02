@@ -2,8 +2,10 @@ using Aqua
 using DataFrames: DataFrame
 using JET
 using Makie
+using CairoMakie
 using PhyloMakie
-using PhyloNetworks
+import PhyloNetworks # not "using" to avoid importing accessor names
+using PhyloNetworks: HybridNetwork, readnewick
 using Test
 
 include("support/fixture_corpus.jl")
@@ -12,11 +14,17 @@ include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
-    include("test_public_attribute_model.jl")
-    include("test_layout_engine.jl")
-    include("test_annotation_data.jl")
-    include("test_render_adapter.jl")
-    include("test_public_plot_owner.jl")
+    include("test_plot_config.jl")
+    include("test_network_layout.jl")
+    include("test_annotation_tables.jl")
+    include("test_primitive_channels.jl")
+    include("test_arrowhead_geometry.jl")
+    include("test_reactive_graph.jl")
+    include("test_primitive_assembly.jl")
+    include("test_public_render_contracts.jl")
+    include("test_recipe.jl")
+    include("test_coordinate_queries.jl")
+    include("test_architecture_audits.jl")
 
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(

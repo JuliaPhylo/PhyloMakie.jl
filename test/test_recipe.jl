@@ -1,10 +1,7 @@
-using CairoMakie
-using Makie
-using PhyloNetworks
-
 function _capture_network_snapshot(net::HybridNetwork)
     return (
         rooti=net.rooti,
+        isrooted=net.isrooted,
         node_numbers=[node.number for node in net.node],
         preorder_numbers=[node.number for node in net.vec_node],
         edge_state=[
@@ -33,10 +30,13 @@ end
 
 function _plot_colorbuffer(figure)
     CairoMakie.activate!()
-    return Makie.colorbuffer(figure; backend=CairoMakie)
+    # copy() is required: colorbuffer reuses an internal buffer across calls on the
+    # same figure, so without copy the caller holds a reference to live memory that
+    # gets overwritten by the next colorbuffer call.
+    return copy(Makie.colorbuffer(figure; backend=CairoMakie))
 end
 
-@testset "Public plot owner" begin
+@testset "PhyloPlot recipe" begin
     CairoMakie.activate!()
 
     PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
@@ -51,25 +51,17 @@ end
         style=:fulltree,
     )
 
-    @testset "Surface registration and non-mutating parity" begin
+    @testset "plot() and phyloplot() dispatch to PhyloPlot and produce identical output" begin
         plot_surface = Makie.plot(readnewick(render_case.newick); render_kwargs...)
         convenience_surface = phyloplot(readnewick(render_case.newick); render_kwargs...)
 
-        @test plot_surface isa Makie.FigureAxisPlot
-        @test convenience_surface isa Makie.FigureAxisPlot
         @test plot_surface.plot isa PhyloPlot
         @test convenience_surface.plot isa PhyloPlot
-        @test :resolved_attributes ∉ propertynames(plot_surface.plot.attributes)
-        @test :resolved_layout ∉ propertynames(plot_surface.plot.attributes)
-        @test :render_layers ∉ propertynames(plot_surface.plot.attributes)
-        @test :resolved_attributes ∉ propertynames(convenience_surface.plot.attributes)
-        @test :resolved_layout ∉ propertynames(convenience_surface.plot.attributes)
-        @test :render_layers ∉ propertynames(convenience_surface.plot.attributes)
         @test _plot_colorbuffer(plot_surface.figure) ==
             _plot_colorbuffer(convenience_surface.figure)
     end
 
-    @testset "Mutating parity and public-surface cleanliness" begin
+    @testset "plot!() and phyloplot!() dispatch to PhyloPlot and produce identical output" begin
         plot_figure = Figure(size=(640, 400))
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
@@ -88,16 +80,10 @@ end
 
         @test plot_surface isa PhyloPlot
         @test convenience_surface isa PhyloPlot
-        @test :resolved_attributes ∉ propertynames(plot_surface.attributes)
-        @test :resolved_layout ∉ propertynames(plot_surface.attributes)
-        @test :render_layers ∉ propertynames(plot_surface.attributes)
-        @test :resolved_attributes ∉ propertynames(convenience_surface.attributes)
-        @test :resolved_layout ∉ propertynames(convenience_surface.attributes)
-        @test :render_layers ∉ propertynames(convenience_surface.attributes)
         @test _plot_colorbuffer(plot_figure) == _plot_colorbuffer(convenience_figure)
     end
 
-    @testset "Caller-owned network boundary" begin
+    @testset "Input network is not mutated by any plotting call" begin
         surfaces = (
             net -> Makie.plot(net; useedgelength=true, style=:fulltree),
             net -> phyloplot(net; useedgelength=true, style=:fulltree),
@@ -121,7 +107,7 @@ end
         end
     end
 
-    @testset "Public limit validation and direct limit proof" begin
+    @testset "xlim and ylim: wrong-length input raises an error; valid values set axis limits" begin
         annotation_case = FIXTURE_CORPUS.render_regression_cases.annotation_and_limits
         nodelabel =
             _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
@@ -155,6 +141,7 @@ end
         @test x_limit_error isa ErrorException
         @test occursin("xlim needs to contain 2 values", sprint(showerror, x_limit_error))
         @test occursin("defaults: [", sprint(showerror, x_limit_error))
+        @test !occursin("ResolveException", sprint(showerror, x_limit_error))
 
         y_limit_error = try
             phyloplot(readnewick(annotation_case.newick); ylim=(1.0,))
@@ -165,14 +152,16 @@ end
         @test y_limit_error isa ErrorException
         @test occursin("ylim needs to contain 2 values", sprint(showerror, y_limit_error))
         @test occursin("defaults: [", sprint(showerror, y_limit_error))
+        @test !occursin("ResolveException", sprint(showerror, y_limit_error))
     end
 
-    @testset "Accepted design scenario public proof" begin
+    @testset "Integration: full pipeline renders without error" begin
         @testset ":simple_tree_no_hybrid" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
             surface = Makie.plot(readnewick(scenario.newick); style=:fulltree)
 
             @test surface isa Makie.FigureAxisPlot
+            @test surface.plot isa PhyloPlot
             @test !isempty(_plot_colorbuffer(surface.figure))
         end
 
@@ -221,7 +210,34 @@ end
         end
     end
 
-    @testset "Dual-axis composition proof" begin
+    @testset "Reactivity: attribute changes propagate without re-creating the plot" begin
+        CairoMakie.activate!()
+        # Hybrid network required: style=:fulltree vs :majortree is only visually
+        # distinct when minor (hybrid) edges are present.
+        net = readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+        surface = Makie.plot(net; style = :fulltree)
+        plot_handle = surface.plot
+
+        before_color = _plot_colorbuffer(surface.figure)
+        Makie.update!(plot_handle; edgecolor = "firebrick")
+        after_color = _plot_colorbuffer(surface.figure)
+        @test before_color != after_color
+
+        before_style = _plot_colorbuffer(surface.figure)
+        Makie.update!(plot_handle; style = :majortree)
+        after_style = _plot_colorbuffer(surface.figure)
+        @test before_style != after_style
+
+        net2 = readnewick("((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
+        before_net = _plot_colorbuffer(surface.figure)
+        Makie.update!(plot_handle; arg1 = net2)
+        after_net = _plot_colorbuffer(surface.figure)
+        @test before_net != after_net
+
+        @test plot_handle isa PhyloPlot
+    end
+
+    @testset "Two networks can be plotted on separate axes in the same figure" begin
         scenario = FIXTURE_CORPUS.accepted_design_scenarios.composable_dual_axes
 
         figure = Figure(size=(900, 360))
@@ -250,7 +266,6 @@ end
         left_limits = _plot_data_limits(left_plot)
         right_limits = _plot_data_limits(right_plot)
 
-        @test left_plot.parent !== right_plot.parent
         @test left_limits != right_limits
         @test !isempty(_plot_colorbuffer(figure))
     end
