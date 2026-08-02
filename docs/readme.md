@@ -43,7 +43,7 @@ Then render native Makie output:
 ````
 ```@example example_name
 net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
-surface = plot(net; showgamma = true)
-surface.figure
+figaxisplot = plot(net; showgamma = true)
+figaxisplot.figure
 ```
 ````

@@ -15,8 +15,8 @@ Show node numbers to identify the internal node to rotate:
 
 ```@example untangling
 net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
-surface = plot(net; shownodenumber = true)
-surface.figure
+figaxisplot = plot(net; shownodenumber = true)
+figaxisplot.figure
 ```
 
 Rotate around node `-5` and render the result next to the original network:

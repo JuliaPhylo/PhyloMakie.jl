@@ -69,12 +69,12 @@ Use `node_positions` and `edge_positions` to get the coordinates used by the
 current rendered plot:
 
 ```@example adding_data
-surface = plot(net; useedgelength = true, style = :majortree)
-first(node_positions(surface.plot), 4)
+figaxisplot = plot(net; useedgelength = true, style = :majortree)
+first(node_positions(figaxisplot.plot), 4)
 ```
 
 ```@example adding_data
-first(edge_positions(surface.plot), 4)
+first(edge_positions(figaxisplot.plot), 4)
 ```
 
 The query functions read from the live plot. If you update a plotted network or
@@ -87,8 +87,8 @@ Makie plotting functions:
 
 ```@example adding_data
 tree = readnewick("(((((((t1,t2),t3),t4),t5),(t6,t7)),(t8,t9)),t10);")
-surface = plot(tree; xlim = (0.0, 10.0), showtiplabel = true)
-axis = surface.axis
+figaxisplot = plot(tree; xlim = (0.0, 10.0), showtiplabel = true)
+axis = figaxisplot.axis
 
 lines!(axis, [9.0, 9.0], [0.8, 7.2]; color = :gray30, linewidth = 3)
 lines!(axis, [9.0, 9.0], [7.8, 9.2]; color = :gray30, linewidth = 3)
@@ -97,5 +97,5 @@ text!(axis, 9.3, 4.0; text = "C", align = (:left, :center), fontsize = 16)
 text!(axis, 9.3, 8.5; text = "B", align = (:left, :center), fontsize = 16)
 text!(axis, 9.3, 10.0; text = "A", align = (:left, :center), fontsize = 16)
 
-surface.figure
+figaxisplot.figure
 ```

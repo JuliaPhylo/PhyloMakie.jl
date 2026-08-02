@@ -132,12 +132,12 @@ Because the plot is a Makie plot object, `update!` changes supported
 attributes in place:
 
 ```@example better_edges
-surface = plot(length_net; useedgelength = true)
+figaxisplot = plot(length_net; useedgelength = true)
 update!(
-    surface.plot;
+    figaxisplot.plot;
     edgecolor = "firebrick",
     edgewidth = 2.5,
     showgamma = true,
 )
-surface.figure
+figaxisplot.figure
 ```

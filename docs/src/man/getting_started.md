@@ -17,8 +17,8 @@ net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:
 
 ```@example getting_started
-surface = plot(net)
-surface.figure
+figaxisplot = plot(net)
+figaxisplot.figure
 ```
 
 The returned value is a `Makie.FigureAxisPlot`. Its `plot` field is the live
@@ -26,19 +26,19 @@ The returned value is a `Makie.FigureAxisPlot`. Its `plot` field is the live
 the rendered coordinates.
 
 ```@example getting_started
-plot_handle = surface.plot
+plot_handle = figaxisplot.plot
 typeof(plot_handle)
 ```
 
 PhyloMakie also provides `phyloplot` as a package-specific alias for `plot`:
 
 ```@example getting_started
-alias_surface = phyloplot(
+alias_figaxisplot = phyloplot(
     net;
     showgamma = true,
     showtiplabel = true,
 )
-alias_surface.figure
+alias_figaxisplot.figure
 ```
 
 To draw into an existing Makie axis, use `plot!` or `phyloplot!`:
