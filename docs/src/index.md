@@ -1,63 +1,44 @@
-```@meta
-CurrentModule = PhyloMakie
-```
-
-# PhyloMakie
+# PhyloMakie.jl
 
 PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks stored as `PhyloNetworks.HybridNetwork`. It preserves the plotting
-capabilities that make `PhyloPlots.plot` useful, but it teaches Makie-native
-entry surfaces first:
+networks stored as `PhyloNetworks.HybridNetwork` values.
 
-- `plot(net)`
-- `plot!(ax, net)`
-- `phyloplot(net)`
-- `phyloplot!(ax, net)`
-
-## What PhyloMakie provides
-
-- full-tree and major-tree styles
-- edge-length-aware layout
-- gamma display for hybrid edges
-- node and edge annotations through the supported public attribute surface
-- color, width, linestyle, and explicit limit controls
-- plotting into a new figure or an existing axis without hidden current-axis state
-
-## Installation
-
-This repository currently documents GitHub-based installation only. It does
-not claim General-registry installation. The first plot example below uses
-CairoMakie as the backend, so install it in the same environment before
-running that example.
+PhyloMakie registers a Makie recipe for `HybridNetwork`, so the standard Makie
+entry points work directly:
 
 ```julia
-using Pkg
-Pkg.add(url = "https://github.com/jeetsukumaran/PhyloMakie.jl")
-Pkg.add("CairoMakie")
+plot(net)
+plot!(axis, net)
 ```
 
-## First plot
+The package also exports `phyloplot` and `phyloplot!` as package-specific
+aliases for the same plotting behavior.
 
-```julia
-using CairoMakie
-using PhyloMakie
-using PhyloNetworks: readnewick
+![PhyloMakie logo](assets/logo.png)
 
-net = readnewick(
-    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-)
+## Manual outline
 
-plot(
-    net;
-    useedgelength = true,
-    showgamma = true,
-    showtiplabel = true,
-    style = :fulltree,
-)
+```@contents
+Pages = [
+    "man/installation.md",
+    "man/getting_started.md",
+    "man/untangling_edges.md",
+    "man/better_edges.md",
+    "man/adding_data.md"
+]
+Depth = 3
 ```
 
+## Library outline
 
-## Learn more
+```@contents
+Pages = ["lib/public.md", "lib/internals.md"]
+Depth = 1
+```
 
-- [Public API](public-api.md)
-- [Render verification](render-verification.md)
+## Function index
+
+```@index
+Pages = ["lib/public.md", "lib/internals.md"]
+Order = [:function]
+```

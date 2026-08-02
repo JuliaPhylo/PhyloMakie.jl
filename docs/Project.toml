@@ -1,8 +1,13 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
+PhyloNetworks = "33ad39ac-ed31-50eb-9b15-43d0656eaa72"
+
+[compat]
+CairoMakie = "0.15.10"
+Documenter = "1"
 
 [sources]
 PhyloMakie = {path = ".."}
