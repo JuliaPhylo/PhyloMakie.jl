@@ -11,10 +11,8 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 CairoMakie = "0.15.10"
+JET = "0.11.3"
 Makie = "0.24.10"
 
 [sources]
 PhyloMakie = {path = ".."}
-
-[compat]
-JET = "0.11.3"
