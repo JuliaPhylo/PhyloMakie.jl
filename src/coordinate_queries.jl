@@ -19,8 +19,8 @@ any prior `Makie.update!` call.
 
 # Examples
 ```julia
-surface = plot(net; useedgelength = true)
-node_positions(surface.plot)
+figaxisplot = plot(net; useedgelength = true)
+node_positions(figaxisplot.plot)
 ```
 """
 function node_positions(plot::PhyloPlot)::DataFrames.DataFrame
@@ -51,8 +51,8 @@ network's zero-length collapsed trunk segment for that edge.
 
 # Examples
 ```julia
-surface = plot(net; useedgelength = true, style = :majortree)
-edge_positions(surface.plot)
+figaxisplot = plot(net; useedgelength = true, style = :majortree)
+edge_positions(figaxisplot.plot)
 ```
 """
 function edge_positions(plot::PhyloPlot)::DataFrames.DataFrame
