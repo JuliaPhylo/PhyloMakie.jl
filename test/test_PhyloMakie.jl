@@ -39,6 +39,8 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test isdefined(PhyloMakie, :PhyloPlot)
     @test isdefined(PhyloMakie, :node_positions)
     @test isdefined(PhyloMakie, :edge_positions)
+    @test :readnewick in names(PhyloMakie)
+    @test PhyloMakie.readnewick === PhyloNetworks.readnewick
     @test !isdefined(PhyloMakie, :PlotKeywordSpec)
     @test !isdefined(PhyloMakie, :normalize_plot_keywords)
     @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)
@@ -62,7 +64,7 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
         @test !isdefined(PhyloMakie, name)
     end
 
-    net = readnewick("(A,B);")
+    net = PhyloMakie.readnewick("(A,B);")
     @test which(Makie.plottype, (HybridNetwork,)) != which(Makie.plottype, (Any,))
     @test Makie.plottype(net) == getfield(PhyloMakie, :PhyloPlot)
 end

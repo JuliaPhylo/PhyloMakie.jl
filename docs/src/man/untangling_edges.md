@@ -1,7 +1,7 @@
 ```@setup untangling
 using CairoMakie
 using PhyloMakie
-using PhyloNetworks
+import PhyloNetworks
 CairoMakie.activate!()
 ```
 
@@ -11,7 +11,7 @@ This plot may not be the easiest to read, as the hybrid edge crosses over C's
 edge:
 
 ```@example untangling
-net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),(C,(D)#H1)));")
 plot(net)
 ```
 

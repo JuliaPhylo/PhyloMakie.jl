@@ -5,7 +5,7 @@ using Makie
 using CairoMakie
 using PhyloMakie
 import PhyloNetworks # not "using" to avoid importing accessor names
-using PhyloNetworks: HybridNetwork, readnewick
+using PhyloNetworks: HybridNetwork
 using Test
 
 include("support/fixture_corpus.jl")

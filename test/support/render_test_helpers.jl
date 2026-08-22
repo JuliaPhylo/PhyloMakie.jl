@@ -2,7 +2,6 @@ using CairoMakie
 using DataFrames: DataFrame
 using LinearAlgebra: dot, norm
 using Makie
-using PhyloNetworks
 
 function _render_fixture_dataframe(table_fixture)
     return DataFrame(
@@ -15,7 +14,7 @@ function _public_render_case(
     kwargs...,
 )
     CairoMakie.activate!()
-    surface = Makie.plot(readnewick(newick); kwargs...)
+    surface = Makie.plot(PhyloMakie.readnewick(newick); kwargs...)
     plot = surface.plot
     return (
         surface=surface,

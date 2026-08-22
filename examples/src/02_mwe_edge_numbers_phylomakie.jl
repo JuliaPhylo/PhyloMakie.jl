@@ -1,8 +1,7 @@
 using PhyloMakie
 using CairoMakie
-using PhyloNetworks: readnewick
 
-net = readnewick("(A,((B,#H1),((C)#H1, D)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),((C)#H1, D)));")
 
 # R"layout"([1 2])
 fig = Figure();

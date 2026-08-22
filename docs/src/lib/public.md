@@ -1,7 +1,8 @@
 # Public API
 
 PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
-the package-specific convenience aliases and coordinate-query helpers.
+the package-specific convenience aliases, coordinate-query helpers, and the
+`PhyloMakie.readnewick` parser.
 
 ## Plotting entry points
 
@@ -11,11 +12,13 @@ the package-specific convenience aliases and coordinate-query helpers.
 | `plot!(axis, net)` | `PhyloPlot` | Draw a network into an existing Makie axis. |
 | `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)`. |
 | `phyloplot!(axis, net)` | `PhyloPlot` | Alias for `plot!(axis, net)`. |
+| `PhyloMakie.readnewick(input)` | `PhyloNetworks.HybridNetwork` | Parse a Newick network. |
 
 ```@docs
 PhyloMakie.PhyloPlot
 PhyloMakie.phyloplot
 PhyloMakie.phyloplot!
+PhyloMakie.readnewick
 ```
 
 ## Plot attributes

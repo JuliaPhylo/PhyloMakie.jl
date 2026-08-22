@@ -1,7 +1,6 @@
 import CairoMakie
 import DataFrames
 import PhyloMakie
-import PhyloNetworks
 using Documenter: DocMeta, HTML, deploydocs, makedocs
 
 CairoMakie.activate!()
@@ -9,7 +8,7 @@ CairoMakie.activate!()
 DocMeta.setdocmeta!(
     PhyloMakie,
     :DocTestSetup,
-    :(using CairoMakie, DataFrames, PhyloMakie, PhyloNetworks);
+    :(using CairoMakie, DataFrames, PhyloMakie);
     recursive = true,
 )
 

@@ -1,8 +1,8 @@
 using GLMakie
 using PhyloMakie
-using PhyloNetworks: readnewick
+import PhyloNetworks
 
-net = readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+net = PhyloMakie.readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
 
 surface = plot(
     net;
@@ -20,18 +20,18 @@ update!(
     # ylim = (0.0, 4.0),
 )
 
-rootonedge!(net, 4) # nothing happens
-preorder!(net)
+PhyloNetworks.rootonedge!(net, 4) # nothing happens
+PhyloNetworks.preorder!(net)
 
 surface.figure
 
-writenewick(plot_handle.attributes.inputs[:arg1].value) # was modified
+PhyloNetworks.writenewick(plot_handle.attributes.inputs[:arg1].value) # was modified
 # "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
 update!(plot_handle) # but the viz didn't change
-writenewick(plot_handle.attributes.outputs[:plot_network].value[].net) # did *not* change
+PhyloNetworks.writenewick(plot_handle.attributes.outputs[:plot_network].value[].net) # did *not* change
 # "(((A:0.2,(B:0.1)#H1:0.1::0.9):0.1,(C:0.11,#H1:0.01::0.1):0.19):0.1,D:0.4);"
 # yet its parent has changed:
-writenewick(plot_handle.attributes.outputs[:plot_network].parent.inputs[1].value[])
+PhyloNetworks.writenewick(plot_handle.attributes.outputs[:plot_network].parent.inputs[1].value[])
 # "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
 # and is marked as not dirty:
 plot_handle.attributes.outputs[:plot_network].parent.inputs_dirty[1] # false

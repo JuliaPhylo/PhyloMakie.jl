@@ -1,7 +1,6 @@
-using PhyloNetworks
 using PhyloMakie
 using CairoMakie
 
-net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),(C,(D)#H1)));")
 
 plot(net)

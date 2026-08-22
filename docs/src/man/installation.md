@@ -18,7 +18,6 @@ CairoMakie for static rendering:
 using Pkg
 Pkg.add([
     "CairoMakie",
-    "PhyloNetworks",
 ])
 ```
 
@@ -27,5 +26,4 @@ Load the packages needed for most examples with:
 ```julia
 using CairoMakie
 using PhyloMakie
-using PhyloNetworks
 ```

@@ -57,7 +57,7 @@ end
 
     @testset "Prepared network is caller-safe" begin
         layout_case = layout_cases.with_lengths_fulltree
-        network = readnewick(layout_case.newick)
+        network = PhyloMakie.readnewick(layout_case.newick)
         before = _plot_network_snapshot(network)
         plot_network = prepare_plot_network(network)
 
@@ -77,7 +77,7 @@ end
             :level2_without_gamma,
         )
             layout_case = getproperty(layout_cases, case_name)
-            network = readnewick(layout_case.newick)
+            network = PhyloMakie.readnewick(layout_case.newick)
             plot_network = prepare_plot_network(network)
             config = resolve_plot_config(; layout_case.attribute_kwargs...)
             geometry = compute_network_geometry(plot_network, config)
@@ -90,7 +90,7 @@ end
 
     @testset "Mixed missing edge lengths warn and use fallback length" begin
         layout_case = layout_cases.mixed_missing_lengths_warning
-        network = readnewick(layout_case.newick)
+        network = PhyloMakie.readnewick(layout_case.newick)
         for edge_number in layout_case.missing_edge_numbers
             edge_index = findfirst(edge -> edge.number == edge_number, network.edge)
             @test !isnothing(edge_index)
@@ -102,7 +102,7 @@ end
             config,
         )
 
-        comparison_network = readnewick(layout_case.newick)
+        comparison_network = PhyloMakie.readnewick(layout_case.newick)
         for edge_number in layout_case.missing_edge_numbers
             edge_index = findfirst(edge -> edge.number == edge_number, comparison_network.edge)
             @test !isnothing(edge_index)
@@ -120,7 +120,7 @@ end
         config = resolve_plot_config(; layout_case.attribute_kwargs...)
         geometry, stdout_text = _capture_stdout() do
             compute_network_geometry(
-                prepare_plot_network(readnewick(layout_case.newick)),
+                prepare_plot_network(PhyloMakie.readnewick(layout_case.newick)),
                 config,
             )
         end
@@ -128,7 +128,7 @@ end
         @test _network_geometry_tuple(geometry) == layout_case.expected
 
         no_lengths_geometry = compute_network_geometry(
-            prepare_plot_network(readnewick(layout_case.newick)),
+            prepare_plot_network(PhyloMakie.readnewick(layout_case.newick)),
             resolve_plot_config(useedgelength=false, style=:fulltree),
         )
         @test _network_geometry_tuple(geometry) != _network_geometry_tuple(no_lengths_geometry)
@@ -136,7 +136,7 @@ end
 
     @testset "Traversal errors remain honest" begin
         layout_case = layout_cases.incompatible_root
-        network = readnewick(layout_case.newick)
+        network = PhyloMakie.readnewick(layout_case.newick)
         network.rooti = layout_case.rooti
         caught_error = try
             prepare_plot_network(network)
@@ -150,13 +150,13 @@ end
 
     @testset "Already-prepared caller network is not mutated" begin
         layout_case = layout_cases.with_lengths_fulltree
-        fresh_network = readnewick(layout_case.newick)
+        fresh_network = PhyloMakie.readnewick(layout_case.newick)
         fresh_geometry = compute_network_geometry(
             prepare_plot_network(fresh_network),
             resolve_plot_config(; layout_case.attribute_kwargs...),
         )
 
-        prepared_network = readnewick(layout_case.newick)
+        prepared_network = PhyloMakie.readnewick(layout_case.newick)
         PhyloNetworks.directedges!(prepared_network)
         PhyloNetworks.preorder!(prepared_network)
         before = _plot_network_snapshot(prepared_network)

@@ -33,7 +33,6 @@ Use named `@setup` blocks for shared imports:
 using CairoMakie
 using DataFrames
 using PhyloMakie
-using PhyloNetworks
 CairoMakie.activate!()
 ```
 ````
@@ -42,7 +41,7 @@ Then render native Makie output:
 
 ````
 ```@example example_name
-net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),(C,(D)#H1)));")
 figaxisplot = plot(net; showgamma = true)
 figaxisplot.figure
 ```

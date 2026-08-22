@@ -1,7 +1,6 @@
 using CairoMakie
 using DataFrames: DataFrame, nrow
 using Makie
-using PhyloNetworks
 
 @testset "Coordinate queries" begin
     CairoMakie.activate!()
@@ -116,7 +115,7 @@ using PhyloNetworks
 
     @testset "Positions update after Makie.update!" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
-        surface = Makie.plot(readnewick(render_case.newick); useedgelength=false, style=:fulltree)
+        surface = Makie.plot(PhyloMakie.readnewick(render_case.newick); useedgelength=false, style=:fulltree)
         plot = surface.plot
 
         before_x = node_positions(plot).x

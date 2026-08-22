@@ -52,8 +52,8 @@ end
     )
 
     @testset "plot() and phyloplot() dispatch to PhyloPlot and produce identical output" begin
-        plot_surface = Makie.plot(readnewick(render_case.newick); render_kwargs...)
-        convenience_surface = phyloplot(readnewick(render_case.newick); render_kwargs...)
+        plot_surface = Makie.plot(PhyloMakie.readnewick(render_case.newick); render_kwargs...)
+        convenience_surface = phyloplot(PhyloMakie.readnewick(render_case.newick); render_kwargs...)
 
         @test plot_surface.plot isa PhyloPlot
         @test convenience_surface.plot isa PhyloPlot
@@ -66,7 +66,7 @@ end
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
         hidespines!(plot_axis)
-        plot_surface = Makie.plot!(plot_axis, readnewick(render_case.newick); render_kwargs...)
+        plot_surface = Makie.plot!(plot_axis, PhyloMakie.readnewick(render_case.newick); render_kwargs...)
 
         convenience_figure = Figure(size=(640, 400))
         convenience_axis = Axis(convenience_figure[1, 1])
@@ -74,7 +74,7 @@ end
         hidespines!(convenience_axis)
         convenience_surface = phyloplot!(
             convenience_axis,
-            readnewick(render_case.newick);
+            PhyloMakie.readnewick(render_case.newick);
             render_kwargs...,
         )
 
@@ -100,7 +100,7 @@ end
         )
 
         for surface in surfaces
-            network = readnewick(render_case.newick)
+            network = PhyloMakie.readnewick(render_case.newick)
             before = _capture_network_snapshot(network)
             surface(network)
             @test _capture_network_snapshot(network) == before
@@ -114,7 +114,7 @@ end
         edgelabel =
             _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         limit_surface = Makie.plot(
-            readnewick(annotation_case.newick);
+            PhyloMakie.readnewick(annotation_case.newick);
             useedgelength=true,
             shownodelabel=true,
             shownodenumber=true,
@@ -133,7 +133,7 @@ end
         @test !isempty(_plot_colorbuffer(limit_surface.figure))
 
         x_limit_error = try
-            Makie.plot(readnewick(annotation_case.newick); xlim=[1.0, 2.0, 3.0])
+            Makie.plot(PhyloMakie.readnewick(annotation_case.newick); xlim=[1.0, 2.0, 3.0])
             nothing
         catch err
             err
@@ -144,7 +144,7 @@ end
         @test !occursin("ResolveException", sprint(showerror, x_limit_error))
 
         y_limit_error = try
-            phyloplot(readnewick(annotation_case.newick); ylim=(1.0,))
+            phyloplot(PhyloMakie.readnewick(annotation_case.newick); ylim=(1.0,))
             nothing
         catch err
             err
@@ -158,7 +158,7 @@ end
     @testset "Integration: full pipeline renders without error" begin
         @testset ":simple_tree_no_hybrid" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
-            surface = Makie.plot(readnewick(scenario.newick); style=:fulltree)
+            surface = Makie.plot(PhyloMakie.readnewick(scenario.newick); style=:fulltree)
 
             @test surface isa Makie.FigureAxisPlot
             @test surface.plot isa PhyloPlot
@@ -168,7 +168,7 @@ end
         @testset ":single_reticulation_gamma and :showgamma_rendering" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.single_reticulation_gamma
             surface = Makie.plot(
-                readnewick(scenario.newick);
+                PhyloMakie.readnewick(scenario.newick);
                 useedgelength=true,
                 showgamma=true,
                 style=:fulltree,
@@ -181,9 +181,9 @@ end
         @testset ":style_distinction_fulltree_vs_majortree" begin
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.style_distinction_fulltree_vs_majortree
             fulltree_surface =
-                Makie.plot(readnewick(scenario.newick); useedgelength=true, style=:fulltree)
+                Makie.plot(PhyloMakie.readnewick(scenario.newick); useedgelength=true, style=:fulltree)
             majortree_surface =
-                Makie.plot(readnewick(scenario.newick); useedgelength=true, style=:majortree)
+                Makie.plot(PhyloMakie.readnewick(scenario.newick); useedgelength=true, style=:majortree)
 
             @test _plot_colorbuffer(fulltree_surface.figure) !=
                 _plot_colorbuffer(majortree_surface.figure)
@@ -196,7 +196,7 @@ end
             edgelabel =
                 _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
             surface = Makie.plot(
-                readnewick(annotation_case.newick);
+                PhyloMakie.readnewick(annotation_case.newick);
                 annotation_case.attribute_kwargs...,
                 nodelabel=nodelabel,
                 edgelabel=edgelabel,
@@ -214,7 +214,7 @@ end
         CairoMakie.activate!()
         # Hybrid network required: style=:fulltree vs :majortree is only visually
         # distinct when minor (hybrid) edges are present.
-        net = readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+        net = PhyloMakie.readnewick("(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
         surface = Makie.plot(net; style = :fulltree)
         plot_handle = surface.plot
 
@@ -228,7 +228,7 @@ end
         after_style = _plot_colorbuffer(surface.figure)
         @test before_style != after_style
 
-        net2 = readnewick("((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
+        net2 = PhyloMakie.readnewick("((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
         before_net = _plot_colorbuffer(surface.figure)
         Makie.update!(plot_handle; arg1 = net2)
         after_net = _plot_colorbuffer(surface.figure)
@@ -250,14 +250,14 @@ end
 
         left_plot = Makie.plot!(
             left_axis,
-            readnewick(scenario.newicks[1]);
+            PhyloMakie.readnewick(scenario.newicks[1]);
             useedgelength=true,
             showgamma=true,
             style=:fulltree,
         )
         right_plot = phyloplot!(
             right_axis,
-            readnewick(scenario.newicks[2]);
+            PhyloMakie.readnewick(scenario.newicks[2]);
             useedgelength=true,
             showedgenumber=true,
             style=:majortree,

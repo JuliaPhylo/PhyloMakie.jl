@@ -2,7 +2,6 @@
 using CairoMakie
 using DataFrames
 using PhyloMakie
-using PhyloNetworks: readnewick
 CairoMakie.activate!()
 ```
 
@@ -20,7 +19,7 @@ To add labels on edges (or nodes), we need to know their numbers. We can use the
 `showedgenumber = true` option for this. (Use `shownodenumber = true` to see node numbers).
 
 ```@example adding_data
-net = readnewick("(A,((B,#H1),((C)#H1,D)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),((C)#H1,D)));")
 
 figure = Figure(size = (760, 320))
 default_axis = Axis(figure[1, 1], title = "Default edge number color")
@@ -92,7 +91,7 @@ by the live `PhyloPlot`.
 Here's example code that adds bars to denote clades in the margin:
 
 ```@example adding_data
-tree = readnewick("(((((((t1,t2),t3),t4),t5),(t6,t7)),(t8,t9)),t10);")
+tree = PhyloMakie.readnewick("(((((((t1,t2),t3),t4),t5),(t6,t7)),(t8,t9)),t10);")
 plot_result = plot(tree; xlim = (1.0, 10.0))
 axis = plot_result.axis
 

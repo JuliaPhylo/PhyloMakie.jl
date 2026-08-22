@@ -1,7 +1,6 @@
 ```@setup getting_started
 using CairoMakie
 using PhyloMakie
-using PhyloNetworks: readnewick
 CairoMakie.activate!()
 ```
 
@@ -11,7 +10,7 @@ Start with a `PhyloNetworks.HybridNetwork`. This example reads a small network
 from an extended Newick string:
 
 ```@repl getting_started
-net = readnewick("(A,((B,#H1),(C,(D)#H1)));")
+net = PhyloMakie.readnewick("(A,((B,#H1),(C,(D)#H1)));")
 ```
 
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:

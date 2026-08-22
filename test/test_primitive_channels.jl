@@ -20,7 +20,7 @@ end
     resolve_plot_config = getfield(PhyloMakie, :resolve_plot_config)
 
     function primitive_channels_for(newick::AbstractString; kwargs...)
-        plot_network = prepare_plot_network(readnewick(newick))
+        plot_network = prepare_plot_network(PhyloMakie.readnewick(newick))
         config = resolve_plot_config(; kwargs...)
         geometry = compute_network_geometry(plot_network, config)
         layout = compute_layout(plot_network, config, geometry)

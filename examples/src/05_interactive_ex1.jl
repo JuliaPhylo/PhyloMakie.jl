@@ -1,6 +1,6 @@
 using GLMakie
-using PhyloMakie: phyloplot!
-using PhyloNetworks: HybridNetwork, readmultinewick, readnewick, readnexus_treeblock
+using PhyloMakie
+using PhyloNetworks: HybridNetwork, readmultinewick, readnexus_treeblock
 
 struct ViewerRecord
     network::HybridNetwork
@@ -145,7 +145,7 @@ function demo_records()::Vector{ViewerRecord}
         ("Demo tree", "(A:1,(B:1,C:1):1);"),
     )
     return [
-        ViewerRecord(readnewick(newick), source, index) for
+        ViewerRecord(PhyloMakie.readnewick(newick), source, index) for
             (index, (source, newick)) in enumerate(demo_newicks)
     ]
 end
@@ -169,7 +169,7 @@ function load_records_from_file(path::AbstractString)::Vector{HybridNetwork}
 
     records = collect(readmultinewick(path, false))
     isempty(records) || return records
-    return HybridNetwork[readnewick(path)]
+    return HybridNetwork[PhyloMakie.readnewick(path)]
 end
 
 function load_records(paths::AbstractVector{<:AbstractString})::LoadResult
