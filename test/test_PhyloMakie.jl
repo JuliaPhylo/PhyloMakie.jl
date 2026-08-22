@@ -41,6 +41,8 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test isdefined(PhyloMakie, :edge_positions)
     @test :readnewick in names(PhyloMakie)
     @test PhyloMakie.readnewick === PhyloNetworks.readnewick
+    @test :readnexus_treeblock in names(PhyloMakie)
+    @test PhyloMakie.readnexus_treeblock === PhyloNetworks.readnexus_treeblock
     @test !isdefined(PhyloMakie, :PlotKeywordSpec)
     @test !isdefined(PhyloMakie, :normalize_plot_keywords)
     @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)

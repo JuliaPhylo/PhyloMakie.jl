@@ -1,6 +1,6 @@
 using GLMakie
 using PhyloMakie
-using PhyloNetworks: HybridNetwork, readmultinewick, readnexus_treeblock
+using PhyloNetworks: HybridNetwork, readmultinewick
 
 struct ViewerRecord
     network::HybridNetwork
@@ -164,7 +164,7 @@ function load_records_from_file(path::AbstractString)::Vector{HybridNetwork}
     isfile(path) || throw(ArgumentError("File does not exist: $(path)"))
 
     if contains_nexus_treeblock(path)
-        return collect(readnexus_treeblock(path))
+        return collect(PhyloMakie.readnexus_treeblock(path))
     end
 
     records = collect(readmultinewick(path, false))

@@ -2,7 +2,7 @@
 
 PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
 the package-specific convenience aliases, coordinate-query helpers, and the
-`PhyloMakie.readnewick` parser.
+`PhyloMakie.readnewick` and `PhyloMakie.readnexus_treeblock` readers.
 
 ## Plotting entry points
 
@@ -13,12 +13,14 @@ the package-specific convenience aliases, coordinate-query helpers, and the
 | `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)`. |
 | `phyloplot!(axis, net)` | `PhyloPlot` | Alias for `plot!(axis, net)`. |
 | `PhyloMakie.readnewick(input)` | `PhyloNetworks.HybridNetwork` | Parse a Newick network. |
+| `PhyloMakie.readnexus_treeblock(filename)` | `Vector{PhyloNetworks.HybridNetwork}` | Read the first trees block in a NEXUS file. |
 
 ```@docs
 PhyloMakie.PhyloPlot
 PhyloMakie.phyloplot
 PhyloMakie.phyloplot!
 PhyloMakie.readnewick
+PhyloMakie.readnexus_treeblock
 ```
 
 ## Plot attributes
