@@ -115,7 +115,7 @@ using Makie
 
     @testset "Positions update after Makie.update!" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
-        surface = Makie.plot(PhyloMakie.readnewick(render_case.newick); useedgelength=false, style=:fulltree)
+        surface = Makie.plot(only(parsenetwork(NewickFormat(), render_case.newick)); useedgelength=false, style=:fulltree)
         plot = surface.plot
 
         before_x = node_positions(plot).x

@@ -2,7 +2,7 @@
 
 PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
 the package-specific convenience aliases, coordinate-query helpers, and the
-`PhyloMakie.readnewick` and `PhyloMakie.readnexus_treeblock` readers.
+`PhyloMakie.parsenetwork` and `PhyloMakie.readnetwork` phylogeny readers.
 
 ## Plotting entry points
 
@@ -12,15 +12,33 @@ the package-specific convenience aliases, coordinate-query helpers, and the
 | `plot!(axis, net)` | `PhyloPlot` | Draw a network into an existing Makie axis. |
 | `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)`. |
 | `phyloplot!(axis, net)` | `PhyloPlot` | Alias for `plot!(axis, net)`. |
-| `PhyloMakie.readnewick(input)` | `PhyloNetworks.HybridNetwork` | Parse a Newick network. |
-| `PhyloMakie.readnexus_treeblock(filename)` | `Vector{PhyloNetworks.HybridNetwork}` | Read the first trees block in a NEXUS file. |
+
+## Reading networks
+
+`parsenetwork`/`readnetwork` dispatch on a format tag
+(`NewickFormat()`, `NexusFormat()`) and always return
+`Vector{PhyloMakie.LineageNetwork}`. `parsenetwork` takes literal format
+content (a string or an `IO` stream); `readnetwork` takes a file path.
+
+| Function | Return value | Description |
+| --- | --- | --- |
+| `parsenetwork(NewickFormat(), text)` | `Vector{LineageNetwork}` | Parse literal Newick text or an `IO` stream. |
+| `readnetwork(NewickFormat(), path)` | `Vector{LineageNetwork}` | Read Newick content from a file. |
+| `readnetwork(NexusFormat(), path)` | `Vector{LineageNetwork}` | Read the first trees block from a NEXUS file. |
+
+Use `only(...)` at the call site when a source is known to hold exactly one
+network, e.g. `only(parsenetwork(NewickFormat(), "(A,B);"))`.
 
 ```@docs
 PhyloMakie.PhyloPlot
 PhyloMakie.phyloplot
 PhyloMakie.phyloplot!
-PhyloMakie.readnewick
-PhyloMakie.readnexus_treeblock
+PhyloMakie.LineageNetwork
+PhyloMakie.AbstractPhylogenyFormat
+PhyloMakie.NewickFormat
+PhyloMakie.NexusFormat
+PhyloMakie.parsenetwork
+PhyloMakie.readnetwork
 ```
 
 ## Plot attributes

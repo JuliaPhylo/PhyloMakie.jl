@@ -39,10 +39,13 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test isdefined(PhyloMakie, :PhyloPlot)
     @test isdefined(PhyloMakie, :node_positions)
     @test isdefined(PhyloMakie, :edge_positions)
-    @test :readnewick in names(PhyloMakie)
-    @test PhyloMakie.readnewick === PhyloNetworks.readnewick
-    @test :readnexus_treeblock in names(PhyloMakie)
-    @test PhyloMakie.readnexus_treeblock === PhyloNetworks.readnexus_treeblock
+    @test :LineageNetwork in names(PhyloMakie)
+    @test PhyloMakie.LineageNetwork === PhyloNetworks.HybridNetwork
+    @test :AbstractPhylogenyFormat in names(PhyloMakie)
+    @test :NewickFormat in names(PhyloMakie)
+    @test :NexusFormat in names(PhyloMakie)
+    @test :parsenetwork in names(PhyloMakie)
+    @test :readnetwork in names(PhyloMakie)
     @test !isdefined(PhyloMakie, :PlotKeywordSpec)
     @test !isdefined(PhyloMakie, :normalize_plot_keywords)
     @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)
@@ -66,7 +69,7 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
         @test !isdefined(PhyloMakie, name)
     end
 
-    net = PhyloMakie.readnewick("(A,B);")
+    net = only(parsenetwork(NewickFormat(), "(A,B);"))
     @test which(Makie.plottype, (HybridNetwork,)) != which(Makie.plottype, (Any,))
     @test Makie.plottype(net) == getfield(PhyloMakie, :PhyloPlot)
 end

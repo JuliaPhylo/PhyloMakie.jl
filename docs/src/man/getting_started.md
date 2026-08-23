@@ -10,7 +10,7 @@ Start with a `PhyloNetworks.HybridNetwork`. This example reads a small network
 from an extended Newick string:
 
 ```@repl getting_started
-net = PhyloMakie.readnewick("(A,((B,#H1),(C,(D)#H1)));")
+net = only(parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
 ```
 
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:

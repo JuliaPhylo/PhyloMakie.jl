@@ -6,7 +6,7 @@ const PRIMITIVE_ASSEMBLY_ALT_NEWICK =
 function _primitive_assembly_plot(; kwargs...)
     CairoMakie.activate!()
     surface = Makie.plot(
-        PhyloMakie.readnewick(PRIMITIVE_ASSEMBLY_NEWICK);
+        only(parsenetwork(NewickFormat(), PRIMITIVE_ASSEMBLY_NEWICK));
         useedgelength = true,
         showgamma = true,
         style = :fulltree,
@@ -167,7 +167,7 @@ end
         _assert_children_match_outputs(plot, outputs)
 
         before_points = copy(children.edge_segments[1][])
-        Makie.update!(plot; arg1 = PhyloMakie.readnewick(PRIMITIVE_ASSEMBLY_ALT_NEWICK))
+        Makie.update!(plot; arg1 = only(parsenetwork(NewickFormat(), PRIMITIVE_ASSEMBLY_ALT_NEWICK)))
         @test _primitive_child_ids(plot) == original_child_ids
         @test children.edge_segments[1][] != before_points
         _assert_children_match_outputs(plot, outputs)

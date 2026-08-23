@@ -1,24 +1,73 @@
+"""
+    LineageNetwork
 
-import PhyloNetworks: readnewick, readnexus_treeblock
+Alias for `PhyloNetworks.HybridNetwork`, the tree/network type used
+throughout PhyloMakie.
+"""
+const LineageNetwork = PhyloNetworks.HybridNetwork
+export LineageNetwork
 
 """
-    readnewick(input)
+    AbstractPhylogenyFormat
 
-Parse a Newick representation and return a `PhyloNetworks.HybridNetwork`.
-
-PhyloMakie re-exports `PhyloNetworks.readnewick`.
+Abstract supertype for phylogeny serialization format tags. Concrete
+subtypes are singleton structs used to dispatch [`parsenetwork`](@ref) and
+[`readnetwork`](@ref) methods to the reader for that format.
 """
-readnewick
+abstract type AbstractPhylogenyFormat end
 
 """
-    readnexus_treeblock(filename, args...; kwargs...)
+    NewickFormat
 
-Read the first trees block in a NEXUS file and return
-`PhyloNetworks.HybridNetwork` values.
-
-PhyloMakie re-exports `PhyloNetworks.readnexus_treeblock`.
+Format tag for (extended) Newick parenthetical notation.
 """
-readnexus_treeblock
+struct NewickFormat <: AbstractPhylogenyFormat end
 
-export readnewick,
-    readnexus_treeblock
+"""
+    NexusFormat
+
+Format tag for NEXUS-formatted files containing a trees block.
+"""
+struct NexusFormat <: AbstractPhylogenyFormat end
+
+export AbstractPhylogenyFormat, NewickFormat, NexusFormat
+
+"""
+    parsenetwork(format, io::IO) -> Vector{LineageNetwork}
+
+Parse `format`-formatted content from the open stream `io` and return the
+networks it contains. Performs no file I/O itself; `io` may be a file
+handle, an `IOBuffer`, or any other `IO` source.
+"""
+function parsenetwork(::NewickFormat, io::IO)::Vector{LineageNetwork}
+    return LineageNetwork[PhyloNetworks.readnewick(io)]
+end
+
+"""
+    parsenetwork(format, text::AbstractString) -> Vector{LineageNetwork}
+
+Parse `text` as literal `format`-formatted content and return the networks
+it contains. `text` is always treated as content, never as a file path.
+"""
+function parsenetwork(fmt::NewickFormat, text::AbstractString)::Vector{LineageNetwork}
+    return parsenetwork(fmt, IOBuffer(text))
+end
+
+export parsenetwork
+
+"""
+    readnetwork(format, path::AbstractString) -> Vector{LineageNetwork}
+
+Read `format`-formatted content from the file at `path` and return the
+networks it contains. `path` is always treated as a file path, never as
+literal content.
+"""
+function readnetwork(fmt::AbstractPhylogenyFormat, path::AbstractString)::Vector{LineageNetwork}
+    return open(io -> parsenetwork(fmt, io), path)
+end
+
+function readnetwork(::NexusFormat, path::AbstractString)::Vector{LineageNetwork}
+    return PhyloNetworks.readnexus_treeblock(path)
+end
+
+export readnetwork
