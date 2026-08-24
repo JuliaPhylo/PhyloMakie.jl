@@ -13,7 +13,7 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 
 - `plot(net)` and `plot!(ax, net)` follow standard Makie conventions
 - `phyloplot` and `phyloplot!` as convenience aliases
-- `newick"..."` and `nexus"..."` literals for exactly one network
+- `newick"..."` and `nexustreeblock"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
 - Edge-length scaling, gamma display, tip labels, colors, and widths
 - Composable with any Makie layout

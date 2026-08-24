@@ -110,22 +110,22 @@
         @test "changed" in PhyloNetworks.tiplabels(first_newick)
         @test !("changed" in PhyloNetworks.tiplabels(second_newick))
 
-        nexus_literal() = nexus"""
+        nexustreeblock_literal() = nexustreeblock"""
         #NEXUS
         begin trees;
           tree tree1 = (A,(B,C));
         end;
         """
-        first_nexus = nexus_literal()
-        second_nexus = nexus_literal()
+        first_nexus = nexustreeblock_literal()
+        second_nexus = nexustreeblock_literal()
         @test first_nexus isa LineageNetwork
         @test first_nexus !== second_nexus
         @test Set(PhyloNetworks.tiplabels(first_nexus)) == Set(["A", "B", "C"])
 
         @test_throws ArgumentError newick""
         @test_throws ArgumentError newick"(A, B); (C, D);"
-        @test_throws ArgumentError nexus""
-        @test_throws ArgumentError nexus"""
+        @test_throws ArgumentError nexustreeblock""
+        @test_throws ArgumentError nexustreeblock"""
         #NEXUS
         begin trees;
           tree tree1 = (A,(B,C));

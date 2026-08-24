@@ -26,7 +26,7 @@ foreach(n -> plot(n), nexus_nets)
 plot(newick"(A,((B,#H1),(C,(D)#H1)));")
 
 plot(
-    nexus"""
+    nexustreeblock"""
     #NEXUS
     begin trees;
       tree tree1 = (A,(B,C));

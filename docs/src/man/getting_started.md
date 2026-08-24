@@ -21,9 +21,9 @@ literal_plot = phyloplot(newick"(A, (B, C));")
 literal_plot
 ```
 
-Both `newick"..."` and `nexus"..."` require exactly one parsed network. Use
-`parsenetwork` when the content may contain multiple networks, then select or
-plot each returned value explicitly.
+Both `newick"..."` and `nexustreeblock"..."` require exactly one parsed
+network. Use `parsenetwork` when the content may contain multiple networks,
+then select or plot each returned value explicitly.
 
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:
 

@@ -154,15 +154,15 @@ macro newick_str(text)
 end
 
 """
-    nexus"..." -> LineageNetwork
+    nexustreeblock"..." -> LineageNetwork
 
 Parse exactly one network from the first trees block in literal NEXUS content.
 The literal returns a fresh `PhyloNetworks.HybridNetwork` each time it is
 evaluated. Use [`parsenetwork`](@ref) with [`NexusFormat`](@ref) when the trees
 block may contain multiple networks.
 """
-macro nexus_str(text)
+macro nexustreeblock_str(text)
     return :(_parse_single_network(NexusFormat(), $text))
 end
 
-export @newick_str, @nexus_str
+export @newick_str, @nexustreeblock_str
