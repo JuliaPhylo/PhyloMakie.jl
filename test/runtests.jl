@@ -14,6 +14,7 @@ include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
+    include("test_networkio.jl")
     include("test_plot_config.jl")
     include("test_network_layout.jl")
     include("test_annotation_tables.jl")

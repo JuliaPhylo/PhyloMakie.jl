@@ -66,15 +66,28 @@ function readnetwork(fmt::AbstractPhylogenyFormat, path::AbstractString)::Vector
     return open(io -> parsenetwork(fmt, io), path)
 end
 
+"""
+    readnetwork(::NexusFormat, path::AbstractString) -> Vector{LineageNetwork}
+
+Read the first trees block of the NEXUS file at `path`, applying its
+translate table if present. Delegates directly to
+`PhyloNetworks.readnexus_treeblock`.
+"""
 function readnetwork(::NexusFormat, path::AbstractString)::Vector{LineageNetwork}
     return PhyloNetworks.readnexus_treeblock(path)
 end
 
-# PhyloNetworks.readnexus_treeblock only accepts a file path; there is no
-# upstream entry point that reads a NEXUS trees block from text or an IO
-# stream. Route through a temp file rather than duplicating the translate
-# table / gamma extraction logic locally, so there stays exactly one
-# implementation of NEXUS treeblock parsing.
+"""
+    parsenetwork(::NexusFormat, text::AbstractString) -> Vector{LineageNetwork}
+
+Parse a NEXUS trees block from literal `text`. `PhyloNetworks.readnexus_treeblock`
+only accepts a file path — there is no upstream entry point that reads NEXUS
+content from text or an `IO` stream. Rather than duplicating its translate
+table / gamma extraction logic locally, this writes `text` to a temporary
+file and delegates to [`readnetwork`](@ref)(NexusFormat(), path), so there
+stays exactly one implementation of NEXUS treeblock parsing. Unlike the
+`NewickFormat` methods, this performs real (transient) file I/O.
+"""
 function parsenetwork(::NexusFormat, text::AbstractString)::Vector{LineageNetwork}
     return mktemp() do path, io
         write(io, text)
@@ -83,6 +96,13 @@ function parsenetwork(::NexusFormat, text::AbstractString)::Vector{LineageNetwor
     end
 end
 
+"""
+    parsenetwork(::NexusFormat, io::IO) -> Vector{LineageNetwork}
+
+Read all of `io` and parse it as a NEXUS trees block; see the
+`AbstractString` method for why this is not a pure in-memory parse for
+`NexusFormat`.
+"""
 function parsenetwork(fmt::NexusFormat, io::IO)::Vector{LineageNetwork}
     return parsenetwork(fmt, read(io, String))
 end
