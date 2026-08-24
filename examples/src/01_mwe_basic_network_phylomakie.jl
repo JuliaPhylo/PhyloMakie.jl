@@ -1,38 +1,35 @@
 using PhyloMakie
-using CairoMakie
+using GLMakie
 
-# Parse literal content. Both format tags return a vector of networks.
-newick_networks = parsenetwork(
-    NewickFormat(),
-    "(A,((B,#H1),(C,(D)#H1))); (E,(F,G));",
-)
+# Networks can be instantiated and visualized from string representations using
+# `parsenetwork`.
+# Note that this always returns a collection of networks (`Vector{PhyloNetwork}`),
+# even if only one network is defined in the source.
 
-nexus_networks = parsenetwork(
-    NexusFormat(),
+newick_nets = parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+plot(only(newick_nets))
+
+nexus_nets = parsenetwork(
+    NexusFormat(), """
+    #NEXUS
+    begin trees;
+        tree tree1 = (A,(B,C));
+        tree tree2 = (D,(E,F));
+    end;
     """
+)
+foreach(n -> plot(n), nexus_nets)
+
+# For convenience, format-specific string macros are provided.
+# These result in a single network when they are evaluated.
+
+plot(newick"(A,((B,#H1),(C,(D)#H1)));")
+
+plot(
+    nexus"""
     #NEXUS
     begin trees;
       tree tree1 = (A,(B,C));
-      tree tree2 = (D,(E,F));
     end;
-    """,
+    """
 )
-
-# Read format-specific content from a file path.
-file_networks = mktemp() do path, io
-    write(io, "(A,(B,C)); (D,(E,F));")
-    close(io)
-    readnetwork(NewickFormat(), path)
-end
-
-# Parse exactly one network with a format-specific string literal.
-newick_network = newick"(A,((B,#H1),(C,(D)#H1)));"
-
-nexus_network = nexus"""
-#NEXUS
-begin trees;
-  tree tree1 = (A,(B,C));
-end;
-"""
-
-plot(newick_network)
