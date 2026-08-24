@@ -70,4 +70,21 @@ function readnetwork(::NexusFormat, path::AbstractString)::Vector{LineageNetwork
     return PhyloNetworks.readnexus_treeblock(path)
 end
 
+# PhyloNetworks.readnexus_treeblock only accepts a file path; there is no
+# upstream entry point that reads a NEXUS trees block from text or an IO
+# stream. Route through a temp file rather than duplicating the translate
+# table / gamma extraction logic locally, so there stays exactly one
+# implementation of NEXUS treeblock parsing.
+function parsenetwork(::NexusFormat, text::AbstractString)::Vector{LineageNetwork}
+    return mktemp() do path, io
+        write(io, text)
+        close(io)
+        readnetwork(NexusFormat(), path)
+    end
+end
+
+function parsenetwork(fmt::NexusFormat, io::IO)::Vector{LineageNetwork}
+    return parsenetwork(fmt, read(io, String))
+end
+
 export readnetwork
