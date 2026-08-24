@@ -40,7 +40,24 @@ networks it contains. Performs no file I/O itself; `io` may be a file
 handle, an `IOBuffer`, or any other `IO` source.
 """
 function parsenetwork(::NewickFormat, io::IO)::Vector{LineageNetwork}
-    return LineageNetwork[PhyloNetworks.readnewick(io)]
+    text = strip(read(io, String))
+    isempty(text) && return LineageNetwork[]
+    endswith(text, ";") || throw(
+        ArgumentError(
+            "Every Newick topology must end with `;`.",
+        )
+    )
+
+    topologies = strip.(split(chop(text), ';'))
+    any(isempty, topologies) && throw(
+        ArgumentError(
+            "Newick content must not contain empty topologies.",
+        )
+    )
+    return LineageNetwork[
+        PhyloNetworks.readnewick(IOBuffer(string(topology, ';')))
+            for topology in topologies
+    ]
 end
 
 """
@@ -108,3 +125,44 @@ function parsenetwork(fmt::NexusFormat, io::IO)::Vector{LineageNetwork}
 end
 
 export readnetwork
+
+function _parse_single_network(
+        format::AbstractPhylogenyFormat,
+        text::AbstractString,
+    )::LineageNetwork
+    networks = parsenetwork(format, text)
+    length(networks) == 1 || throw(
+        ArgumentError(
+            "Expected exactly one network in $(nameof(typeof(format))) content, " *
+                "but parsed $(length(networks)). Use `parsenetwork($(nameof(typeof(format)))(), text)` " *
+                "when the input may contain multiple networks.",
+        )
+    )
+    return only(networks)
+end
+
+"""
+    newick"..." -> LineageNetwork
+
+Parse exactly one extended Newick topology from literal content. The literal
+returns a fresh `PhyloNetworks.HybridNetwork` each time it is evaluated. Use
+[`parsenetwork`](@ref) with [`NewickFormat`](@ref) when the content may contain
+multiple topologies.
+"""
+macro newick_str(text)
+    return :(_parse_single_network(NewickFormat(), $text))
+end
+
+"""
+    nexus"..." -> LineageNetwork
+
+Parse exactly one network from the first trees block in literal NEXUS content.
+The literal returns a fresh `PhyloNetworks.HybridNetwork` each time it is
+evaluated. Use [`parsenetwork`](@ref) with [`NexusFormat`](@ref) when the trees
+block may contain multiple networks.
+"""
+macro nexus_str(text)
+    return :(_parse_single_network(NexusFormat(), $text))
+end
+
+export @newick_str, @nexus_str

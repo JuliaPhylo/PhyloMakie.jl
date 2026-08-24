@@ -13,6 +13,7 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 
 - `plot(net)` and `plot!(ax, net)` follow standard Makie conventions
 - `phyloplot` and `phyloplot!` as convenience aliases
+- `newick"..."` and `nexus"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
 - Edge-length scaling, gamma display, tip labels, colors, and widths
 - Composable with any Makie layout
@@ -50,9 +51,7 @@ Pkg.add([
 using CairoMakie
 using PhyloMakie
 
-net = only(parsenetwork(NewickFormat(), 
-    "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-))
+net = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
 
 plot(
     net;

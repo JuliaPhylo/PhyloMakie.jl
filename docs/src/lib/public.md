@@ -2,7 +2,9 @@
 
 PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
 the package-specific convenience aliases, coordinate-query helpers, and the
-`PhyloMakie.parsenetwork` and `PhyloMakie.readnetwork` phylogeny readers.
+`PhyloMakie.parsenetwork` and `PhyloMakie.readnetwork` phylogeny readers. The
+`newick"..."` and `nexus"..."` string literals parse exactly one network for
+direct use with the plotting entry points.
 
 ## Plotting entry points
 
@@ -25,9 +27,25 @@ content (a string or an `IO` stream); `readnetwork` takes a file path.
 | `parsenetwork(NewickFormat(), text)` | `Vector{LineageNetwork}` | Parse literal Newick text or an `IO` stream. |
 | `readnetwork(NewickFormat(), path)` | `Vector{LineageNetwork}` | Read Newick content from a file. |
 | `readnetwork(NexusFormat(), path)` | `Vector{LineageNetwork}` | Read the first trees block from a NEXUS file. |
+| `newick"..."` | `LineageNetwork` | Parse exactly one Newick topology. |
+| `nexus"..."` | `LineageNetwork` | Parse exactly one network from a NEXUS trees block. |
 
 Use `only(...)` at the call site when a source is known to hold exactly one
 network, e.g. `only(parsenetwork(NewickFormat(), "(A,B);"))`.
+
+The singular string literals reject content containing zero or multiple
+networks. Keep multiple networks explicit and plot them individually:
+
+```julia
+nets = parsenetwork(NewickFormat(), "(A,B); (C,D);")
+plots = phyloplot.(nets)
+```
+
+For a single literal network, pass the parsed value directly:
+
+```julia
+phyloplot(newick"(A, (B, C));")
+```
 
 ```@docs
 PhyloMakie.PhyloPlot
@@ -39,6 +57,8 @@ PhyloMakie.NewickFormat
 PhyloMakie.NexusFormat
 PhyloMakie.parsenetwork
 PhyloMakie.readnetwork
+PhyloMakie.@newick_str
+PhyloMakie.@nexus_str
 ```
 
 ## Plot attributes

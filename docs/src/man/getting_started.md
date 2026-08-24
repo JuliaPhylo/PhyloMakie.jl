@@ -13,6 +13,18 @@ from an extended Newick string:
 net = only(parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
 ```
 
+For literal content containing exactly one network, use the corresponding
+format-specific string literal:
+
+```@example getting_started
+literal_plot = phyloplot(newick"(A, (B, C));")
+literal_plot
+```
+
+Both `newick"..."` and `nexus"..."` require exactly one parsed network. Use
+`parsenetwork` when the content may contain multiple networks, then select or
+plot each returned value explicitly.
+
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:
 
 ```@example getting_started

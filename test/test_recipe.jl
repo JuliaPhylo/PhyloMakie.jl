@@ -61,6 +61,12 @@ end
             _plot_colorbuffer(convenience_surface.figure)
     end
 
+    @testset "phyloplot accepts a Newick string literal" begin
+        surface = phyloplot(newick"(A, (B, C));")
+        @test surface isa Makie.FigureAxisPlot
+        @test surface.plot isa PhyloPlot
+    end
+
     @testset "plot!() and phyloplot!() dispatch to PhyloPlot and produce identical output" begin
         plot_figure = Figure(size=(640, 400))
         plot_axis = Axis(plot_figure[1, 1])

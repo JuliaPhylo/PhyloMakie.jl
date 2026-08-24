@@ -14,6 +14,34 @@
         @test all(==(1.0), elength.(net.edge))
     end
 
+    @testset "Newick: multiple trees from text" begin
+        newick = """
+        (A, B);
+        (C, (D, E));
+        """
+        nets = parsenetwork(NewickFormat(), newick)
+
+        @test nets isa Vector{LineageNetwork}
+        @test length(nets) == 2
+        @test Set(PhyloNetworks.tiplabels(nets[1])) == Set(["A", "B"])
+        @test Set(PhyloNetworks.tiplabels(nets[2])) == Set(["C", "D", "E"])
+
+        from_io = parsenetwork(NewickFormat(), IOBuffer(newick))
+        @test PhyloNetworks.tiplabels.(from_io) == PhyloNetworks.tiplabels.(nets)
+
+        mktemp() do path, io
+            write(io, newick)
+            close(io)
+            from_file = readnetwork(NewickFormat(), path)
+            @test PhyloNetworks.tiplabels.(from_file) == PhyloNetworks.tiplabels.(nets)
+        end
+    end
+
+    @testset "Newick: malformed topology collections are rejected" begin
+        @test_throws ArgumentError parsenetwork(NewickFormat(), "(A, B)")
+        @test_throws ArgumentError parsenetwork(NewickFormat(), "(A, B);; (C, D);")
+    end
+
     @testset "Newick: reticulate network with gamma from text" begin
         newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
         net = only(parsenetwork(NewickFormat(), newick))
@@ -69,5 +97,40 @@
             @test length(from_file) == length(from_text)
             @test PhyloNetworks.tiplabels(first(from_file)) == PhyloNetworks.tiplabels(first(from_text))
         end
+    end
+
+    @testset "String literals: singular parsing and fresh values" begin
+        newick_literal() = newick"(A, (B, C));"
+        first_newick = newick_literal()
+        second_newick = newick_literal()
+
+        @test first_newick isa LineageNetwork
+        @test first_newick !== second_newick
+        first(first_newick.leaf).name = "changed"
+        @test "changed" in PhyloNetworks.tiplabels(first_newick)
+        @test !("changed" in PhyloNetworks.tiplabels(second_newick))
+
+        nexus_literal() = nexus"""
+        #NEXUS
+        begin trees;
+          tree tree1 = (A,(B,C));
+        end;
+        """
+        first_nexus = nexus_literal()
+        second_nexus = nexus_literal()
+        @test first_nexus isa LineageNetwork
+        @test first_nexus !== second_nexus
+        @test Set(PhyloNetworks.tiplabels(first_nexus)) == Set(["A", "B", "C"])
+
+        @test_throws ArgumentError newick""
+        @test_throws ArgumentError newick"(A, B); (C, D);"
+        @test_throws ArgumentError nexus""
+        @test_throws ArgumentError nexus"""
+        #NEXUS
+        begin trees;
+          tree tree1 = (A,(B,C));
+          tree tree2 = (D,(E,F));
+        end;
+        """
     end
 end
