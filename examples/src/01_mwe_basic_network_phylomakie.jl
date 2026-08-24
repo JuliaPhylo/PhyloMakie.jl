@@ -7,7 +7,7 @@ using GLMakie
 # even if only one network is defined in the source.
 
 newick_nets = parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
-plot(only(newick_nets))
+plot(first(newick_nets))
 
 nexus_nets = parsenetwork(
     NexusFormat(), """
