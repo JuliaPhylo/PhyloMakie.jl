@@ -2,7 +2,7 @@ using GLMakie
 using PhyloMakie
 import PhyloNetworks
 
-net = only(parsenetwork(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"))
+net = only(parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"))
 
 surface = plot(
     net;

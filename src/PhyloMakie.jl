@@ -6,7 +6,7 @@ import Makie
 import PhyloNetworks
 
 include("networkaccessors.jl")
-include("networkio.jl")
+include("phylogenyio.jl")
 include("plot_config.jl")
 include("network_layout.jl")
 include("annotation_tables.jl")

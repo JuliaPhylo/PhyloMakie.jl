@@ -1,15 +1,15 @@
 using PhyloMakie
 using GLMakie
 
-# Networks can be instantiated and visualized from string representations using
-# `parsenetwork`.
-# Note that this always returns a collection of networks (`Vector{PhyloNetwork}`),
-# even if only one network is defined in the source.
+# Phylogenies can be instantiated and visualized from string representations using
+# `parsephylogeny`.
+# Note that this always returns a collection of phylogenies (`Vector{LineageNetwork}`),
+# even if only one phylogeny is defined in the source.
 
-newick_nets = parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
-plot(first(newick_nets))
+newick_phylogenies = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+plot(first(newick_phylogenies))
 
-nexus_nets = parsenetwork(
+nexus_phylogenies = parsephylogeny(
     NexusFormat(), """
     #NEXUS
     begin trees;
@@ -18,10 +18,10 @@ nexus_nets = parsenetwork(
     end;
     """
 )
-foreach(n -> plot(n), nexus_nets)
+foreach(n -> plot(n), nexus_phylogenies)
 
 # For convenience, format-specific string macros are provided.
-# These result in a single network when they are evaluated.
+# These result in a single phylogeny when they are evaluated.
 
 plot(newick"(A,((B,#H1),(C,(D)#H1)));")
 

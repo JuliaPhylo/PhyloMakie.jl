@@ -6,7 +6,7 @@ const REACTIVE_GRAPH_ALT_NEWICK =
 function _reactive_plot(; kwargs...)
     CairoMakie.activate!()
     surface = Makie.plot(
-        only(parsenetwork(NewickFormat(), REACTIVE_GRAPH_NEWICK));
+        only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK));
         useedgelength = true,
         showgamma = true,
         style = :fulltree,
@@ -175,7 +175,7 @@ function _assert_all_outputs_match_channels(plot, outputs)::Nothing
 end
 
 function _reactive_annotation_inputs()
-    net = only(parsenetwork(NewickFormat(), REACTIVE_GRAPH_NEWICK))
+    net = only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK))
     return (
         nodelabel = DataFrame(node = [first(net.node).number], label = ["node label"]),
         edgelabel = DataFrame(edge = [first(net.edge).number], label = ["edge label"]),
@@ -273,7 +273,7 @@ end
         axis = Axis(figure[1, 1])
         plot = Makie.plot!(
             axis,
-            only(parsenetwork(NewickFormat(), REACTIVE_GRAPH_NEWICK));
+            only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK));
             useedgelength=true,
             showgamma=true,
             style=:fulltree,
@@ -304,7 +304,7 @@ end
         axis = Axis(figure[1, 1])
         plot = Makie.plot!(
             axis,
-            only(parsenetwork(NewickFormat(), REACTIVE_GRAPH_NEWICK));
+            only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK));
             useedgelength=true,
             showgamma=true,
             style=:fulltree,
@@ -445,7 +445,7 @@ end
         plot, outputs = _registered_reactive_plot()
         before_points = copy(plot[outputs.primitive_outputs.edge_segments.points][])
 
-        new_net = only(parsenetwork(NewickFormat(), REACTIVE_GRAPH_ALT_NEWICK))
+        new_net = only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_ALT_NEWICK))
         before_snapshot = _reactive_network_snapshot(new_net)
         Makie.update!(plot; arg1 = new_net)
 

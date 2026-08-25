@@ -11,7 +11,7 @@ This plot may not be the easiest to read, as the hybrid edge crosses over C's
 edge:
 
 ```@example untangling
-net = only(parsenetwork(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
+net = only(parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
 plot(net)
 ```
 

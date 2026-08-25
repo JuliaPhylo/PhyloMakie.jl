@@ -2,9 +2,9 @@
 
 PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
 the package-specific convenience aliases, coordinate-query helpers, and the
-`PhyloMakie.parsenetwork` and `PhyloMakie.readnetwork` phylogeny readers. The
+`PhyloMakie.parsephylogeny` and `PhyloMakie.readphylogeny` phylogeny readers. The
 `newick"..."` and `nexustreeblock"..."` string literals parse exactly one
-network for direct use with the plotting entry points.
+phylogeny for direct use with the plotting entry points.
 
 ## Plotting entry points
 
@@ -15,33 +15,33 @@ network for direct use with the plotting entry points.
 | `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)`. |
 | `phyloplot!(axis, net)` | `PhyloPlot` | Alias for `plot!(axis, net)`. |
 
-## Reading networks
+## Reading phylogenies
 
-`parsenetwork`/`readnetwork` dispatch on a format tag
+`parsephylogeny`/`readphylogeny` dispatch on a format tag
 (`NewickFormat()`, `NexusFormat()`) and always return
-`Vector{PhyloMakie.LineageNetwork}`. `parsenetwork` takes literal format
-content (a string or an `IO` stream); `readnetwork` takes a file path.
+`Vector{PhyloMakie.LineageNetwork}`. `parsephylogeny` takes literal format
+content (a string or an `IO` stream); `readphylogeny` takes a file path.
 
 | Function | Return value | Description |
 | --- | --- | --- |
-| `parsenetwork(NewickFormat(), text)` | `Vector{LineageNetwork}` | Parse literal Newick text or an `IO` stream. |
-| `readnetwork(NewickFormat(), path)` | `Vector{LineageNetwork}` | Read Newick content from a file. |
-| `readnetwork(NexusFormat(), path)` | `Vector{LineageNetwork}` | Read the first trees block from a NEXUS file. |
+| `parsephylogeny(NewickFormat(), text)` | `Vector{LineageNetwork}` | Parse literal Newick text or an `IO` stream. |
+| `readphylogeny(NewickFormat(), path)` | `Vector{LineageNetwork}` | Read Newick content from a file. |
+| `readphylogeny(NexusFormat(), path)` | `Vector{LineageNetwork}` | Read the first trees block from a NEXUS file. |
 | `newick"..."` | `LineageNetwork` | Parse exactly one Newick topology. |
-| `nexustreeblock"..."` | `LineageNetwork` | Parse exactly one network from a NEXUS trees block. |
+| `nexustreeblock"..."` | `LineageNetwork` | Parse exactly one phylogeny from a NEXUS trees block. |
 
 Use `only(...)` at the call site when a source is known to hold exactly one
-network, e.g. `only(parsenetwork(NewickFormat(), "(A,B);"))`.
+phylogeny, e.g. `only(parsephylogeny(NewickFormat(), "(A,B);"))`.
 
 The singular string literals reject content containing zero or multiple
-networks. Keep multiple networks explicit and plot them individually:
+phylogenies. Keep multiple phylogenies explicit and plot them individually:
 
 ```julia
-nets = parsenetwork(NewickFormat(), "(A,B); (C,D);")
-plots = phyloplot.(nets)
+phylogenies = parsephylogeny(NewickFormat(), "(A,B); (C,D);")
+plots = phyloplot.(phylogenies)
 ```
 
-For a single literal network, pass the parsed value directly:
+For a single literal phylogeny, pass the parsed value directly:
 
 ```julia
 phyloplot(newick"(A, (B, C));")
@@ -55,8 +55,8 @@ PhyloMakie.LineageNetwork
 PhyloMakie.AbstractPhylogenyFormat
 PhyloMakie.NewickFormat
 PhyloMakie.NexusFormat
-PhyloMakie.parsenetwork
-PhyloMakie.readnetwork
+PhyloMakie.parsephylogeny
+PhyloMakie.readphylogeny
 PhyloMakie.@newick_str
 PhyloMakie.@nexustreeblock_str
 ```

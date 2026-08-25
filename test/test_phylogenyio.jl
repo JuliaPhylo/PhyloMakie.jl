@@ -1,11 +1,11 @@
-@testset "networkio" begin
+@testset "phylogeny I/O" begin
     elength = getfield(PhyloMakie, :elength)
     egamma = getfield(PhyloMakie, :egamma)
     ishybrid = getfield(PhyloMakie, :ishybrid)
 
     @testset "Newick: single tree from text" begin
         newick = "(A:1.0,(B:1.0,C:1.0):1.0);"
-        nets = parsenetwork(NewickFormat(), newick)
+        nets = parsephylogeny(NewickFormat(), newick)
         @test nets isa Vector{LineageNetwork}
         @test length(nets) == 1
 
@@ -19,32 +19,32 @@
         (A, B);
         (C, (D, E));
         """
-        nets = parsenetwork(NewickFormat(), newick)
+        nets = parsephylogeny(NewickFormat(), newick)
 
         @test nets isa Vector{LineageNetwork}
         @test length(nets) == 2
         @test Set(PhyloNetworks.tiplabels(nets[1])) == Set(["A", "B"])
         @test Set(PhyloNetworks.tiplabels(nets[2])) == Set(["C", "D", "E"])
 
-        from_io = parsenetwork(NewickFormat(), IOBuffer(newick))
+        from_io = parsephylogeny(NewickFormat(), IOBuffer(newick))
         @test PhyloNetworks.tiplabels.(from_io) == PhyloNetworks.tiplabels.(nets)
 
         mktemp() do path, io
             write(io, newick)
             close(io)
-            from_file = readnetwork(NewickFormat(), path)
+            from_file = readphylogeny(NewickFormat(), path)
             @test PhyloNetworks.tiplabels.(from_file) == PhyloNetworks.tiplabels.(nets)
         end
     end
 
     @testset "Newick: malformed topology collections are rejected" begin
-        @test_throws ArgumentError parsenetwork(NewickFormat(), "(A, B)")
-        @test_throws ArgumentError parsenetwork(NewickFormat(), "(A, B);; (C, D);")
+        @test_throws ArgumentError parsephylogeny(NewickFormat(), "(A, B)")
+        @test_throws ArgumentError parsephylogeny(NewickFormat(), "(A, B);; (C, D);")
     end
 
     @testset "Newick: reticulate network with gamma from text" begin
         newick = "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
-        net = only(parsenetwork(NewickFormat(), newick))
+        net = only(parsephylogeny(NewickFormat(), newick))
 
         @test Set(PhyloNetworks.tiplabels(net)) == Set(["A", "B", "C", "D"])
         hybrid_edges = filter(ishybrid, net.edge)
@@ -54,14 +54,14 @@
 
     @testset "Newick: IO and file sources agree with text source" begin
         newick = "(A:1.0,(B:1.0,C:1.0):1.0);"
-        from_text = only(parsenetwork(NewickFormat(), newick))
-        from_io = only(parsenetwork(NewickFormat(), IOBuffer(newick)))
+        from_text = only(parsephylogeny(NewickFormat(), newick))
+        from_io = only(parsephylogeny(NewickFormat(), IOBuffer(newick)))
         @test PhyloNetworks.tiplabels(from_text) == PhyloNetworks.tiplabels(from_io)
 
         mktemp() do path, io
             write(io, newick)
             close(io)
-            from_file = only(readnetwork(NewickFormat(), path))
+            from_file = only(readphylogeny(NewickFormat(), path))
             @test Set(PhyloNetworks.tiplabels(from_file)) == Set(PhyloNetworks.tiplabels(from_text))
         end
     end
@@ -79,21 +79,21 @@
     """
 
     @testset "Nexus: treeblock from text" begin
-        nets = parsenetwork(NexusFormat(), nexus_treeblock)
+        nets = parsephylogeny(NexusFormat(), nexus_treeblock)
         @test nets isa Vector{LineageNetwork}
         @test length(nets) == 2
         @test all(net -> Set(PhyloNetworks.tiplabels(net)) == Set(["A", "B", "C"]), nets)
     end
 
     @testset "Nexus: IO and file sources agree with text source" begin
-        from_text = parsenetwork(NexusFormat(), nexus_treeblock)
-        from_io = parsenetwork(NexusFormat(), IOBuffer(nexus_treeblock))
+        from_text = parsephylogeny(NexusFormat(), nexus_treeblock)
+        from_io = parsephylogeny(NexusFormat(), IOBuffer(nexus_treeblock))
         @test length(from_io) == length(from_text)
 
         mktemp() do path, io
             write(io, nexus_treeblock)
             close(io)
-            from_file = readnetwork(NexusFormat(), path)
+            from_file = readphylogeny(NexusFormat(), path)
             @test length(from_file) == length(from_text)
             @test PhyloNetworks.tiplabels(first(from_file)) == PhyloNetworks.tiplabels(first(from_text))
         end

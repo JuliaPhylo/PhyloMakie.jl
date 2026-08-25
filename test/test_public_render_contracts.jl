@@ -92,8 +92,8 @@ end
             style=:fulltree,
         )
 
-        plot_surface = Makie.plot(only(parsenetwork(NewickFormat(), render_case.newick)); render_kwargs...)
-        convenience_surface = phyloplot(only(parsenetwork(NewickFormat(), render_case.newick)); render_kwargs...)
+        plot_surface = Makie.plot(only(parsephylogeny(NewickFormat(), render_case.newick)); render_kwargs...)
+        convenience_surface = phyloplot(only(parsephylogeny(NewickFormat(), render_case.newick)); render_kwargs...)
         _assert_public_surface_rendered(plot_surface)
         _assert_public_surface_rendered(convenience_surface)
         @test _render_colorbuffer(plot_surface.figure) ==
@@ -103,14 +103,14 @@ end
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
         hidespines!(plot_axis)
-        plot_handle = Makie.plot!(plot_axis, only(parsenetwork(NewickFormat(), render_case.newick)); render_kwargs...)
+        plot_handle = Makie.plot!(plot_axis, only(parsephylogeny(NewickFormat(), render_case.newick)); render_kwargs...)
 
         convenience_figure = Figure(size=(640, 400))
         convenience_axis = Axis(convenience_figure[1, 1])
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
         convenience_handle =
-            phyloplot!(convenience_axis, only(parsenetwork(NewickFormat(), render_case.newick)); render_kwargs...)
+            phyloplot!(convenience_axis, only(parsephylogeny(NewickFormat(), render_case.newick)); render_kwargs...)
 
         @test plot_handle isa PhyloPlot
         @test convenience_handle isa PhyloPlot
@@ -399,7 +399,7 @@ end
 
     @testset "Public updates preserve child identity and caller-owned networks" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
-        surface = Makie.plot(only(parsenetwork(NewickFormat(), render_case.newick)); render_case.attribute_kwargs...)
+        surface = Makie.plot(only(parsephylogeny(NewickFormat(), render_case.newick)); render_case.attribute_kwargs...)
         plot = surface.plot
         children = _contract_children(plot)
         original_child_ids = _contract_child_ids(plot)
@@ -417,7 +417,7 @@ end
         @test children.edge_segments.linewidth[] != before_widths
         @test children.edge_segments.linewidth[] == plot[:edge_segment_linewidths][]
 
-        new_net = only(parsenetwork(NewickFormat(), FIXTURE_CORPUS.render_regression_cases.style_majortree.newick))
+        new_net = only(parsephylogeny(NewickFormat(), FIXTURE_CORPUS.render_regression_cases.style_majortree.newick))
         before_network = _contract_network_snapshot(new_net)
         Makie.update!(plot; arg1=new_net)
         @test _contract_child_ids(plot) == original_child_ids

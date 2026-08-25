@@ -943,7 +943,7 @@ function test_makie_update_recomputes_data_limits()::Nothing end
 function test_makie_update_with_fresh_network_keeps_original_network_unmutated()::Nothing end
 
 # Integration tests: create figures and verify visible behavior.
-function test_plot_accepts_fresh_readnewick_network_without_user_preparation()::Nothing end
+function test_plot_accepts_fresh_readnewick_phylogeny_without_user_preparation()::Nothing end
 function test_plot_update_does_not_recreate_child_primitives()::Nothing end
 function test_arrowheads_use_one_poly_child_not_per_edge_arrows2d()::Nothing end
 function test_hidden_layers_use_empty_outputs_not_deleted_children()::Nothing end
