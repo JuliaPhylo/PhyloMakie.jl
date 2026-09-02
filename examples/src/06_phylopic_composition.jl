@@ -1,23 +1,20 @@
 using CairoMakie
 using PhyloMakie
-using PhyloPicMakie: phylopicglyphs!
+using PhyloPicMakie: PhyloPicDB, augment_phylopic!
 
-function example_glyph(
-        color::RGBAf;
-        width::Integer = 48,
-        height::Integer = 32,
-    )::Matrix{RGBAf}
-    image = fill(RGBAf(0, 0, 0, 0), Int(height), Int(width))
-    for row in axes(image, 1), column in axes(image, 2)
-        x = (Float64(column) - 0.5 * (Float64(width) + 1.0)) / (0.42 * Float64(width))
-        y = (Float64(row) - 0.5 * (Float64(height) + 1.0)) / (0.34 * Float64(height))
-        body = x^2 + y^2 <= 1.0
-        tail = x < -0.65 && abs(y) <= 0.75 * (x + 1.25)
-        if body || tail
-            image[row, column] = color
-        end
+const BEAR_TAXA = [
+    "Ailuropoda melanoleuca",
+    "Ursus americanus",
+    "Ursus arctos",
+    "Ursus maritimus",
+]
+
+function bear_phylogeny()
+    network = newick"(Ailuropoda_melanoleuca:1.0,(Ursus_americanus:1.0,(Ursus_arctos:0.5,Ursus_maritimus:0.5):0.5):1.0);"
+    for node in network.node
+        node.name = replace(node.name, "_" => " ")
     end
-    return image
+    return network
 end
 
 function tip_identity(table)::Vector{NamedTuple{(:number, :name), Tuple{Int, String}}}
@@ -33,44 +30,118 @@ function tip_points(table)::Vector{Point2f}
     ]
 end
 
+function resolve_bear_phylopics(taxa::Vector{String})::NamedTuple
+    resolutions = PhyloPicDB.resolve_taxa(taxa)
+    unresolved = filter(resolution -> !PhyloPicDB.isresolved(resolution), resolutions)
+    isempty(unresolved) || error(
+        "Could not resolve all bear taxa through PhyloPic: " *
+            join(["$(resolution.query) ($(resolution.status))" for resolution in unresolved], ", ")
+    )
+
+    nodes = PhyloPicDB.require_node.(resolutions)
+    builds = unique(node.build for node in nodes)
+    length(builds) == 1 || error("PhyloPic resolutions did not share one build.")
+
+    image_records = PhyloPicDB.PhyloPicImage[]
+    for resolution in resolutions
+        image = PhyloPicDB.primary_image(resolution; add_node_name = true)
+        isnothing(image) && error(
+            "PhyloPic has no primary image for $(resolution.query)."
+        )
+        push!(image_records, image)
+    end
+
+    return (;
+        resolutions,
+        node_uuids = String[node.uuid for node in nodes],
+        image_records,
+        build = only(builds),
+    )
+end
+
+function credit_value(value, fallback::String)::String
+    ismissing(value) && return fallback
+    text = strip(replace(String(value), '\n' => ' '))
+    return isempty(text) ? fallback : text
+end
+
+function image_credit_lines(
+        taxa::Vector{String},
+        images::Vector{PhyloPicDB.PhyloPicImage},
+    )::Vector{String}
+    return [
+        "$(taxon) — " *
+            "$(credit_value(image.attribution, "creator not listed")); " *
+            credit_value(image.license, "license unavailable")
+            for (taxon, image) in zip(taxa, images)
+    ]
+end
+
 function phylopic_composition_example()::NamedTuple
-    network = newick"((Canis:1.0,Felis:2.0):1.0,(Ursus:1.5,Vulpes:1.0):2.0);"
-    figure = Figure(size = (820, 420))
+    figure = Figure(size = (980, 600), backgroundcolor = RGBf(0.985, 0.98, 0.965))
     axis = Axis(
         figure[1, 1];
-        title = "Reactive PhyloPic composition",
-        xautolimitmargin = (0.05, 0.12),
+        title = "Selected living bears",
+        titlesize = 20,
+        backgroundcolor = RGBf(0.985, 0.98, 0.965),
+        xautolimitmargin = (0.06, 0.18),
+        yautolimitmargin = (0.12, 0.12),
     )
     hidedecorations!(axis)
     hidespines!(axis)
 
     tree_plot = plot!(
         axis,
-        network;
+        bear_phylogeny();
         useedgelength = false,
         showtiplabel = true,
-        tipoffset = 0.12,
+        tipoffset = 0.1,
     )
     live_positions = node_positions_observable(tree_plot)
 
-    # Giving the tree plot to map registers the callback with the tree's
-    # lifecycle. The derived Observable stops listening when the tree is deleted.
+    # Giving the tree plot to map registers these derived Observables with the
+    # tree's lifecycle.
     identities = map(tip_identity, tree_plot, live_positions)
     positions = map(tip_points, tree_plot, live_positions)
-    images = Matrix{RGBAf}[
-        example_glyph(RGBAf(0.14, 0.26, 0.42, 1.0)),
-        example_glyph(RGBAf(0.42, 0.2, 0.15, 1.0)),
-        example_glyph(RGBAf(0.2, 0.36, 0.18, 1.0)),
-        example_glyph(RGBAf(0.34, 0.22, 0.4, 1.0)),
-    ]
-    glyph_plot = phylopicglyphs!(
-        axis,
-        positions,
-        images;
-        glyph_size = 0.22,
-        placement = :left,
-        xoffset = 0.72,
+    taxa = String[identity.name for identity in identities[]]
+    Set(taxa) == Set(BEAR_TAXA) || error(
+        "The rendered tree tips do not match the expected bear taxa."
     )
+
+    discovery = resolve_bear_phylopics(taxa)
+    initial_positions = positions[]
+    glyph_plot = augment_phylopic!(
+        axis,
+        first.(initial_positions),
+        last.(initial_positions);
+        node_uuid = discovery.node_uuids,
+        build = discovery.build,
+        image_rendering = :thumbnail,
+        glyph_size = 0.24,
+        placement = :left,
+        xoffset = 1.65,
+        on_missing = :error,
+    )
+
+    # Discovery runs once. Later layouts update the existing PhyloPicGlyphs
+    # recipe rather than resolving images or reconstructing the plot.
+    position_binding = map(glyph_plot, positions) do updated_positions
+        update!(glyph_plot; arg1 = updated_positions)
+        return nothing
+    end
+
+    credit_lines = image_credit_lines(taxa, discovery.image_records)
+    Label(
+        figure[2, 1],
+        "PhyloPic image credits\n" * join(credit_lines, "\n");
+        fontsize = 9,
+        color = RGBf(0.28, 0.28, 0.26),
+        justification = :left,
+        halign = :left,
+        tellwidth = false,
+        padding = (8, 8, 4, 6),
+    )
+    rowgap!(figure.layout, 6)
 
     return (;
         figure,
@@ -80,6 +151,11 @@ function phylopic_composition_example()::NamedTuple
         live_positions,
         identities,
         positions,
+        position_binding,
+        taxa,
+        resolutions = discovery.resolutions,
+        image_records = discovery.image_records,
+        credit_lines,
     )
 end
 
@@ -90,18 +166,21 @@ identity_before = copy(composition.identities[])
 positions_before = copy(composition.positions[])
 
 # This relayout preserves node identity. The existing PhyloPicGlyphs handle
-# follows the new coordinates without rebuilding either plot.
+# follows the new coordinates without repeating discovery or rebuilding.
 update!(composition.tree_plot; useedgelength = true)
 @assert composition.identities[] == identity_before
 @assert composition.positions[] != positions_before
+@assert composition.glyph_plot[1][] == composition.positions[]
 
 # If arg1 is replaced with a network containing different taxa, inspect the
-# updated identity table and re-resolve the glyphs. Update both PhyloPicGlyphs
-# arguments together with Makie.update!(glyph_plot; arg1 = ..., arg2 = ...).
+# updated identity table, resolve the new taxa, and update both PhyloPicGlyphs
+# arguments together.
 if isempty(ARGS) && isinteractive()
     display(composition.figure)
 else
     output_path = abspath(get(ARGS, 1, "phylopic_composition.png"))
     save(output_path, composition.figure)
     println("Saved reactive PhyloPic composition example to $(output_path)")
+    println("PhyloPic image credits:")
+    foreach(line -> println("  $(line)"), composition.credit_lines)
 end

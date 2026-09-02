@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document governs how LineagesMakie.jl integrates with Makie and Makie-
+This document governs how this project integrates with Makie and Makie-
 family packages such as CairoMakie and GraphMakie.
 
 Use this document whenever work touches plotting entrypoints, custom blocks,
