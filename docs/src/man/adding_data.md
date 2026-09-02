@@ -115,9 +115,11 @@ Passing `reactive_result.plot` to `map` ties the callback to that plot's
 lifecycle. The `tip_overlay` handle remains the same while its positions
 change.
 
-The optional `examples/src/06_phylopic_composition.jl` example applies the
-same pattern to the public `PhyloPicMakie.phylopicglyphs!` recipe. PhyloMakie
-does not depend on PhyloPicMakie and does not resolve silhouettes.
+The optional `examples/src/06_phylopic_composition.jl` example passes tree-tip
+coordinates and scientific names to the discovery-aware
+`PhyloPicMakie.augment_phylopic!` function. PhyloPicMakie resolves and renders
+the silhouettes; the PhyloMakie package itself does not depend on
+PhyloPicMakie.
 
 ## Side clade bars example
 
