@@ -115,7 +115,7 @@ using Makie
 
     @testset "Positions update after Makie.update!" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
-        surface = Makie.plot(only(parsephylogeny(NewickFormat(), render_case.newick)); useedgelength = false, style = :fulltree)
+        surface = Makie.plot(parsephylogeny(NewickFormat(), render_case.newick); useedgelength = false, style = :fulltree)
         plot = surface.plot
 
         before_x = node_positions(plot).x
@@ -125,11 +125,9 @@ using Makie
     end
 
     @testset "Reactive node positions preserve identity across relayout" begin
-        network = only(
-            parsephylogeny(
-                NewickFormat(),
-                "((A:1.0,B:2.0):1.0,C:3.0);",
-            ),
+        network = parsephylogeny(
+            NewickFormat(),
+            "((A:1.0,B:2.0):1.0,C:3.0);",
         )
         surface = Makie.plot(network; useedgelength = false)
         plot = surface.plot
@@ -177,12 +175,8 @@ using Makie
     end
 
     @testset "Reactive node positions report changed-network identity" begin
-        first_network = only(
-            parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);"),
-        )
-        second_network = only(
-            parsephylogeny(NewickFormat(), "((D:1.0,E:1.0):2.0,F:2.0);"),
-        )
+        first_network = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
+        second_network = parsephylogeny(NewickFormat(), "((D:1.0,E:1.0):2.0,F:2.0);")
         surface = Makie.plot(first_network; useedgelength = true)
         plot = surface.plot
         live_positions = node_positions_observable(plot)

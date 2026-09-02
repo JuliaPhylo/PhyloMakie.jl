@@ -1,8 +1,8 @@
 using GLMakie
 using PhyloMakie
 
-net1 = only(parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"))
-net2 = only(parsephylogeny(NewickFormat(), "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);"))
+net1 = parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+net2 = parsephylogeny(NewickFormat(), "(A:2.5,((B:1,#H1:0.5::0.1):1,(C:1,(D:0.5)#H1:0.5::0.9):1):0.5);")
 
 fig = Figure(size = (1200, 760))
 before_axis = Axis(fig[1, 1], title = "Initial full-tree plot")

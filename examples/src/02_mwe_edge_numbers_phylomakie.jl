@@ -1,7 +1,7 @@
 using PhyloMakie
 using CairoMakie
 
-net = only(parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1, D)));"))
+net = parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1, D)));")
 
 # R"layout"([1 2])
 fig = Figure();

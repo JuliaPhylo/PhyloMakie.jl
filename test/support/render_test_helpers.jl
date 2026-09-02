@@ -14,7 +14,7 @@ function _public_render_case(
     kwargs...,
 )
     CairoMakie.activate!()
-    surface = Makie.plot(only(parsephylogeny(NewickFormat(), newick)); kwargs...)
+    surface = Makie.plot(parsephylogeny(NewickFormat(), newick); kwargs...)
     plot = surface.plot
     return (
         surface=surface,

@@ -19,7 +19,7 @@ To add labels on edges (or nodes), we need to know their numbers. We can use the
 `showedgenumber = true` option for this. (Use `shownodenumber = true` to see node numbers).
 
 ```@example adding_data
-net = only(parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1,D)));"))
+net = parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1,D)));")
 
 figure = Figure(size = (760, 320))
 default_axis = Axis(figure[1, 1], title = "Default edge number color")
@@ -91,9 +91,7 @@ These query functions return independent snapshots. Use
 an annotation must move after a layout update:
 
 ```@example adding_data
-reactive_tree = only(
-    parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);"),
-)
+reactive_tree = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
 reactive_result = plot(reactive_tree; useedgelength = false)
 live_positions = node_positions_observable(reactive_result.plot)
 tip_points = map(reactive_result.plot, live_positions) do table
@@ -126,7 +124,7 @@ PhyloPicMakie.
 Here's example code that adds bars to denote clades in the margin:
 
 ```@example adding_data
-tree = only(parsephylogeny(NewickFormat(), "(((((((t1,t2),t3),t4),t5),(t6,t7)),(t8,t9)),t10);"))
+tree = parsephylogeny(NewickFormat(), "(((((((t1,t2),t3),t4),t5),(t6,t7)),(t8,t9)),t10);")
 plot_result = plot(tree; xlim = (1.0, 10.0))
 axis = plot_result.axis
 

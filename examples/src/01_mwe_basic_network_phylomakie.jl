@@ -2,14 +2,14 @@ using PhyloMakie
 using GLMakie
 
 # Phylogenies can be instantiated and visualized from string representations using
-# `parsephylogeny`.
+# `parsephylogenies`.
 # Note that this always returns a collection of phylogenies (`Vector{LineageNetwork}`),
 # even if only one phylogeny is defined in the source.
 
-newick_phylogenies = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+newick_phylogenies = parsephylogenies(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
 plot(first(newick_phylogenies))
 
-nexus_phylogenies = parsephylogeny(
+nexus_phylogenies = parsephylogenies(
     NexusFormat(), """
     #NEXUS
     begin trees;

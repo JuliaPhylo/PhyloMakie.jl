@@ -11,8 +11,8 @@ export LineageNetwork
     AbstractPhylogenyFormat
 
 Abstract supertype for phylogeny serialization format tags. Concrete
-subtypes are singleton structs used to dispatch [`parsephylogeny`](@ref) and
-[`readphylogeny`](@ref) methods to the reader for that format.
+subtypes are singleton structs used to dispatch [`parsephylogenies`](@ref) and
+[`readphylogenies`](@ref) methods to the reader for that format.
 """
 abstract type AbstractPhylogenyFormat end
 
@@ -33,13 +33,13 @@ struct NexusFormat <: AbstractPhylogenyFormat end
 export AbstractPhylogenyFormat, NewickFormat, NexusFormat
 
 """
-    parsephylogeny(format, io::IO) -> Vector{LineageNetwork}
+    parsephylogenies(format, io::IO) -> Vector{LineageNetwork}
 
 Parse `format`-formatted content from the open stream `io` and return the
 phylogenies it contains. Performs no file I/O itself; `io` may be a file
 handle, an `IOBuffer`, or any other `IO` source.
 """
-function parsephylogeny(::NewickFormat, io::IO)::Vector{LineageNetwork}
+function parsephylogenies(::NewickFormat, io::IO)::Vector{LineageNetwork}
     text = strip(read(io, String))
     isempty(text) && return LineageNetwork[]
     endswith(text, ";") || throw(
@@ -61,96 +61,111 @@ function parsephylogeny(::NewickFormat, io::IO)::Vector{LineageNetwork}
 end
 
 """
-    parsephylogeny(format, text::AbstractString) -> Vector{LineageNetwork}
+    parsephylogenies(format, text::AbstractString) -> Vector{LineageNetwork}
 
 Parse `text` as literal `format`-formatted content and return the phylogenies
 it contains. `text` is always treated as content, never as a file path.
 """
-function parsephylogeny(fmt::NewickFormat, text::AbstractString)::Vector{LineageNetwork}
-    return parsephylogeny(fmt, IOBuffer(text))
+function parsephylogenies(fmt::NewickFormat, text::AbstractString)::Vector{LineageNetwork}
+    return parsephylogenies(fmt, IOBuffer(text))
 end
 
-export parsephylogeny
+export parsephylogenies
 
 """
-    readphylogeny(format, path::AbstractString) -> Vector{LineageNetwork}
+    readphylogenies(format, path::AbstractString) -> Vector{LineageNetwork}
 
 Read `format`-formatted content from the file at `path` and return the
 phylogenies it contains. `path` is always treated as a file path, never as
 literal content.
 """
-function readphylogeny(fmt::AbstractPhylogenyFormat, path::AbstractString)::Vector{LineageNetwork}
-    return open(io -> parsephylogeny(fmt, io), path)
+function readphylogenies(fmt::AbstractPhylogenyFormat, path::AbstractString)::Vector{LineageNetwork}
+    return open(io -> parsephylogenies(fmt, io), path)
 end
 
 """
-    readphylogeny(::NexusFormat, path::AbstractString) -> Vector{LineageNetwork}
+    readphylogenies(::NexusFormat, path::AbstractString) -> Vector{LineageNetwork}
 
 Read the first trees block of the NEXUS file at `path`, applying its
 translate table if present. Delegates directly to
 `PhyloNetworks.readnexus_treeblock`.
 """
-function readphylogeny(::NexusFormat, path::AbstractString)::Vector{LineageNetwork}
+function readphylogenies(::NexusFormat, path::AbstractString)::Vector{LineageNetwork}
     return PhyloNetworks.readnexus_treeblock(path)
 end
 
 """
-    parsephylogeny(::NexusFormat, text::AbstractString) -> Vector{LineageNetwork}
+    parsephylogenies(::NexusFormat, text::AbstractString) -> Vector{LineageNetwork}
 
 Parse a NEXUS trees block from literal `text`. `PhyloNetworks.readnexus_treeblock`
 only accepts a file path — there is no upstream entry point that reads NEXUS
 content from text or an `IO` stream. Rather than duplicating its translate
 table / gamma extraction logic locally, this writes `text` to a temporary
-file and delegates to [`readphylogeny`](@ref)(NexusFormat(), path), so there
+file and delegates to [`readphylogenies`](@ref)(NexusFormat(), path), so there
 stays exactly one implementation of NEXUS treeblock parsing. Unlike the
 `NewickFormat` methods, this performs real (transient) file I/O.
 """
-function parsephylogeny(::NexusFormat, text::AbstractString)::Vector{LineageNetwork}
+function parsephylogenies(::NexusFormat, text::AbstractString)::Vector{LineageNetwork}
     return mktemp() do path, io
         write(io, text)
         close(io)
-        readphylogeny(NexusFormat(), path)
+        readphylogenies(NexusFormat(), path)
     end
 end
 
 """
-    parsephylogeny(::NexusFormat, io::IO) -> Vector{LineageNetwork}
+    parsephylogenies(::NexusFormat, io::IO) -> Vector{LineageNetwork}
 
 Read all of `io` and parse it as a NEXUS trees block; see the
 `AbstractString` method for why this is not a pure in-memory parse for
 `NexusFormat`.
 """
-function parsephylogeny(fmt::NexusFormat, io::IO)::Vector{LineageNetwork}
-    return parsephylogeny(fmt, read(io, String))
+function parsephylogenies(fmt::NexusFormat, io::IO)::Vector{LineageNetwork}
+    return parsephylogenies(fmt, read(io, String))
 end
 
-export readphylogeny
+export readphylogenies
 
-function _parse_single_phylogeny(
+"""
+    parsephylogeny(format, source) -> LineageNetwork
+
+Parse exactly one phylogeny from literal `format`-formatted content in `source`.
+`source` may be a string or an `IO` stream. Use [`parsephylogenies`](@ref) when
+the content may contain zero or multiple phylogenies.
+"""
+function parsephylogeny(
         format::AbstractPhylogenyFormat,
-        text::AbstractString,
+        source::Union{IO, AbstractString},
     )::LineageNetwork
-    phylogenies = parsephylogeny(format, text)
-    length(phylogenies) == 1 || throw(
-        ArgumentError(
-            "Expected exactly one phylogeny in $(nameof(typeof(format))) content, " *
-                "but parsed $(length(phylogenies)). Use `parsephylogeny($(nameof(typeof(format)))(), text)` " *
-                "when the input may contain multiple phylogenies.",
-        )
-    )
-    return only(phylogenies)
+    return only(parsephylogenies(format, source))
 end
+
+"""
+    readphylogeny(format, path::AbstractString) -> LineageNetwork
+
+Read exactly one phylogeny from the `format`-formatted file at `path`. Use
+[`readphylogenies`](@ref) when the file may contain zero or multiple
+phylogenies.
+"""
+function readphylogeny(
+        format::AbstractPhylogenyFormat,
+        path::AbstractString,
+    )::LineageNetwork
+    return only(readphylogenies(format, path))
+end
+
+export parsephylogeny, readphylogeny
 
 """
     newick"..." -> LineageNetwork
 
 Parse exactly one extended Newick topology from literal content. The literal
 returns a fresh `PhyloNetworks.HybridNetwork` each time it is evaluated. Use
-[`parsephylogeny`](@ref) with [`NewickFormat`](@ref) when the content may contain
-multiple topologies.
+[`parsephylogenies`](@ref) with [`NewickFormat`](@ref) when the content may
+contain multiple topologies.
 """
 macro newick_str(text)
-    return :(_parse_single_phylogeny(NewickFormat(), $text))
+    return :(parsephylogeny(NewickFormat(), $text))
 end
 
 """
@@ -158,11 +173,11 @@ end
 
 Parse exactly one phylogeny from the first trees block in literal NEXUS content.
 The literal returns a fresh `PhyloNetworks.HybridNetwork` each time it is
-evaluated. Use [`parsephylogeny`](@ref) with [`NexusFormat`](@ref) when the trees
-block may contain multiple phylogenies.
+evaluated. Use [`parsephylogenies`](@ref) with [`NexusFormat`](@ref) when the
+trees block may contain multiple phylogenies.
 """
 macro nexustreeblock_str(text)
-    return :(_parse_single_phylogeny(NexusFormat(), $text))
+    return :(parsephylogeny(NexusFormat(), $text))
 end
 
 export @newick_str, @nexustreeblock_str

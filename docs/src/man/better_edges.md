@@ -15,7 +15,7 @@ default `:fulltree`, but by switching it to `:majortree`, we can draw minor
 hybrid edges as diagonal lines.
 
 ```@example better_edges
-net = only(parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
+net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
 plot(net; style = :majortree)
 ```
 
@@ -26,9 +26,9 @@ lengths to determine the lengths of the lines. For this, we'll use a network
 that has edge lengths:
 
 ```@example better_edges
-net = only(parsephylogeny(NewickFormat(),
+net = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:0.5):1.5,((C:1)#H1:1.8,D:1.1):0.2):0.3);",
-))
+)
 df = DataFrame(number = [-3, 3], label = ["N", "H1"])
 
 figure = Figure(size = (760, 320))
@@ -71,12 +71,12 @@ This network happens to be time consistent, because the distance along the time
 Time-inconsistent networks like these ones below might cause confusion:
 
 ```@example better_edges
-net1 = only(parsephylogeny(NewickFormat(),
+net1 = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:1.2):1.5,((C:1.8)#H1:1,D:1.1):0.2):0.3);",
-))
-net2 = only(parsephylogeny(NewickFormat(),
+)
+net2 = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:0.2):1.5,((C:1)#H1:1.8,D:1.1):0.2):0.3);",
-))
+)
 
 figure = Figure(size = (760, 320))
 left_axis = Axis(figure[1, 1])

@@ -46,7 +46,9 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test :NewickFormat in names(PhyloMakie)
     @test :NexusFormat in names(PhyloMakie)
     @test :parsephylogeny in names(PhyloMakie)
+    @test :parsephylogenies in names(PhyloMakie)
     @test :readphylogeny in names(PhyloMakie)
+    @test :readphylogenies in names(PhyloMakie)
     @test Symbol("@newick_str") in names(PhyloMakie)
     @test Symbol("@nexustreeblock_str") in names(PhyloMakie)
     @test !(Symbol("@nexus_str") in names(PhyloMakie))
@@ -73,7 +75,7 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
         @test !isdefined(PhyloMakie, name)
     end
 
-    net = only(parsephylogeny(NewickFormat(), "(A,B);"))
+    net = parsephylogeny(NewickFormat(), "(A,B);")
     @test which(Makie.plottype, (HybridNetwork,)) != which(Makie.plottype, (Any,))
     @test Makie.plottype(net) == getfield(PhyloMakie, :PhyloPlot)
 end

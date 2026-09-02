@@ -10,7 +10,7 @@ Start with a `PhyloNetworks.HybridNetwork`. This example reads a small network
 from an extended Newick string:
 
 ```@repl getting_started
-net = only(parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));"))
+net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
 ```
 
 For literal content containing exactly one phylogeny, use the corresponding
@@ -22,7 +22,7 @@ literal_plot
 ```
 
 Both `newick"..."` and `nexustreeblock"..."` require exactly one parsed
-phylogeny. Use `parsephylogeny` when the content may contain multiple
+phylogeny. Use `parsephylogenies` when the content may contain multiple
 phylogenies, then select or plot each returned value explicitly.
 
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:

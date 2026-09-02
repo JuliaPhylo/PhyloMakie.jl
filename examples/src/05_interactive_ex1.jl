@@ -145,7 +145,7 @@ function demo_records()::Vector{ViewerRecord}
         ("Demo tree", "(A:1,(B:1,C:1):1);"),
     )
     return [
-        ViewerRecord(only(parsephylogeny(NewickFormat(), newick)), source, index) for
+        ViewerRecord(parsephylogeny(NewickFormat(), newick), source, index) for
             (index, (source, newick)) in enumerate(demo_newicks)
     ]
 end
@@ -164,12 +164,12 @@ function load_records_from_file(path::AbstractString)::Vector{HybridNetwork}
     isfile(path) || throw(ArgumentError("File does not exist: $(path)"))
 
     if contains_nexus_treeblock(path)
-        return collect(readphylogeny(NexusFormat(), path))
+        return readphylogenies(NexusFormat(), path)
     end
 
     records = collect(readmultinewick(path, false))
     isempty(records) || return records
-    return HybridNetwork[only(readphylogeny(NewickFormat(), path))]
+    return HybridNetwork[readphylogeny(NewickFormat(), path)]
 end
 
 function load_records(paths::AbstractVector{<:AbstractString})::LoadResult

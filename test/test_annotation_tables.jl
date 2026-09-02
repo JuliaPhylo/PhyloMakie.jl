@@ -18,14 +18,14 @@ end
     base_newick = FIXTURE_CORPUS.accepted_design_scenarios.dataframe_label_rendering.newick
 
     function annotation_layout(; kwargs...)
-        plot_network = prepare_plot_network(only(parsephylogeny(NewickFormat(), base_newick)))
+        plot_network = prepare_plot_network(parsephylogeny(NewickFormat(), base_newick))
         config = resolve_plot_config(; kwargs...)
         geometry = compute_network_geometry(plot_network, config)
         return compute_layout(plot_network, config, geometry)
     end
 
     @testset "Node-label validation keeps accepted warnings and filtering" begin
-        network = only(parsephylogeny(NewickFormat(), base_newick))
+        network = parsephylogeny(NewickFormat(), base_newick)
         warning_input =
             _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_warning_rows)
         labelnodes, filtered = @test_logs (:warn, warning_strings.nodelabel_unknown_nodes) validate_node_data(
