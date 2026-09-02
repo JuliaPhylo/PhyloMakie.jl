@@ -86,6 +86,39 @@ Use `.figure` to display the figure, `.axis` to add more Makie annotations, and
 [`edge_positions`](@ref PhyloMakie.edge_positions) to query the coordinates used
 by the live `PhyloPlot`.
 
+These query functions return independent snapshots. Use
+[`node_positions_observable`](@ref PhyloMakie.node_positions_observable) when
+an annotation must move after a layout update:
+
+```@example adding_data
+reactive_tree = only(
+    parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);"),
+)
+reactive_result = plot(reactive_tree; useedgelength = false)
+live_positions = node_positions_observable(reactive_result.plot)
+tip_points = map(reactive_result.plot, live_positions) do table
+    Point2f[
+        Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf
+    ]
+end
+tip_overlay = scatter!(
+    reactive_result.axis,
+    tip_points;
+    color = :orangered,
+    markersize = 14,
+)
+update!(reactive_result.plot; useedgelength = true)
+reactive_result.figure
+```
+
+Passing `reactive_result.plot` to `map` ties the callback to that plot's
+lifecycle. The `tip_overlay` handle remains the same while its positions
+change.
+
+The optional `examples/src/06_phylopic_composition.jl` example applies the
+same pattern to the public `PhyloPicMakie.phylopicglyphs!` recipe. PhyloMakie
+does not depend on PhyloPicMakie and does not resolve silhouettes.
+
 ## Side clade bars example
 
 Here's example code that adds bars to denote clades in the margin:

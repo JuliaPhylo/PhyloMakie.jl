@@ -76,6 +76,8 @@ end
         _audit_token(".", "layers"),
         _audit_token("getfield", "(", "Phylo", "Makie"),
         _audit_token("arrows", "2d", "!"),
+        _audit_token(".attributes", ".inputs"),
+        _audit_token(".attributes", ".outputs"),
     )
 
     for (path, source) in docs_sources

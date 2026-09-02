@@ -1,44 +1,42 @@
 using GLMakie
 using PhyloMakie
-import PhyloNetworks
 
-net = only(parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"))
-
+network = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
 surface = plot(
-    net;
-    useedgelength = true,
+    network;
+    useedgelength = false,
     showtiplabel = true,
     showgamma = true,
 )
 plot_handle = surface.plot
 
-update!(
-    plot_handle;
-    edgecolor = "firebrick",
-    edgewidth = 2.0,
-    # xlim = (0.0, 1.0),
-    # ylim = (0.0, 4.0),
+live_positions = node_positions_observable(plot_handle)
+tip_positions = map(plot_handle, live_positions) do table
+    Point2f[
+        Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf
+    ]
+end
+tip_overlay = scatter!(
+    surface.axis,
+    tip_positions;
+    color = :orangered,
+    markersize = 14,
 )
 
-PhyloNetworks.rootonedge!(net, 4) # nothing happens
-PhyloNetworks.preorder!(net)
+positions_before = copy(tip_positions[])
+update!(
+    plot_handle;
+    useedgelength = true,
+    edgecolor = "firebrick",
+    edgewidth = 2.0,
+    tipoffset = 0.05,
+)
+@assert tip_positions[] != positions_before
+
+# Plotting never mutates a caller-owned network. Replace arg1 explicitly when
+# the network changes; the same live_positions and tip_overlay handles update.
+replacement = newick"((A:1.0,B:0.5):1.0,(C:0.75,D:1.25):1.0);"
+update!(plot_handle; arg1 = replacement)
+@assert live_positions[] == node_positions(plot_handle)
 
 surface.figure
-
-PhyloNetworks.writenewick(plot_handle.attributes.inputs[:arg1].value) # was modified
-# "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
-update!(plot_handle) # but the viz didn't change
-PhyloNetworks.writenewick(plot_handle.attributes.outputs[:plot_network].value[].net) # did *not* change
-# "(((A:0.2,(B:0.1)#H1:0.1::0.9):0.1,(C:0.11,#H1:0.01::0.1):0.19):0.1,D:0.4);"
-# yet its parent has changed:
-PhyloNetworks.writenewick(plot_handle.attributes.outputs[:plot_network].parent.inputs[1].value[])
-# "((A:0.2,(B:0.1)#H1:0.1::0.9):0.05,((C:0.11,#H1:0.01::0.1):0.19,D:0.5):0.05);"
-# and is marked as not dirty:
-plot_handle.attributes.outputs[:plot_network].parent.inputs_dirty[1] # false
-
-xlims!(surface.axis, 0.9, 2) # works
-update!(plot_handle; xlim=(0.9, 1.6)) # changes nothing: does not work
-surface.figure # even after re-plotting
-
-xlims!(surface.axis, 2, 0) # beautiful: flips the network, time from right to left
-update!(plot_handle, tipoffset = 0.05)

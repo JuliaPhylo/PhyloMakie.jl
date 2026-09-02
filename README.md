@@ -16,6 +16,7 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 - `newick"..."` and `nexustreeblock"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
 - Edge-length scaling, gamma display, tip labels, colors, and widths
+- Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
 
 ## API
@@ -26,6 +27,8 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 | `plot!(ax, net)` | `PhyloPlot` | Draws into an existing axis |
 | `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)` |
 | `phyloplot!(ax, net)` | `PhyloPlot` | Alias for `plot!(ax, net)` |
+| `node_positions(plot)` | `DataFrame` | Independent node-coordinate snapshot |
+| `node_positions_observable(plot)` | `Observable{DataFrame}` | Live identity-plus-position table |
 
 ## Installation
 

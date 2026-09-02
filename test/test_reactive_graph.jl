@@ -29,17 +29,17 @@ function _reactive_network_snapshot(net::PhyloNetworks.HybridNetwork)
         preorder_numbers = [node.number for node in net.vec_node],
         edge_state = [
             (
-                number = edge.number,
-                parent = PhyloNetworks.getparent(edge).number,
-                child = PhyloNetworks.getchild(edge).number,
-                ischild1 = edge.ischild1,
-                containroot = hasfield(typeof(edge), :containroot) ?
+                    number = edge.number,
+                    parent = PhyloNetworks.getparent(edge).number,
+                    child = PhyloNetworks.getchild(edge).number,
+                    ischild1 = edge.ischild1,
+                    containroot = hasfield(typeof(edge), :containroot) ?
                     getfield(edge, :containroot) : nothing,
-                hybrid = edge.hybrid,
-                ismajor = edge.ismajor,
-                length = edge.length,
-                gamma = edge.gamma,
-            ) for edge in net.edge
+                    hybrid = edge.hybrid,
+                    ismajor = edge.ismajor,
+                    length = edge.length,
+                    gamma = edge.gamma,
+                ) for edge in net.edge
         ],
     )
 end
@@ -224,6 +224,7 @@ end
                 :plot_network,
                 :network_geometry,
                 :layout_computation,
+                :node_position_table,
                 :primitive_channels,
                 :data_limits,
                 :minor_arrowhead_pixel_startpoints,
@@ -269,14 +270,14 @@ end
     end
 
     @testset "arrowhead meshes follow projected pixel positions" begin
-        figure = Figure(size=(900, 300))
+        figure = Figure(size = (900, 300))
         axis = Axis(figure[1, 1])
         plot = Makie.plot!(
             axis,
             only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK));
-            useedgelength=true,
-            showgamma=true,
-            style=:fulltree,
+            useedgelength = true,
+            showgamma = true,
+            style = :fulltree,
         )
         outputs = register_phylo_graph!(plot).primitive_outputs.minor_arrowheads
 
@@ -300,14 +301,14 @@ end
     end
 
     @testset "arrowhead projection follows plot model transforms" begin
-        figure = Figure(size=(600, 400))
+        figure = Figure(size = (600, 400))
         axis = Axis(figure[1, 1])
         plot = Makie.plot!(
             axis,
             only(parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK));
-            useedgelength=true,
-            showgamma=true,
-            style=:fulltree,
+            useedgelength = true,
+            showgamma = true,
+            style = :fulltree,
         )
         outputs = register_phylo_graph!(plot).primitive_outputs.minor_arrowheads
 

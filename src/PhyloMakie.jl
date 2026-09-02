@@ -22,6 +22,7 @@ export phyloplot,
     phyloplot!,
     PhyloPlot,
     node_positions,
+    node_positions_observable,
     edge_positions
 
 end

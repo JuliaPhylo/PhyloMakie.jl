@@ -156,6 +156,7 @@ const PHYLO_GRAPH_OUTPUT_SYMBOLS = (
     NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS...,
     TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS...,
 )
+const NODE_POSITION_TABLE_OUTPUT = :node_position_table
 
 function phylo_graph_output_symbols()::Tuple{Vararg{Symbol}}
     return PHYLO_GRAPH_OUTPUT_SYMBOLS
@@ -369,6 +370,22 @@ function _compute_network_geometry(
     return (_ref_any(compute_network_geometry(plot_network, config)),)
 end
 
+function _compute_node_position_table(
+        plot_network::PlotNetwork,
+        geometry::NetworkGeometry,
+    )::Tuple{DataFrames.DataFrame}
+    net = plot_network.net
+    return (
+        DataFrames.DataFrame(
+            number = Int[node.number for node in net.node],
+            name = String[node.name for node in net.node],
+            isleaf = Bool[node.leaf for node in net.node],
+            x = copy(geometry.node_x),
+            y = copy(geometry.node_y),
+        ),
+    )
+end
+
 function _compute_layout(
         plot_network::PlotNetwork,
         config::PhyloPlotConfig,
@@ -546,6 +563,20 @@ function register_layout_nodes!(
     return (geometry = :network_geometry, layout = :layout_computation)
 end
 
+function register_node_position_table_node!(
+        plot::PhyloPlot,
+        network_node::Symbol,
+        geometry_node::Symbol,
+    )::Symbol
+    _register_outputs_once!(
+        _compute_node_position_table,
+        plot,
+        (network_node, geometry_node),
+        (NODE_POSITION_TABLE_OUTPUT,),
+    )
+    return NODE_POSITION_TABLE_OUTPUT
+end
+
 function register_primitive_channel_node!(
         plot::PhyloPlot,
         network_node::Symbol,
@@ -577,12 +608,25 @@ end
 function _register_phylo_intermediate_nodes!(
         plot::PhyloPlot,
     )::NamedTuple{
-        (:config, :network, :geometry, :layout, :primitive_channels, :data_limits),
-        NTuple{6, Symbol},
+        (
+            :config,
+            :network,
+            :geometry,
+            :layout,
+            :node_positions,
+            :primitive_channels,
+            :data_limits,
+        ),
+        NTuple{7, Symbol},
     }
     config_node = register_plot_config_node!(plot)
     network_node = register_plot_network_node!(plot)
     layout_nodes = register_layout_nodes!(plot, config_node, network_node)
+    node_position_table_node = register_node_position_table_node!(
+        plot,
+        network_node,
+        layout_nodes.geometry,
+    )
     primitive_channels_node = register_primitive_channel_node!(
         plot,
         network_node,
@@ -595,6 +639,7 @@ function _register_phylo_intermediate_nodes!(
         network = network_node,
         geometry = layout_nodes.geometry,
         layout = layout_nodes.layout,
+        node_positions = node_position_table_node,
         primitive_channels = primitive_channels_node,
         data_limits = data_limits_node,
     )

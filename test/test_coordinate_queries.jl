@@ -77,12 +77,12 @@ using Makie
             FIXTURE_CORPUS.upstream_helper_regressions.level2_network_without_gamma
 
         with_gamma_table = edge_positions(
-            _public_render_case(with_gamma_case.newick; showgamma=with_gamma_case.showgamma).plot,
+            _public_render_case(with_gamma_case.newick; showgamma = with_gamma_case.showgamma).plot,
         )
         without_gamma_table = edge_positions(
             _public_render_case(
                 without_gamma_case.newick;
-                showgamma=without_gamma_case.showgamma,
+                showgamma = without_gamma_case.showgamma,
             ).plot,
         )
 
@@ -119,8 +119,89 @@ using Makie
         plot = surface.plot
 
         before_x = node_positions(plot).x
-        Makie.update!(plot; useedgelength=true)
+        Makie.update!(plot; useedgelength = true)
         after_x = node_positions(plot).x
         @test before_x != after_x
+    end
+
+    @testset "Reactive node positions preserve identity across relayout" begin
+        network = only(
+            parsephylogeny(
+                NewickFormat(),
+                "((A:1.0,B:2.0):1.0,C:3.0);",
+            ),
+        )
+        surface = Makie.plot(network; useedgelength = false)
+        plot = surface.plot
+        live_positions = node_positions_observable(plot)
+        @test live_positions isa Makie.Observable{DataFrame}
+        first_table = deepcopy(live_positions[])
+        @test allunique(first_table.number)
+        first_identity = [
+            (row.number, row.name, row.isleaf) for row in eachrow(first_table)
+        ]
+        notifications = Ref(0)
+        on(live_positions) do _
+            notifications[] += 1
+            return nothing
+        end
+
+        tip_points = map(
+            table -> Makie.Point2f[
+                Makie.Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf
+            ],
+            plot,
+            live_positions,
+        )
+        overlay = Makie.scatter!(surface.axis, tip_points; marker = :circle)
+        overlay_identity = objectid(overlay)
+        first_overlay_points = copy(overlay[1][])
+
+        Makie.update!(plot; useedgelength = true)
+
+        second_table = live_positions[]
+        second_identity = [
+            (row.number, row.name, row.isleaf) for row in eachrow(second_table)
+        ]
+        @test live_positions === node_positions_observable(plot)
+        @test first_identity == second_identity
+        @test first_table.x != second_table.x
+        @test second_table == node_positions(plot)
+        @test notifications[] == 1
+        @test objectid(overlay) == overlay_identity
+        @test overlay[1][] != first_overlay_points
+
+        Makie.update!(plot; edgecolor = "firebrick")
+        @test notifications[] == 1
+        @test live_positions[] == second_table
+    end
+
+    @testset "Reactive node positions report changed-network identity" begin
+        first_network = only(
+            parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);"),
+        )
+        second_network = only(
+            parsephylogeny(NewickFormat(), "((D:1.0,E:1.0):2.0,F:2.0);"),
+        )
+        surface = Makie.plot(first_network; useedgelength = true)
+        plot = surface.plot
+        live_positions = node_positions_observable(plot)
+        first_identity = [
+            (row.number, row.name, row.isleaf) for row in eachrow(live_positions[])
+        ]
+        notifications = Ref(0)
+        on(live_positions) do _
+            notifications[] += 1
+            return nothing
+        end
+
+        Makie.update!(plot; arg1 = second_network)
+
+        second_identity = [
+            (row.number, row.name, row.isleaf) for row in eachrow(live_positions[])
+        ]
+        @test first_identity != second_identity
+        @test live_positions[] == node_positions(plot)
+        @test notifications[] == 1
     end
 end

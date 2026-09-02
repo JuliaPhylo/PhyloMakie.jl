@@ -98,8 +98,20 @@ PhyloMakie.@nexustreeblock_str
 
 ## Coordinate queries
 
+[`node_positions`](@ref PhyloMakie.node_positions) returns an independent
+snapshot. [`node_positions_observable`](@ref
+PhyloMakie.node_positions_observable) returns one persistent
+`Observable{DataFrame}` for a live overlay. Both surfaces use `number` as the
+node key within the current network and report `name` and `isleaf` alongside
+the coordinates.
+
+Layout updates preserve the identity columns and update `x` and `y`. Replacing
+`arg1` may change the identities; consumers that associate external data with
+taxa must inspect the new table and refresh that data.
+
 ```@docs
 PhyloMakie.node_positions
+PhyloMakie.node_positions_observable
 PhyloMakie.edge_positions
 ```
 

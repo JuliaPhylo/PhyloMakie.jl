@@ -38,6 +38,7 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test isdefined(PhyloMakie, Symbol("phyloplot!"))
     @test isdefined(PhyloMakie, :PhyloPlot)
     @test isdefined(PhyloMakie, :node_positions)
+    @test isdefined(PhyloMakie, :node_positions_observable)
     @test isdefined(PhyloMakie, :edge_positions)
     @test :LineageNetwork in names(PhyloMakie)
     @test PhyloMakie.LineageNetwork === PhyloNetworks.HybridNetwork

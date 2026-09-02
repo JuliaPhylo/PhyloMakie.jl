@@ -13,9 +13,10 @@ which nodes receive on-plot text, not which nodes this query reports.  Filter
 to tips with `filter(:isleaf => identity, node_positions(plot))`, or to
 internal/ancestral nodes with `filter(:isleaf => !, node_positions(plot))`.
 
-Coordinates are read from the plot's live compute graph rather than
-recomputed, so they always match what is on screen and reflect the effect of
-any prior `Makie.update!` call.
+Coordinates are read from the plot's live node-position output rather than
+recomputed, so they match what is on screen and reflect the effect of any prior
+`Makie.update!` call. The returned `DataFrame` is an independent snapshot; use
+[`node_positions_observable`](@ref) when an overlay must follow later updates.
 
 # Examples
 ```julia
@@ -24,15 +25,44 @@ node_positions(figaxisplot.plot)
 ```
 """
 function node_positions(plot::PhyloPlot)::DataFrames.DataFrame
-    plot_network = _plot_output_value(plot, :plot_network)::PlotNetwork
-    geometry = _plot_output_value(plot, :network_geometry)::NetworkGeometry
-    net = plot_network.net
-    return DataFrames.DataFrame(
-        number = Int[node.number for node in net.node],
-        name = String[node.name for node in net.node],
-        isleaf = Bool[node.leaf for node in net.node],
-        x = copy(geometry.node_x),
-        y = copy(geometry.node_y),
+    table = _plot_output_value(plot, NODE_POSITION_TABLE_OUTPUT)::DataFrames.DataFrame
+    return copy(table)
+end
+
+"""
+    node_positions_observable(plot::PhyloPlot)::Makie.Observable{DataFrames.DataFrame}
+
+Return a live node-position table for the network rendered by `plot`.
+
+The observable has the same columns and row order as [`node_positions`](@ref).
+The `number` column is the stable node key within the current network. Layout
+updates such as `Makie.update!(plot; useedgelength = true)` preserve the
+identity columns (`number`, `name`, and `isleaf`) and update `x` and `y`.
+
+Replacing `arg1` may change every identity column. Consumers that associate
+external data with taxa must inspect the updated identity columns and update
+that data when the network changes. PhyloMakie does not resolve external data.
+
+The returned `Observable` is backed by the plot's public node-position output
+and remains the same object for the lifetime of `plot`.
+
+# Examples
+```julia
+figaxisplot = plot(net; useedgelength = false)
+live_positions = node_positions_observable(figaxisplot.plot)
+tip_points = map(live_positions) do table
+    Point2f[Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf]
+end
+scatter!(figaxisplot.axis, tip_points)
+Makie.update!(figaxisplot.plot; useedgelength = true)
+```
+"""
+function node_positions_observable(
+        plot::PhyloPlot,
+    )::Makie.Observable{DataFrames.DataFrame}
+    return Makie.ComputePipeline.get_observable!(
+        plot.attributes,
+        NODE_POSITION_TABLE_OUTPUT,
     )
 end
 
