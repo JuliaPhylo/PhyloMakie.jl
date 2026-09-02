@@ -1,4 +1,4 @@
-using CairoMakie
+using GLMakie
 using PhyloMakie
 using PhyloPicMakie: augment_phylopic!
 
@@ -39,7 +39,7 @@ glyph_plot = augment_phylopic!(
     image_rendering = :thumbnail,
     glyph_size = 0.24,
     placement = :left,
-    xoffset = 1.65,
+    xoffset = 0.3,
     on_missing = :error,
 )
 
