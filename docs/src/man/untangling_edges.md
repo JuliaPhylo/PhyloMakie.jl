@@ -1,7 +1,6 @@
 ```@setup untangling
 using CairoMakie
 using PhyloMakie
-import PhyloNetworks
 CairoMakie.activate!()
 ```
 
@@ -11,8 +10,8 @@ This plot may not be the easiest to read, as the hybrid edge crosses over C's
 edge:
 
 ```@example untangling
-net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
-plot(net)
+phylogeny = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+plot(phylogeny)
 ```
 
 To fix this, we can rotate C and D's edges around their parent node.
@@ -22,14 +21,14 @@ with the `shownodenumber = true` option, we can find the number of the node
 whose child edges we should rotate.
 
 ```@example untangling
-plot(net; shownodenumber = true)
+plot(phylogeny; shownodenumber = true)
 ```
 
 As we can see, rotating edges around node `-5` will make for a prettier network.
 
 ```@example untangling
-PhyloNetworks.rotate!(net, -5)
-plot(net)
+rotate_children!(phylogeny, -5)
+plot(phylogeny)
 ```
 
 This may seem unnecessary for a small network as shown, but it is a useful tool

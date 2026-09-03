@@ -185,7 +185,10 @@ end
         _assert_children_match_outputs(plot, outputs)
 
         before_points = copy(children.edge_segments[1][])
-        Makie.update!(plot; arg1 = parsephylogeny(NewickFormat(), PRIMITIVE_ASSEMBLY_ALT_NEWICK))
+        Makie.update!(
+            plot;
+            arg1 = parsephylogeny(NewickFormat(), PRIMITIVE_ASSEMBLY_ALT_NEWICK),
+        )
         @test _primitive_child_ids(plot) == original_child_ids
         @test children.edge_segments[1][] != before_points
         _assert_children_match_outputs(plot, outputs)

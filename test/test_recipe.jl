@@ -1,24 +1,5 @@
-function _capture_network_snapshot(net::HybridNetwork)
-    return (
-        rooti=net.rooti,
-        isrooted=net.isrooted,
-        node_numbers=[node.number for node in net.node],
-        preorder_numbers=[node.number for node in net.vec_node],
-        edge_state=[
-            (
-                number=edge.number,
-                parent=PhyloNetworks.getparent(edge).number,
-                child=PhyloNetworks.getchild(edge).number,
-                ischild1=edge.ischild1,
-                containroot=hasfield(typeof(edge), :containroot) ? getfield(edge, :containroot) : nothing,
-                hybrid=edge.hybrid,
-                ismajor=edge.ismajor,
-                length=edge.length,
-                gamma=edge.gamma,
-            ) for edge in net.edge
-        ],
-    )
-end
+_capture_phylogeny_snapshot(phylogeny::AbstractPhylogeny) =
+    _native_phylogeny_snapshot(phylogeny)
 
 function _plot_data_limits(plot)
     limits = Makie.data_limits(plot)
@@ -33,7 +14,7 @@ function _plot_colorbuffer(figure)
     # copy() is required: colorbuffer reuses an internal buffer across calls on the
     # same figure, so without copy the caller holds a reference to live memory that
     # gets overwritten by the next colorbuffer call.
-    return copy(Makie.colorbuffer(figure; backend=CairoMakie))
+    return copy(Makie.colorbuffer(figure; backend = CairoMakie))
 end
 
 @testset "PhyloPlot recipe" begin
@@ -43,12 +24,12 @@ end
 
     render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
     render_kwargs = (
-        useedgelength=true,
-        showgamma=true,
-        edgecolor=Dict(render_case.edgecolor_overrides),
-        defaultedgecolor=render_case.defaultedgecolor,
-        edgewidth=Dict(render_case.edgewidth_overrides),
-        style=:fulltree,
+        useedgelength = true,
+        showgamma = true,
+        edgecolor = Dict(render_case.edgecolor_overrides),
+        defaultedgecolor = render_case.defaultedgecolor,
+        edgewidth = Dict(render_case.edgewidth_overrides),
+        style = :fulltree,
     )
 
     @testset "plot() and phyloplot() dispatch to PhyloPlot and produce identical output" begin
@@ -68,13 +49,13 @@ end
     end
 
     @testset "plot!() and phyloplot!() dispatch to PhyloPlot and produce identical output" begin
-        plot_figure = Figure(size=(640, 400))
+        plot_figure = Figure(size = (640, 400))
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
         hidespines!(plot_axis)
         plot_surface = Makie.plot!(plot_axis, parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
 
-        convenience_figure = Figure(size=(640, 400))
+        convenience_figure = Figure(size = (640, 400))
         convenience_axis = Axis(convenience_figure[1, 1])
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
@@ -89,27 +70,27 @@ end
         @test _plot_colorbuffer(plot_figure) == _plot_colorbuffer(convenience_figure)
     end
 
-    @testset "Input network is not mutated by any plotting call" begin
+    @testset "Input phylogeny is not mutated by any plotting call" begin
         surfaces = (
-            net -> Makie.plot(net; useedgelength=true, style=:fulltree),
-            net -> phyloplot(net; useedgelength=true, style=:fulltree),
-            net -> begin
+            phylogeny -> Makie.plot(phylogeny; useedgelength = true, style = :fulltree),
+            phylogeny -> phyloplot(phylogeny; useedgelength = true, style = :fulltree),
+            phylogeny -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
-                Makie.plot!(axis, net; useedgelength=true, style=:fulltree)
+                Makie.plot!(axis, phylogeny; useedgelength = true, style = :fulltree)
             end,
-            net -> begin
+            phylogeny -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
-                phyloplot!(axis, net; useedgelength=true, style=:fulltree)
+                phyloplot!(axis, phylogeny; useedgelength = true, style = :fulltree)
             end,
         )
 
         for surface in surfaces
-            network = parsephylogeny(NewickFormat(), render_case.newick)
-            before = _capture_network_snapshot(network)
-            surface(network)
-            @test _capture_network_snapshot(network) == before
+            phylogeny = parsephylogeny(NewickFormat(), render_case.newick)
+            before = _capture_phylogeny_snapshot(phylogeny)
+            surface(phylogeny)
+            @test isequal(_capture_phylogeny_snapshot(phylogeny), before)
         end
     end
 
@@ -121,17 +102,17 @@ end
             _render_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         limit_surface = Makie.plot(
             parsephylogeny(NewickFormat(), annotation_case.newick);
-            useedgelength=true,
-            shownodelabel=true,
-            shownodenumber=true,
-            showedgelength=true,
-            showedgenumber=true,
-            showgamma=true,
-            nodelabel=nodelabel,
-            edgelabel=edgelabel,
-            xlim=annotation_case.xlim,
-            ylim=annotation_case.ylim,
-            style=:majortree,
+            useedgelength = true,
+            shownodelabel = true,
+            shownodenumber = true,
+            showedgelength = true,
+            showedgenumber = true,
+            showgamma = true,
+            nodelabel = nodelabel,
+            edgelabel = edgelabel,
+            xlim = annotation_case.xlim,
+            ylim = annotation_case.ylim,
+            style = :majortree,
         )
 
         @test _plot_data_limits(limit_surface.plot)[1] == annotation_case.xlim
@@ -175,9 +156,9 @@ end
             scenario = FIXTURE_CORPUS.accepted_design_scenarios.single_reticulation_gamma
             surface = Makie.plot(
                 parsephylogeny(NewickFormat(), scenario.newick);
-                useedgelength=true,
-                showgamma=true,
-                style=:fulltree,
+                useedgelength = true,
+                showgamma = true,
+                style = :fulltree,
             )
 
             @test surface isa Makie.FigureAxisPlot
@@ -204,10 +185,10 @@ end
             surface = Makie.plot(
                 parsephylogeny(NewickFormat(), annotation_case.newick);
                 annotation_case.attribute_kwargs...,
-                nodelabel=nodelabel,
-                edgelabel=edgelabel,
-                xlim=annotation_case.xlim,
-                ylim=annotation_case.ylim,
+                nodelabel = nodelabel,
+                edgelabel = edgelabel,
+                xlim = annotation_case.xlim,
+                ylim = annotation_case.ylim,
             )
 
             @test _plot_data_limits(surface.plot)[1] == annotation_case.xlim
@@ -218,10 +199,10 @@ end
 
     @testset "Reactivity: attribute changes propagate without re-creating the plot" begin
         CairoMakie.activate!()
-        # Hybrid network required: style=:fulltree vs :majortree is only visually
+        # A reticulation is required: style=:fulltree vs :majortree is only visually
         # distinct when minor (hybrid) edges are present.
-        net = parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
-        surface = Makie.plot(net; style = :fulltree)
+        phylogeny = parsephylogeny(NewickFormat(), "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);")
+        surface = Makie.plot(phylogeny; style = :fulltree)
         plot_handle = surface.plot
 
         before_color = _plot_colorbuffer(surface.figure)
@@ -234,19 +215,22 @@ end
         after_style = _plot_colorbuffer(surface.figure)
         @test before_style != after_style
 
-        net2 = parsephylogeny(NewickFormat(), "((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);")
-        before_net = _plot_colorbuffer(surface.figure)
-        Makie.update!(plot_handle; arg1 = net2)
-        after_net = _plot_colorbuffer(surface.figure)
-        @test before_net != after_net
+        replacement_phylogeny = parsephylogeny(
+            NewickFormat(),
+            "((A:1,(B:0.5)#H1:0.5):1,(#H1:0.5,C:1):1);",
+        )
+        before_replacement = _plot_colorbuffer(surface.figure)
+        Makie.update!(plot_handle; arg1 = replacement_phylogeny)
+        after_replacement = _plot_colorbuffer(surface.figure)
+        @test before_replacement != after_replacement
 
         @test plot_handle isa PhyloPlot
     end
 
-    @testset "Two networks can be plotted on separate axes in the same figure" begin
+    @testset "Two phylogenies can be plotted on separate axes in the same figure" begin
         scenario = FIXTURE_CORPUS.accepted_design_scenarios.composable_dual_axes
 
-        figure = Figure(size=(900, 360))
+        figure = Figure(size = (900, 360))
         left_axis = Axis(figure[1, 1])
         right_axis = Axis(figure[1, 2])
         hidedecorations!(left_axis)
@@ -257,16 +241,16 @@ end
         left_plot = Makie.plot!(
             left_axis,
             parsephylogeny(NewickFormat(), scenario.newicks[1]);
-            useedgelength=true,
-            showgamma=true,
-            style=:fulltree,
+            useedgelength = true,
+            showgamma = true,
+            style = :fulltree,
         )
         right_plot = phyloplot!(
             right_axis,
             parsephylogeny(NewickFormat(), scenario.newicks[2]);
-            useedgelength=true,
-            showedgenumber=true,
-            style=:majortree,
+            useedgelength = true,
+            showedgenumber = true,
+            style = :majortree,
         )
 
         left_limits = _plot_data_limits(left_plot)

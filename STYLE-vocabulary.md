@@ -60,7 +60,7 @@ for APIs that define it explicitly, such as PhyloPicMakie's silhouette glyphs.
 ### FigureAxisPlot
 
 `Makie.FigureAxisPlot` is the canonical non-mutating return contract for
-`plot(net; kwargs...)` and any equivalent non-mutating convenience wrapper
+`plot(phylogeny; kwargs...)` and any equivalent non-mutating convenience wrapper
 provided by PhyloMakie.
 
 Use the exact type name when discussing the API contract.
@@ -86,14 +86,17 @@ For this production run, keep these exact public spellings and behaviors.
 In reader-facing prose, describe them as "full-tree style" and "major-tree
 style".
 
-### HybridNetwork
+### AbstractPhylogeny and LineageNetwork
 
-`PhyloNetworks.HybridNetwork` is the canonical input type for the current
-production run.
+`AbstractPhylogeny` is the canonical input abstraction for plotting and
+general phylogeny algorithms. `AbstractPhylogeneticTree` and
+`AbstractPhylogeneticNetwork` are its semantic categories.
 
-Do not generalize planning language to arbitrary graphs, arbitrary trees, or
-arbitrary network types when the contract being discussed is specific to
-`HybridNetwork`.
+`LineageNetwork` is the current native concrete implementation. It stores
+durable graph topology and phylogenetic metadata without inference caches.
+`PhyloNetworks.HybridNetwork` is a foreign parser and interoperability type;
+direct knowledge of its representation belongs only in the
+`PhyloNetworksAdapter` module.
 
 ### Capability parity
 
@@ -132,7 +135,7 @@ contract.
 ### Legacy keyword surface
 
 The legacy keyword surface is the historical
-`PhyloPlots.plot(net::HybridNetwork; ...)` interface used as a capability and
+`PhyloPlots.plot(phylogeny::HybridNetwork; ...)` interface used as a capability and
 migration reference.
 
 It is not the canonical PhyloMakie public contract for this production run.
@@ -140,9 +143,9 @@ It is not the canonical PhyloMakie public contract for this production run.
 ### Makie-native public plot owner
 
 The Makie-native public plot owner is the single recipe or plot type that owns
-public plotting semantics for `PhyloNetworks.HybridNetwork` in PhyloMakie.
+public plotting semantics for `AbstractPhylogeny` in PhyloMakie.
 
-`plot(net)`, `plot!(ax, net)`, and any optional `phyloplot` convenience
+`plot(phylogeny)`, `plot!(axis, phylogeny)`, and any optional `phyloplot` convenience
 surfaces must route through this same owner.
 Do not let a wrapper, compatibility shell, or legacy keyword adapter become a
 second semantic center.
@@ -167,7 +170,8 @@ Do not replace them with vague substitutes such as "primary edge",
 
 ### PhyloPlot
 
-`PhyloPlot` is the Makie recipe type name produced by `@recipe(PhyloPlot, net)`.
+`PhyloPlot` is the Makie recipe type name produced by
+`@recipe(PhyloPlot, phylogeny)`.
 
 Treat `PhyloPlot` as an implementation-detail type.
 User-facing prose should prefer `plot` and `plot!`, or `phyloplot` and
@@ -176,17 +180,17 @@ specifically.
 
 ### Phyloplot
 
-`phyloplot(net; kwargs...)` is an optional package-specific non-mutating
+`phyloplot(phylogeny; kwargs...)` is an optional package-specific non-mutating
 convenience plotting function in PhyloMakie when it is present.
 
 It must remain a thin wrapper over the same Makie-native public plot owner used
-by `plot(net; kwargs...)`.
+by `plot(phylogeny; kwargs...)`.
 Do not define package semantics here independently from the host-framework
 plotting surface.
 
 ### Phyloplot!
 
-`phyloplot!(ax, net; kwargs...)` is an optional package-specific mutating
+`phyloplot!(axis, phylogeny; kwargs...)` is an optional package-specific mutating
 convenience plotting function for plotting into an existing Makie axis-like
 owner when it is present.
 

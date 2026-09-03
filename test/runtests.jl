@@ -5,7 +5,6 @@ using Makie
 using CairoMakie
 using PhyloMakie
 import PhyloNetworks # not "using" to avoid importing accessor names
-using PhyloNetworks: HybridNetwork
 using Test
 
 include("support/fixture_corpus.jl")
@@ -14,9 +13,11 @@ include("support/render_test_helpers.jl")
 
 @testset "PhyloMakie.jl" begin
     include("test_PhyloMakie.jl")
+    include("test_phylogenies.jl")
+    include("test_phylonetworks_adapter.jl")
     include("test_phylogenyio.jl")
     include("test_plot_config.jl")
-    include("test_network_layout.jl")
+    include("test_phylogeny_layout.jl")
     include("test_annotation_tables.jl")
     include("test_image_annotations.jl")
     include("test_primitive_channels.jl")
@@ -31,7 +32,7 @@ include("support/render_test_helpers.jl")
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(
             PhyloMakie;
-            piracies = (treat_as_own = [Makie.plottype, PhyloNetworks.HybridNetwork],),
+            piracies = false,
         )
     end
     @testset "Code linting (JET.jl)" begin

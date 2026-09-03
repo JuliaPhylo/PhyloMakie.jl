@@ -3,7 +3,7 @@ using GLMakie
 
 # Phylogenies can be instantiated and visualized from string representations using
 # `parsephylogenies`.
-# Note that this always returns a collection of phylogenies (`Vector{LineageNetwork}`),
+# Note that this always returns a collection of phylogenies (`Vector{<:LineageNetwork}`),
 # even if only one phylogeny is defined in the source.
 
 newick_phylogenies = parsephylogenies(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")

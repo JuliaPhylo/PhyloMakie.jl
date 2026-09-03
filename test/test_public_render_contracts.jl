@@ -32,23 +32,8 @@ function _contract_children(plot)::NamedTuple
     )
 end
 
-function _contract_network_snapshot(net::PhyloNetworks.HybridNetwork)
-    return (
-        rooti = net.rooti,
-        isrooted = net.isrooted,
-        preorder_numbers = [node.number for node in net.vec_node],
-        edge_state = [
-            (
-                    number = edge.number,
-                    parent = PhyloNetworks.getparent(edge).number,
-                    child = PhyloNetworks.getchild(edge).number,
-                    ischild1 = edge.ischild1,
-                    containroot = hasfield(typeof(edge), :containroot) ?
-                    getfield(edge, :containroot) : nothing,
-                ) for edge in net.edge
-        ],
-    )
-end
+_contract_phylogeny_snapshot(phylogeny::AbstractPhylogeny) =
+    _native_phylogeny_snapshot(phylogeny)
 
 function _repeat_each(values::AbstractVector{T})::Vector{T} where {T}
     repeated = Vector{T}(undef, 2 * length(values))
@@ -191,12 +176,14 @@ end
         expected_edgewidths = Float32[]
         expected_minor_edgewidths = Float32[]
         fallback_color = _rgba(render_case.defaultedgecolor)
-        for edge in case.network.edge
-            resolved_color = _rgba(get(edgecolor, edge.number, render_case.defaultedgecolor))
-            resolved_width = Float32(get(edgewidth, edge.number, 1.0))
+        for current_edge in edges(case.phylogeny)
+            resolved_color = _rgba(
+                get(edgecolor, edge_id(current_edge), render_case.defaultedgecolor),
+            )
+            resolved_width = Float32(get(edgewidth, edge_id(current_edge), 1.0))
             push!(expected_edgecolors, resolved_color)
             push!(expected_edgewidths, resolved_width)
-            if !edge.ismajor
+            if !is_major(current_edge)
                 push!(expected_minor_edgecolors, resolved_color)
                 push!(expected_minor_edgewidths, resolved_width)
             end
@@ -209,7 +196,7 @@ end
         @test case.channels.minor_edge_shafts.linewidths ==
             _repeat_each(expected_minor_edgewidths)
         @test case.channels.node_bars.colors ==
-            _repeat_each(fill(fallback_color, case.network.numnodes))
+            _repeat_each(fill(fallback_color, node_count(case.phylogeny)))
 
         expected_minor_gamma_color = fill(
             _rgba(case.config.minorhybridedgecolor),
@@ -419,12 +406,12 @@ end
         @test children.edge_segments.linewidth[] != before_widths
         @test children.edge_segments.linewidth[] == plot[:edge_segment_linewidths][]
 
-        new_net = parsephylogeny(NewickFormat(), FIXTURE_CORPUS.render_regression_cases.style_majortree.newick)
-        before_network = _contract_network_snapshot(new_net)
-        Makie.update!(plot; arg1 = new_net)
+        new_phylogeny = parsephylogeny(NewickFormat(), FIXTURE_CORPUS.render_regression_cases.style_majortree.newick)
+        before_phylogeny = _contract_phylogeny_snapshot(new_phylogeny)
+        Makie.update!(plot; arg1 = new_phylogeny)
         @test _contract_child_ids(plot) == original_child_ids
-        @test _contract_network_snapshot(new_net) == before_network
-        @test plot[:plot_network][].net !== new_net
+        @test isequal(_contract_phylogeny_snapshot(new_phylogeny), before_phylogeny)
+        @test plot[:prepared_phylogeny][].phylogeny === new_phylogeny
 
         Makie.update!(plot; showtiplabel = false, minorlinetype = "blank")
         @test _contract_child_ids(plot) == original_child_ids

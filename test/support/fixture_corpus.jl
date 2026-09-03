@@ -266,8 +266,7 @@ const FIXTURE_CORPUS = (
         incompatible_root = (
             newick = "((a,(b)#H1)i1,(#H1,c)i2)root:0.5;",
             attribute_kwargs = (useedgelength = false, style = :fulltree),
-            rooti = 2,
-            expected_error_message = "non-leaf node 3 had 0 children.\nCould be a hybrid whose parents' direction conflicts with the root.\nischild1 and containroot were updated for a subset of edges in the network only.\nPlease change the root, perhaps using rootatnode! or rootatedge!",
+            root_index = 2,
         ),
     ),
     annotation_rows = (
@@ -384,9 +383,9 @@ const FIXTURE_CORPUS = (
         ),
     ),
     warning_strings = (
-        nodelabel_unknown_nodes = "Some node numbers in the nodelabel data frame are not found in the network:\n 100",
+        nodelabel_unknown_nodes = "Some node numbers in the nodelabel data frame are not found in the phylogeny:\n 100",
         nodelabel_invalid_shape = "nodelabel should have 2+ columns, the first one giving the node numbers (Integer)",
-        edgelabel_unknown_edges = "Some edge numbers in the edgelabel data frame are not found in the network:\n 200",
+        edgelabel_unknown_edges = "Some edge numbers in the edgelabel data frame are not found in the phylogeny:\n 200",
         edgelabel_invalid_shape = "edgelabel should have 2+ columns, the first one giving the edge numbers (Integer)",
         mixed_missing_edge_lengths = "At least one non-missing edge length: plotting any missing length as 1.0",
     ),

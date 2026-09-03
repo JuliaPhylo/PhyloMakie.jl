@@ -2,9 +2,9 @@ using GLMakie
 using PhyloMakie
 using PhyloPicMakie: augment_phylopic!
 
-network = newick"(Ailuropoda_melanoleuca:1.0,(Ursus_americanus:1.0,(Ursus_arctos:0.5,Ursus_maritimus:0.5):0.5):1.0);"
-for node in network.node
-    node.name = replace(node.name, "_" => " ")
+phylogeny = newick"(Ailuropoda_melanoleuca:1.0,(Ursus_americanus:1.0,(Ursus_arctos:0.5,Ursus_maritimus:0.5):0.5):1.0);"
+for current_node in nodes(phylogeny)
+    rename_node!(current_node, replace(node_label(current_node), "_" => " "))
 end
 
 figure = Figure(size = (980, 600))
@@ -19,7 +19,7 @@ hidespines!(axis)
 
 tree_plot = plot!(
     axis,
-    network;
+    phylogeny;
     useedgelength = true,
     showtiplabel = true,
     tipoffset = 0.1,

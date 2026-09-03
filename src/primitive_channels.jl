@@ -72,10 +72,10 @@ function _transparent_color(color::Makie.RGBAf)::Makie.RGBAf
 end
 
 function compute_edge_colors(
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
     )::NamedTuple{(:edgecolors, :minor_edgecolors, :defaultedgecolor)}
-    net = plot_network.net
+    phylogeny = prepared_phylogeny.phylogeny
     edgecolor_mode = config.edgecolor isa AbstractDict ? :by_edge : :uniform
     defaultedgecolor = _resolve_color(
         _resolve_defaultedgecolor(
@@ -84,15 +84,15 @@ function compute_edge_colors(
             edgecolor_mode,
         ),
     )
-    edgecolors = Vector{Makie.RGBAf}(undef, numedges(net))
+    edgecolors = Vector{Makie.RGBAf}(undef, edge_count(phylogeny))
     minor_edgecolors = Makie.RGBAf[]
 
     if edgecolor_mode == :by_edge
-        for (edge_index, edge) in enumerate(getedges(net))
+        for (edge_index, edge) in enumerate(edges(phylogeny))
             edgecolor = _resolve_color(
                 get(
                     config.edgecolor,
-                    uniqueid(edge),
+                    edge_id(edge),
                     _resolve_defaultedgecolor(
                         config.edgecolor,
                         config.defaultedgecolor,
@@ -101,7 +101,7 @@ function compute_edge_colors(
                 ),
             )
             edgecolors[edge_index] = edgecolor
-            !ismajor(edge) && push!(minor_edgecolors, edgecolor)
+            !is_major(edge) && push!(minor_edgecolors, edgecolor)
         end
         return (edgecolors = edgecolors, minor_edgecolors = minor_edgecolors, defaultedgecolor = defaultedgecolor)
     end
@@ -110,38 +110,38 @@ function compute_edge_colors(
     majorhybridedgecolor = _resolve_color(config.majorhybridedgecolor)
     minorhybridedgecolor = _resolve_color(config.minorhybridedgecolor)
 
-    for (edge_index, edge) in enumerate(getedges(net))
+    for (edge_index, edge) in enumerate(edges(phylogeny))
         edgecolor = uniform_edgecolor
-        ishybrid(edge) && (edgecolor = majorhybridedgecolor)
-        !ismajor(edge) && (edgecolor = minorhybridedgecolor)
+        is_hybrid(edge) && (edgecolor = majorhybridedgecolor)
+        !is_major(edge) && (edgecolor = minorhybridedgecolor)
         edgecolors[edge_index] = edgecolor
-        !ismajor(edge) && push!(minor_edgecolors, edgecolor)
+        !is_major(edge) && push!(minor_edgecolors, edgecolor)
     end
     return (edgecolors = edgecolors, minor_edgecolors = minor_edgecolors, defaultedgecolor = defaultedgecolor)
 end
 
 function compute_edge_widths(
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
     )::NamedTuple{(:edgewidths, :minor_edgewidths)}
-    net = plot_network.net
+    phylogeny = prepared_phylogeny.phylogeny
     edgewidths = Float32[]
     minor_edgewidths = Float32[]
 
     if _resolve_edgewidth_mode(config.edgewidth) == :uniform
         resolved_width = Float32(config.edgewidth)
-        for edge in getedges(net)
+        for edge in edges(phylogeny)
             push!(edgewidths, resolved_width)
-            !ismajor(edge) && push!(minor_edgewidths, resolved_width)
+            !is_major(edge) && push!(minor_edgewidths, resolved_width)
         end
         return (edgewidths = edgewidths, minor_edgewidths = minor_edgewidths)
     end
 
-    for edge in getedges(net)
-        resolved_width = haskey(config.edgewidth, uniqueid(edge)) ?
-            Float32(config.edgewidth[uniqueid(edge)]) : 1.0f0
+    for edge in edges(phylogeny)
+        resolved_width = haskey(config.edgewidth, edge_id(edge)) ?
+            Float32(config.edgewidth[edge_id(edge)]) : 1.0f0
         push!(edgewidths, resolved_width)
-        !ismajor(edge) && push!(minor_edgewidths, resolved_width)
+        !is_major(edge) && push!(minor_edgewidths, resolved_width)
     end
     return (edgewidths = edgewidths, minor_edgewidths = minor_edgewidths)
 end
@@ -197,17 +197,17 @@ function _segment_channel(
     if !render_visible || isempty(points)
         return SegmentChannel(Makie.Point2f[], Makie.RGBAf[], Float32[], linestyle)
     end
-    return SegmentChannel(points, repeat(colors, inner=2), repeat(linewidths, inner=2), linestyle)
+    return SegmentChannel(points, repeat(colors, inner = 2), repeat(linewidths, inner = 2), linestyle)
 end
 
 function compute_segment_channels(
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
         layout::LayoutComputation,
     )::NamedTuple{(:edge_segments, :node_bars, :minor_edge_shafts)}
     geometry = layout.geometry
-    colors = compute_edge_colors(plot_network, config)
-    widths = compute_edge_widths(plot_network, config)
+    colors = compute_edge_colors(prepared_phylogeny, config)
+    widths = compute_edge_widths(prepared_phylogeny, config)
     edge_points = compute_segment_points(
         geometry.edge_x_lo,
         geometry.edge_x_hi,
@@ -425,105 +425,105 @@ function compute_text_channels(
             :minor_gamma_labels,
             :major_gamma_labels,
             :edge_numbers,
-        )
+        ),
     }
     node_table = layout.annotations.node_data
     edge_table = layout.annotations.edge_data
     leaf_rows = findall(node_table.lea)
     internal_rows = findall(.!node_table.lea)
     tip_labels = config.showtiplabel ? compute_text_channel(
-        node_table,
-        leaf_rows,
-        :name,
-        _resolve_color("black"),
-        compute_text_sizes(config.tipcex, length(leaf_rows)),
-        (:left, :center),
-        :italic,
-        config.tipoffset,
-    ) : _empty_text_channel((:left, :center), :italic)
+            node_table,
+            leaf_rows,
+            :name,
+            _resolve_color("black"),
+            compute_text_sizes(config.tipcex, length(leaf_rows)),
+            (:left, :center),
+            :italic,
+            config.tipoffset,
+        ) : _empty_text_channel((:left, :center), :italic)
 
     internal_node_names = config.shownodelabel ? compute_text_channel(
-        node_table,
-        internal_rows,
-        :name,
-        _resolve_color("black"),
-        compute_text_sizes(config.tipcex, length(internal_rows)),
-        (0.5, 0.0),
-        :italic,
-    ) : _empty_text_channel((0.5, 0.0), :italic)
+            node_table,
+            internal_rows,
+            :name,
+            _resolve_color("black"),
+            compute_text_sizes(config.tipcex, length(internal_rows)),
+            (0.5, 0.0),
+            :italic,
+        ) : _empty_text_channel((0.5, 0.0), :italic)
 
     node_number_align = compute_xy_alignment(1)
     node_numbers = config.shownodenumber ? compute_text_channel(
-        node_table,
-        axes(node_table, 1),
-        :num,
-        _resolve_color("black"),
-        _default_text_sizes(size(node_table, 1)),
-        node_number_align,
-        nothing,
-    ) : _empty_text_channel(node_number_align)
+            node_table,
+            axes(node_table, 1),
+            :num,
+            _resolve_color("black"),
+            _default_text_sizes(size(node_table, 1)),
+            node_number_align,
+            nothing,
+        ) : _empty_text_channel(node_number_align)
 
     nodelabeladj = compute_xy_alignment(config.nodelabeladj)
     node_labels = layout.annotations.labelnodes ? compute_text_channel(
-        node_table,
-        axes(node_table, 1),
-        :lab,
-        _resolve_color(config.nodelabelcolor),
-        compute_text_sizes(config.nodecex, size(node_table, 1)),
-        nodelabeladj,
-        nothing,
-    ) : _empty_text_channel(nodelabeladj)
+            node_table,
+            axes(node_table, 1),
+            :lab,
+            _resolve_color(config.nodelabelcolor),
+            compute_text_sizes(config.nodecex, size(node_table, 1)),
+            nodelabeladj,
+            nothing,
+        ) : _empty_text_channel(nodelabeladj)
 
     edgelabeladj = compute_xy_alignment(config.edgelabeladj)
     edge_labels = layout.annotations.labeledges ? compute_text_channel(
-        edge_table,
-        axes(edge_table, 1),
-        :lab,
-        _resolve_color(config.edgelabelcolor),
-        compute_text_sizes(config.edgecex, size(edge_table, 1)),
-        edgelabeladj,
-        nothing,
-    ) : _empty_text_channel(edgelabeladj)
+            edge_table,
+            axes(edge_table, 1),
+            :lab,
+            _resolve_color(config.edgelabelcolor),
+            compute_text_sizes(config.edgecex, size(edge_table, 1)),
+            edgelabeladj,
+            nothing,
+        ) : _empty_text_channel(edgelabeladj)
 
     edge_lengths = config.showedgelength ? compute_text_channel(
-        edge_table,
-        axes(edge_table, 1),
-        :len,
-        _resolve_color("black"),
-        _default_text_sizes(size(edge_table, 1)),
-        (0.5, 1.0),
-        nothing,
-    ) : _empty_text_channel((0.5, 1.0))
+            edge_table,
+            axes(edge_table, 1),
+            :len,
+            _resolve_color("black"),
+            _default_text_sizes(size(edge_table, 1)),
+            (0.5, 1.0),
+            nothing,
+        ) : _empty_text_channel((0.5, 1.0))
 
     minor_gamma_rows = findall(edge_table.hyb .& edge_table.min)
     major_gamma_rows = findall(edge_table.hyb .& .!edge_table.min)
     minor_gamma_labels = config.showgamma ? compute_text_channel(
-        edge_table,
-        minor_gamma_rows,
-        :gam,
-        _resolve_color(config.minorhybridedgecolor),
-        _default_text_sizes(length(minor_gamma_rows)),
-        (0.5, 1.0),
-        nothing,
-    ) : _empty_text_channel((0.5, 1.0))
+            edge_table,
+            minor_gamma_rows,
+            :gam,
+            _resolve_color(config.minorhybridedgecolor),
+            _default_text_sizes(length(minor_gamma_rows)),
+            (0.5, 1.0),
+            nothing,
+        ) : _empty_text_channel((0.5, 1.0))
     major_gamma_labels = config.showgamma ? compute_text_channel(
-        edge_table,
-        major_gamma_rows,
-        :gam,
-        _resolve_color(config.majorhybridedgecolor),
-        _default_text_sizes(length(major_gamma_rows)),
-        (0.5, 1.0),
-        nothing,
-    ) : _empty_text_channel((0.5, 1.0))
+            edge_table,
+            major_gamma_rows,
+            :gam,
+            _resolve_color(config.majorhybridedgecolor),
+            _default_text_sizes(length(major_gamma_rows)),
+            (0.5, 1.0),
+            nothing,
+        ) : _empty_text_channel((0.5, 1.0))
     edge_numbers = config.showedgenumber ? compute_text_channel(
-        edge_table,
-        axes(edge_table, 1),
-        :num,
-        _resolve_color(config.edgenumbercolor),
-        _default_text_sizes(size(edge_table, 1)),
-        (0.5, 0.0),
-        nothing,
-    ) : _empty_text_channel((0.5, 0.0))
+            edge_table,
+            axes(edge_table, 1),
+            :num,
+            _resolve_color(config.edgenumbercolor),
+            _default_text_sizes(size(edge_table, 1)),
+            (0.5, 0.0),
+            nothing,
+        ) : _empty_text_channel((0.5, 0.0))
 
     return (
         tip_labels = tip_labels,
@@ -561,13 +561,13 @@ function compute_data_limits(
 end
 
 function compute_primitive_channels(
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
         layout::LayoutComputation,
     )::PrimitiveChannels
-    segment_channels = compute_segment_channels(plot_network, config, layout)
-    colors = compute_edge_colors(plot_network, config)
-    widths = compute_edge_widths(plot_network, config)
+    segment_channels = compute_segment_channels(prepared_phylogeny, config, layout)
+    colors = compute_edge_colors(prepared_phylogeny, config)
+    widths = compute_edge_widths(prepared_phylogeny, config)
     minor_edge_style = compute_minor_edge_style(config.minorlinetype)
     arrow_metrics = compute_arrowhead_metrics(config.arrowlen, widths.minor_edgewidths)
     arrowheads = compute_arrowhead_channel(

@@ -8,8 +8,8 @@ end
     PlotExtent = getfield(PhyloMakie, :PlotExtent)
     AnnotationTables = getfield(PhyloMakie, :AnnotationTables)
     LayoutComputation = getfield(PhyloMakie, :LayoutComputation)
-    prepare_plot_network = getfield(PhyloMakie, :prepare_plot_network)
-    compute_network_geometry = getfield(PhyloMakie, :compute_network_geometry)
+    prepare_for_layout = getfield(PhyloMakie, :prepare_for_layout)
+    compute_phylogeny_geometry = getfield(PhyloMakie, :compute_phylogeny_geometry)
     compute_layout = getfield(PhyloMakie, :compute_layout)
     resolve_plot_config = getfield(PhyloMakie, :resolve_plot_config)
     validate_node_data = getfield(PhyloMakie, :_validate_node_data)
@@ -18,18 +18,18 @@ end
     base_newick = FIXTURE_CORPUS.accepted_design_scenarios.dataframe_label_rendering.newick
 
     function annotation_layout(; kwargs...)
-        plot_network = prepare_plot_network(parsephylogeny(NewickFormat(), base_newick))
+        prepared_phylogeny = prepare_for_layout(parsephylogeny(NewickFormat(), base_newick))
         config = resolve_plot_config(; kwargs...)
-        geometry = compute_network_geometry(plot_network, config)
-        return compute_layout(plot_network, config, geometry)
+        geometry = compute_phylogeny_geometry(prepared_phylogeny, config)
+        return compute_layout(prepared_phylogeny, config, geometry)
     end
 
     @testset "Node-label validation keeps accepted warnings and filtering" begin
-        network = parsephylogeny(NewickFormat(), base_newick)
+        phylogeny = parsephylogeny(NewickFormat(), base_newick)
         warning_input =
             _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_warning_rows)
         labelnodes, filtered = @test_logs (:warn, warning_strings.nodelabel_unknown_nodes) validate_node_data(
-            network,
+            phylogeny,
             warning_input,
         )
         @test labelnodes === true
@@ -37,7 +37,7 @@ end
 
         invalid_input = warning_input[!, 2:3]
         labelnodes_invalid, invalid_result = @test_logs (:warn, warning_strings.nodelabel_invalid_shape) validate_node_data(
-            network,
+            phylogeny,
             invalid_input,
         )
         @test labelnodes_invalid === false
@@ -45,7 +45,7 @@ end
 
         filtered_input =
             _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_filtered_rows)
-        labelnodes_filtered, filtered_result = validate_node_data(network, filtered_input)
+        labelnodes_filtered, filtered_result = validate_node_data(phylogeny, filtered_input)
         @test labelnodes_filtered === true
         @test filtered_result ==
             _annotation_fixture_dataframe(table_expectations.nodelabel_filtered_result)
@@ -55,9 +55,9 @@ end
         node_labels = _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.nodelabel_render_rows)
         edge_labels = _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_filtered_rows)
         node_layout = annotation_layout(
-            nodelabel=node_labels,
-            shownodenumber=true,
-            shownodelabel=true,
+            nodelabel = node_labels,
+            shownodenumber = true,
+            shownodelabel = true,
         )
 
         @test node_layout isa LayoutComputation
@@ -66,7 +66,7 @@ end
         @test node_layout.annotations.labelnodes === true
         @test node_layout.annotations.node_data == _annotation_fixture_dataframe(table_expectations.prepared_node_table)
 
-        edge_layout = annotation_layout(edgelabel=edge_labels, style=:majortree)
+        edge_layout = annotation_layout(edgelabel = edge_labels, style = :majortree)
 
         @test edge_layout.annotations.labeledges === true
         @test edge_layout.annotations.edge_data == _annotation_fixture_dataframe(table_expectations.prepared_edge_table_majortree)
@@ -82,15 +82,15 @@ end
     @testset "Warnings remain on annotation validation owner" begin
         warning_edges = _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_warning_rows)
         layout = @test_logs (:warn, warning_strings.edgelabel_unknown_edges) annotation_layout(
-            edgelabel=warning_edges,
-            style=:majortree,
+            edgelabel = warning_edges,
+            style = :majortree,
         )
         @test layout.annotations.labeledges === true
 
         invalid_edges = warning_edges[!, 2:2]
         invalid_layout = @test_logs (:warn, warning_strings.edgelabel_invalid_shape) annotation_layout(
-            edgelabel=invalid_edges,
-            style=:majortree,
+            edgelabel = invalid_edges,
+            style = :majortree,
         )
         @test invalid_layout.annotations.labeledges === false
         @test all(invalid_layout.annotations.edge_data.lab .== "")
@@ -99,7 +99,7 @@ end
     @testset "Edge labels with missing numbers keep accepted filtering" begin
         filtered_edge_numbers =
             _annotation_fixture_dataframe(FIXTURE_CORPUS.annotation_rows.edgelabel_missing_number_rows)
-        filtered_layout = annotation_layout(edgelabel=filtered_edge_numbers, style=:majortree)
+        filtered_layout = annotation_layout(edgelabel = filtered_edge_numbers, style = :majortree)
         expected_filtered =
             _annotation_fixture_dataframe(table_expectations.edgelabel_filtered_result)
         for row_index in axes(expected_filtered, 1)

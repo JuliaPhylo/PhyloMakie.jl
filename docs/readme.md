@@ -41,8 +41,8 @@ Then render native Makie output:
 
 ````
 ```@example example_name
-net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
-figaxisplot = plot(net; showgamma = true)
+phylogeny = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+figaxisplot = plot(phylogeny; showgamma = true)
 figaxisplot.figure
 ```
 ````

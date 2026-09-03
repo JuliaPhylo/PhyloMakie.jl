@@ -6,12 +6,12 @@ const PhyloPicDB = PhyloPicMakie.PhyloPicDB
 
 CairoMakie.activate!()
 
-network = newick"(Ailuropoda_melanoleuca:1.0,(Ursus_americanus:1.0,(Ursus_arctos:0.5,Ursus_maritimus:0.5):0.5):1.0);"
-for node in network.node
-    node.name = replace(node.name, "_" => " ")
+phylogeny = newick"(Ailuropoda_melanoleuca:1.0,(Ursus_americanus:1.0,(Ursus_arctos:0.5,Ursus_maritimus:0.5):0.5):1.0);"
+for current_node in nodes(phylogeny)
+    rename_node!(current_node, replace(node_label(current_node), "_" => " "))
 end
 
-tip_names = String[node.name for node in network.node if node.leaf]
+tip_names = tip_labels(phylogeny)
 thumbnail_urls = Dict{String, String}()
 for name in tip_names
     resolution = PhyloPicDB.resolve_taxon(name)
@@ -22,7 +22,7 @@ for name in tip_names
 end
 
 function phylopic_tip_image(node)
-    url = get(thumbnail_urls, node.name, nothing)
+    url = get(thumbnail_urls, node_label(node), nothing)
     isnothing(url) && return nothing
     return ImageAnnotation(url; height = 0.75, position = :right, offset = (6, 0))
 end
@@ -39,7 +39,7 @@ hidespines!(axis)
 
 plot!(
     axis,
-    network;
+    phylogeny;
     useedgelength = true,
     nodeimages = phylopic_tip_image,
     showtiplabel = false,

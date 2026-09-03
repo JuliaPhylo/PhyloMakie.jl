@@ -1,9 +1,9 @@
 using GLMakie
 using PhyloMakie
 
-network = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
+phylogeny = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
 surface = plot(
-    network;
+    phylogeny;
     useedgelength = false,
     showtiplabel = true,
     showgamma = true,
@@ -33,8 +33,8 @@ update!(
 )
 @assert tip_positions[] != positions_before
 
-# Plotting never mutates a caller-owned network. Replace arg1 explicitly when
-# the network changes; the same live_positions and tip_overlay handles update.
+# Plotting never mutates a caller-owned phylogeny. Replace arg1 explicitly when
+# the phylogeny changes; the same live_positions and tip_overlay handles update.
 replacement = newick"((A:1.0,B:0.5):1.0,(C:0.75,D:1.25):1.0);"
 update!(plot_handle; arg1 = replacement)
 @assert live_positions[] == node_positions(plot_handle)

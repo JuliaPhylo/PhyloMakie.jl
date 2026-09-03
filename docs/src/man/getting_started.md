@@ -6,11 +6,12 @@ CairoMakie.activate!()
 
 # Getting started
 
-Start with a `PhyloNetworks.HybridNetwork`. This example reads a small network
-from an extended Newick string:
+Start with a `LineageNetwork`. This example reads a small network from an
+extended Newick string. Parsing delegates to PhyloNetworks, then converts the
+result to the independent native model:
 
 ```@repl getting_started
-net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+phylogeny = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
 ```
 
 For literal content containing exactly one phylogeny, use the corresponding
@@ -28,7 +29,7 @@ phylogenies, then select or plot each returned value explicitly.
 Call `plot` to create a new Makie figure, axis, and PhyloMakie plot object:
 
 ```@example getting_started
-figaxisplot = plot(net)
+figaxisplot = plot(phylogeny)
 figaxisplot.figure
 ```
 
@@ -45,7 +46,7 @@ PhyloMakie also provides `phyloplot` as a package-specific alias for `plot`:
 
 ```@example getting_started
 alias_figaxisplot = phyloplot(
-    net;
+    phylogeny;
     showgamma = true,
     showtiplabel = true,
 )
@@ -61,7 +62,7 @@ hidedecorations!(axis)
 hidespines!(axis)
 phyloplot!(
     axis,
-    net;
+    phylogeny;
     showgamma = true,
     useedgelength = false,
 )

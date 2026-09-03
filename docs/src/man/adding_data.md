@@ -19,7 +19,7 @@ To add labels on edges (or nodes), we need to know their numbers. We can use the
 `showedgenumber = true` option for this. (Use `shownodenumber = true` to see node numbers).
 
 ```@example adding_data
-net = parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1,D)));")
+phylogeny = parsephylogeny(NewickFormat(), "(A,((B,#H1),((C)#H1,D)));")
 
 figure = Figure(size = (760, 320))
 default_axis = Axis(figure[1, 1], title = "Default edge number color")
@@ -28,8 +28,8 @@ hidedecorations!(default_axis)
 hidedecorations!(red_axis)
 hidespines!(default_axis)
 hidespines!(red_axis)
-plot!(default_axis, net; showedgenumber = true)
-plot!(red_axis, net; showedgenumber = true, edgenumbercolor = "red4")
+plot!(default_axis, phylogeny; showedgenumber = true)
+plot!(red_axis, phylogeny; showedgenumber = true, edgenumbercolor = "red4")
 figure
 ```
 
@@ -56,7 +56,7 @@ puts the text on the correct edges:
 
 ```@example adding_data
 plot(
-    net;
+    phylogeny;
     edgelabel = DataFrame(
         number = [1, 2],
         label = ["edge number 1", "edge # 2"],
@@ -70,7 +70,8 @@ plot(
 ## Adding images to nodes and edges
 
 Use `nodeimages` and `edgeimages` to make images part of the live tree plot.
-The mapping receives each node or edge object from the input network and
+The mapping receives each node object, or the phylogeny and each edge object,
+from the input phylogeny and
 returns an image source, an [`ImageAnnotation`](@ref
 PhyloMakie.ImageAnnotation), or `nothing`. An image source may be a decoded
 pixel matrix, a local file path, or an HTTP(S) URL.
@@ -84,12 +85,12 @@ circle_paths = Dict(
 )
 
 function tip_image(node)
-    source = get(circle_paths, node.name, nothing)
+    source = get(circle_paths, node_label(node), nothing)
     isnothing(source) && return nothing
     return ImageAnnotation(source; position = :right, offset = (6, 0))
 end
 
-plot(net; nodeimages = tip_image)
+plot(phylogeny; nodeimages = tip_image)
 ```
 
 Sparse node dictionaries may use node labels, regular expressions, or node
@@ -106,7 +107,7 @@ Separate dictionary selectors may not overlap on the same node or edge.
 
 Functions remain available when selection requires other node or edge
 properties. Numeric node and edge selectors are not accepted because those
-identifiers are assigned by the network implementation and are not a
+identifiers are assigned by the phylogeny implementation and are not a
 predictable user-facing key.
 
 The default image has a full height of `0.8` y-axis data units. Tip rows are

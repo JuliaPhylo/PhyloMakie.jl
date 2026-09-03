@@ -392,27 +392,31 @@ function _compute_plot_config(
     return (_ref_any(config),)
 end
 
-function _compute_plot_network(net)::Tuple{Base.RefValue{Any}}
-    return (_ref_any(prepare_plot_network(net)),)
+function _compute_prepared_phylogeny(
+        phylogeny::AbstractPhylogeny,
+    )::Tuple{Base.RefValue{Any}}
+    return (_ref_any(prepare_for_layout(phylogeny)),)
 end
 
-function _compute_network_geometry(
-        plot_network::PlotNetwork,
+function _compute_phylogeny_geometry(
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
     )::Tuple{Base.RefValue{Any}}
-    return (_ref_any(compute_network_geometry(plot_network, config)),)
+    return (_ref_any(compute_phylogeny_geometry(prepared_phylogeny, config)),)
 end
 
 function _compute_node_position_table(
-        plot_network::PlotNetwork,
-        geometry::NetworkGeometry,
+        prepared_phylogeny::PreparedPhylogeny,
+        geometry::PhylogenyGeometry,
     )::Tuple{DataFrames.DataFrame}
-    net = plot_network.net
+    phylogeny = prepared_phylogeny.phylogeny
     return (
         DataFrames.DataFrame(
-            number = Int[node.number for node in net.node],
-            name = String[node.name for node in net.node],
-            isleaf = Bool[node.leaf for node in net.node],
+            number = Int[node_id(current_node) for current_node in nodes(phylogeny)],
+            name = String[node_label(current_node) for current_node in nodes(phylogeny)],
+            isleaf = Bool[
+                is_leaf(phylogeny, current_node) for current_node in nodes(phylogeny)
+            ],
             x = copy(geometry.node_x),
             y = copy(geometry.node_y),
         ),
@@ -420,24 +424,24 @@ function _compute_node_position_table(
 end
 
 function _compute_layout(
-        plot_network::PlotNetwork,
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
     )::Tuple{Base.RefValue{Any}}
-    return (_ref_any(compute_layout(plot_network, config, geometry)),)
+    return (_ref_any(compute_layout(prepared_phylogeny, config, geometry)),)
 end
 
 function _compute_primitive_channels(
-        plot_network::PlotNetwork,
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
         layout::LayoutComputation,
     )::Tuple{Base.RefValue{Any}}
-    return (_ref_any(compute_primitive_channels(plot_network, config, layout)),)
+    return (_ref_any(compute_primitive_channels(prepared_phylogeny, config, layout)),)
 end
 
 function _resolve_image_channels_graph!(
-        input_net::PhyloNetworks.HybridNetwork,
-        plot_network::PlotNetwork,
+        input_phylogeny::AbstractPhylogeny,
+        prepared_phylogeny::PreparedPhylogeny,
         layout::LayoutComputation,
         nodeimages,
         edgeimages,
@@ -445,8 +449,8 @@ function _resolve_image_channels_graph!(
     )::Tuple{Base.RefValue{Any}, Base.RefValue{Any}}
     channels = resolve_image_channels!(
         cache,
-        input_net,
-        plot_network,
+        input_phylogeny,
+        prepared_phylogeny,
         layout,
         nodeimages,
         edgeimages,
@@ -500,9 +504,9 @@ function validate_public_plot_limits(plot::PhyloPlot)::Nothing
     end
 
     config = current_plot_config(plot)
-    plot_network = prepare_plot_network(_plot_output_value(plot, :net))
-    geometry = compute_network_geometry(plot_network, config)
-    layout = compute_layout(plot_network, config, geometry)
+    prepared_phylogeny = prepare_for_layout(_plot_output_value(plot, :phylogeny))
+    geometry = compute_phylogeny_geometry(prepared_phylogeny, config)
+    layout = compute_layout(prepared_phylogeny, config, geometry)
     compute_data_limits(config, layout.extent)
     return nothing
 end
@@ -615,9 +619,9 @@ function register_plot_config_node!(plot::PhyloPlot)::Symbol
     return :plot_config
 end
 
-function register_plot_network_node!(plot::PhyloPlot)::Symbol
-    _register_outputs_once!(_compute_plot_network, plot, (:net,), (:plot_network,))
-    return :plot_network
+function register_prepared_phylogeny_node!(plot::PhyloPlot)::Symbol
+    _register_outputs_once!(_compute_prepared_phylogeny, plot, (:phylogeny,), (:prepared_phylogeny,))
+    return :prepared_phylogeny
 end
 
 function register_image_asset_cache_node!(plot::PhyloPlot)::Symbol
@@ -630,32 +634,32 @@ end
 function register_layout_nodes!(
         plot::PhyloPlot,
         config_node::Symbol,
-        network_node::Symbol,
+        prepared_phylogeny_node::Symbol,
     )::NamedTuple{(:geometry, :layout), Tuple{Symbol, Symbol}}
     _register_outputs_once!(
-        _compute_network_geometry,
+        _compute_phylogeny_geometry,
         plot,
-        (network_node, config_node),
-        (:network_geometry,),
+        (prepared_phylogeny_node, config_node),
+        (:phylogeny_geometry,),
     )
     _register_outputs_once!(
         _compute_layout,
         plot,
-        (network_node, config_node, :network_geometry),
+        (prepared_phylogeny_node, config_node, :phylogeny_geometry),
         (:layout_computation,),
     )
-    return (geometry = :network_geometry, layout = :layout_computation)
+    return (geometry = :phylogeny_geometry, layout = :layout_computation)
 end
 
 function register_node_position_table_node!(
         plot::PhyloPlot,
-        network_node::Symbol,
+        prepared_phylogeny_node::Symbol,
         geometry_node::Symbol,
     )::Symbol
     _register_outputs_once!(
         _compute_node_position_table,
         plot,
-        (network_node, geometry_node),
+        (prepared_phylogeny_node, geometry_node),
         (NODE_POSITION_TABLE_OUTPUT,),
     )
     return NODE_POSITION_TABLE_OUTPUT
@@ -663,14 +667,14 @@ end
 
 function register_primitive_channel_node!(
         plot::PhyloPlot,
-        network_node::Symbol,
+        prepared_phylogeny_node::Symbol,
         config_node::Symbol,
         layout_node::Symbol,
     )::Symbol
     _register_outputs_once!(
         _compute_primitive_channels,
         plot,
-        (network_node, config_node, layout_node),
+        (prepared_phylogeny_node, config_node, layout_node),
         (:primitive_channels,),
     )
     return :primitive_channels
@@ -678,14 +682,14 @@ end
 
 function register_image_channel_nodes!(
         plot::PhyloPlot,
-        network_node::Symbol,
+        prepared_phylogeny_node::Symbol,
         layout_node::Symbol,
     )::NamedTuple{(:edge_images, :node_images), Tuple{Symbol, Symbol}}
     cache_node = register_image_asset_cache_node!(plot)
     _register_outputs_once!(
         _resolve_image_channels_graph!,
         plot,
-        (:net, network_node, layout_node, :nodeimages, :edgeimages, cache_node),
+        (:phylogeny, prepared_phylogeny_node, layout_node, :nodeimages, :edgeimages, cache_node),
         (:edge_image_channel, :node_image_channel),
     )
     return (edge_images = :edge_image_channel, node_images = :node_image_channel)
@@ -709,7 +713,7 @@ function _register_phylo_intermediate_nodes!(
     )::NamedTuple{
         (
             :config,
-            :network,
+            :phylogeny,
             :geometry,
             :layout,
             :node_positions,
@@ -721,28 +725,28 @@ function _register_phylo_intermediate_nodes!(
         NTuple{9, Symbol},
     }
     config_node = register_plot_config_node!(plot)
-    network_node = register_plot_network_node!(plot)
-    layout_nodes = register_layout_nodes!(plot, config_node, network_node)
+    prepared_phylogeny_node = register_prepared_phylogeny_node!(plot)
+    layout_nodes = register_layout_nodes!(plot, config_node, prepared_phylogeny_node)
     node_position_table_node = register_node_position_table_node!(
         plot,
-        network_node,
+        prepared_phylogeny_node,
         layout_nodes.geometry,
     )
     primitive_channels_node = register_primitive_channel_node!(
         plot,
-        network_node,
+        prepared_phylogeny_node,
         config_node,
         layout_nodes.layout,
     )
     image_channel_nodes = register_image_channel_nodes!(
         plot,
-        network_node,
+        prepared_phylogeny_node,
         layout_nodes.layout,
     )
     data_limits_node = register_data_limits_node!(plot, primitive_channels_node)
     return (
         config = config_node,
-        network = network_node,
+        phylogeny = prepared_phylogeny_node,
         geometry = layout_nodes.geometry,
         layout = layout_nodes.layout,
         node_positions = node_position_table_node,

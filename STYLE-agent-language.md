@@ -132,9 +132,9 @@ Incorrect:
 
 Correct:
 
-> `compute_network_geometry` is the single authoritative implementation for
+> `compute_phylogeny_geometry` is the single authoritative implementation for
 > node and edge coordinate calculation. `layout_plot_geometry` may call
-> `compute_network_geometry` while it remains as a compatibility entry point,
+> `compute_phylogeny_geometry` while it remains as a compatibility entry point,
 > but it must not keep a separate coordinate calculation.
 
 ## Terms that require expansion
@@ -216,12 +216,12 @@ When a workflow document says that code owns a responsibility, it must state:
 
 Example:
 
-> `prepare_plot_network` owns traversal preparation for plotting. It copies the
-> caller's `HybridNetwork`, runs `directedges!` and `preorder!` on the copy,
-> and returns the prepared copy. Public plotting entry points consume the
-> prepared copy. No public plotting path may call `directedges!` or `preorder!`
-> on the caller's original network. The caller-safety test fails if the
-> original network's traversal fields change.
+> `prepare_for_layout` owns traversal preparation for plotting. It validates
+> the caller's `AbstractPhylogeny`, computes an independent preorder vector,
+> and returns a `PreparedPhylogeny` containing that derived state and the same
+> input object. Public plotting entry points consume the prepared value. No
+> plotting path may mutate or deep-copy the caller's phylogeny. The
+> caller-safety test verifies both object identity and unchanged model state.
 
 ## User-facing explanations
 

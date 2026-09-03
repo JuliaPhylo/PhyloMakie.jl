@@ -6,12 +6,14 @@
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
-`plot` / `plot!` interface.
+networks. Its independent `LineageNetwork` model implements the
+`AbstractPhylogeny` interface without carrying parser or inference caches, and
+the standard Makie `plot` / `plot!` interface accepts any implementation of
+that interface.
 
 ## Features
 
-- `plot(net)` and `plot!(ax, net)` follow standard Makie conventions
+- `plot(phylogeny)` and `plot!(axis, phylogeny)` follow standard Makie conventions
 - `phyloplot` and `phyloplot!` as convenience aliases
 - `newick"..."` and `nexustreeblock"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
@@ -24,10 +26,10 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 
 | Function | Returns | Notes |
 | --- | --- | --- |
-| `plot(net)` | `Makie.FigureAxisPlot` | Creates a new figure |
-| `plot!(ax, net)` | `PhyloPlot` | Draws into an existing axis |
-| `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)` |
-| `phyloplot!(ax, net)` | `PhyloPlot` | Alias for `plot!(ax, net)` |
+| `plot(phylogeny)` | `Makie.FigureAxisPlot` | Creates a new figure |
+| `plot!(axis, phylogeny)` | `PhyloPlot` | Draws into an existing axis |
+| `phyloplot(phylogeny)` | `Makie.FigureAxisPlot` | Alias for `plot(phylogeny)` |
+| `phyloplot!(axis, phylogeny)` | `PhyloPlot` | Alias for `plot!(axis, phylogeny)` |
 | `node_positions(plot)` | `DataFrame` | Independent node-coordinate snapshot |
 | `node_positions_observable(plot)` | `Observable{DataFrame}` | Live identity-plus-position table |
 
@@ -55,16 +57,20 @@ Pkg.add([
 using CairoMakie
 using PhyloMakie
 
-net = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
+phylogeny = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
 
 plot(
-    net;
+    phylogeny;
     useedgelength = true,
     showgamma = true,
     showtiplabel = true,
     style = :fulltree,
 )
 ```
+
+Newick and NEXUS parsing currently delegates to PhyloNetworks and immediately
+converts the result to `LineageNetwork`. Use `from_hybridnetwork`,
+`to_hybridnetwork`, or `convert` when explicitly crossing that adapter boundary.
 
 ## Documentation
 

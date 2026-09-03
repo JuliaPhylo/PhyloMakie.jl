@@ -1,14 +1,15 @@
 # PhyloMakie.jl
 
 PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks stored as `PhyloNetworks.HybridNetwork` values.
+networks implementing its `AbstractPhylogeny` interface. Its current native
+concrete model is the independent `LineageNetwork`.
 
-PhyloMakie registers a Makie recipe for `HybridNetwork`, so the standard Makie
-entry points work directly:
+PhyloMakie registers a Makie recipe for `AbstractPhylogeny`, so the standard
+Makie entry points work directly:
 
 ```julia
-plot(net)
-plot!(axis, net)
+plot(phylogeny)
+plot!(axis, phylogeny)
 ```
 
 The package also exports `phyloplot` and `phyloplot!` as package-specific

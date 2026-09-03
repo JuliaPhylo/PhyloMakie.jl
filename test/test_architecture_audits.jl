@@ -94,6 +94,15 @@ end
 end
 
 @testset "Architecture source audits" begin
+    layout_source = _audit_source(joinpath("src", "phylogeny_layout.jl"))
+    @test occursin("PreparedPhylogeny", layout_source)
+    @test !occursin("deepcopy", layout_source)
+
+    for (path, source) in _audit_package_sources()
+        startswith(path, joinpath("src", "PhyloNetworksAdapter")) && continue
+        @test !occursin("HybridNetwork", source)
+    end
+
     legacy_package_tokens = (
         _audit_token("render", "_", "plot", "!"),
         _audit_token("Plot", "Render", "Layers"),
@@ -129,7 +138,7 @@ end
         "edgecolor",
         "edgewidth",
         "style",
-        "net",
+        "phylogeny",
         "arg1",
         "showtiplabel",
         "shownodelabel",

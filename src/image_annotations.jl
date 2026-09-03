@@ -339,7 +339,7 @@ function _named_node_indices(
         nodes::AbstractVector,
         selector::Union{AbstractString, Symbol, Regex},
     )::Vector{Int}
-    matches = findall(node -> _image_label_matches(selector, namelabel(node)), nodes)
+    matches = findall(node -> _image_label_matches(selector, node_label(node)), nodes)
     isempty(matches) && throw(
         ArgumentError(
             "node image selector matches no node label: $(repr(selector))",
@@ -348,10 +348,10 @@ function _named_node_indices(
     return matches
 end
 
-function _node_object_index(nodes::AbstractVector, selector::PhyloNetworks.Node)::Int
+function _node_object_index(nodes::AbstractVector, selector)::Int
     index = findfirst(node -> node === selector, nodes)
     isnothing(index) && throw(
-        ArgumentError("node image selector is not a node object from the plotted input network"),
+        ArgumentError("node image selector is not a node object from the plotted phylogeny"),
     )
     return index
 end
@@ -361,9 +361,7 @@ function _resolve_node_image_values(mapping, nodes::AbstractVector)::Vector{Any}
     if mapping isa AbstractDict
         values = Any[nothing for _ in nodes]
         for (selector, value) in pairs(mapping)
-            indices = if selector isa PhyloNetworks.Node
-                [_node_object_index(nodes, selector)]
-            elseif selector isa Union{AbstractString, Symbol, Regex}
+            indices = if selector isa Union{AbstractString, Symbol, Regex}
                 _named_node_indices(nodes, selector)
             elseif selector isa Integer
                 throw(
@@ -373,7 +371,7 @@ function _resolve_node_image_values(mapping, nodes::AbstractVector)::Vector{Any}
                     ),
                 )
             else
-                throw(ArgumentError("unsupported node image selector type $(typeof(selector))"))
+                [_node_object_index(nodes, selector)]
             end
             for index in indices
                 isnothing(values[index]) || throw(
@@ -390,10 +388,10 @@ function _resolve_node_image_values(mapping, nodes::AbstractVector)::Vector{Any}
     throw(ArgumentError("nodeimages must be nothing, a dictionary, or a callable mapping"))
 end
 
-function _edge_object_index(edges::AbstractVector, selector::PhyloNetworks.Edge)::Int
+function _edge_object_index(edges::AbstractVector, selector)::Int
     index = findfirst(edge -> edge === selector, edges)
     isnothing(index) && throw(
-        ArgumentError("edge image selector is not an edge object from the plotted input network"),
+        ArgumentError("edge image selector is not an edge object from the plotted phylogeny"),
     )
     return index
 end
@@ -412,6 +410,7 @@ function _edge_endpoint_selectors(selector)
 end
 
 function _endpoint_edge_indices(
+        phylogeny::AbstractPhylogeny,
         prepared_edges::AbstractVector,
         selector,
     )::Vector{Int}
@@ -424,8 +423,13 @@ function _endpoint_edge_indices(
     )
     parent_selector, child_selector = endpoint_selectors
     matches = findall(prepared_edges) do edge
-        return _image_label_matches(parent_selector, namelabel(getparent(edge))) &&
-            _image_label_matches(child_selector, namelabel(getchild(edge)))
+        return _image_label_matches(
+            parent_selector,
+            node_label(parent_node(phylogeny, edge)),
+        ) && _image_label_matches(
+            child_selector,
+            node_label(child_node(phylogeny, edge)),
+        )
     end
     isempty(matches) && throw(
         ArgumentError(
@@ -438,24 +442,24 @@ end
 
 function _resolve_edge_image_values(
         mapping,
+        phylogeny::AbstractPhylogeny,
         edges::AbstractVector,
-        prepared_edges::AbstractVector,
     )::Vector{Any}
     isnothing(mapping) && return Any[nothing for _ in edges]
     if mapping isa AbstractDict
         values = Any[nothing for _ in edges]
         for (selector, value) in pairs(mapping)
-            indices = if selector isa PhyloNetworks.Edge
-                [_edge_object_index(edges, selector)]
-            elseif selector isa Integer
+            indices = if selector isa Integer
                 throw(
                     ArgumentError(
                         "numeric edge image selectors are not supported; use an edge object, " *
                             "endpoint names or regular expressions, or callable mapping",
                     ),
                 )
+            elseif !isnothing(_edge_endpoint_selectors(selector))
+                _endpoint_edge_indices(phylogeny, edges, selector)
             else
-                _endpoint_edge_indices(prepared_edges, selector)
+                [_edge_object_index(edges, selector)]
             end
             for index in indices
                 isnothing(values[index]) || throw(
@@ -466,10 +470,19 @@ function _resolve_edge_image_values(
         end
         return values
     end
-    if isempty(edges) || applicable(mapping, first(edges))
+    isempty(edges) && return Any[]
+    if applicable(mapping, phylogeny, first(edges))
+        return Any[mapping(phylogeny, current_edge) for current_edge in edges]
+    end
+    if applicable(mapping, first(edges))
         return Any[mapping(edge) for edge in edges]
     end
-    throw(ArgumentError("edgeimages must be nothing, a dictionary, or a callable mapping"))
+    throw(
+        ArgumentError(
+            "edgeimages must be nothing, a dictionary, or a callable mapping accepting " *
+                "an edge or `(phylogeny, edge)`",
+        ),
+    )
 end
 
 function _build_image_channel!(
@@ -516,23 +529,22 @@ end
 
 function resolve_image_channels!(
         cache::ImageAssetCache,
-        input_net::PhyloNetworks.HybridNetwork,
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        input_phylogeny::AbstractPhylogeny,
+        prepared_phylogeny::PreparedPhylogeny,
         layout::LayoutComputation,
         nodeimages,
         edgeimages,
     )::PhyloImageChannels
-    prepared_net = plot_network.net
-    length(input_net.node) == length(prepared_net.node) ||
-        error("prepared network node order does not match the input network")
-    length(input_net.edge) == length(prepared_net.edge) ||
-        error("prepared network edge order does not match the input network")
-
-    node_values = _resolve_node_image_values(nodeimages, input_net.node)
-    edge_values = _resolve_edge_image_values(edgeimages, input_net.edge, prepared_net.edge)
+    prepared_phylogeny.phylogeny === input_phylogeny ||
+        error("prepared phylogeny does not reference the plotted input phylogeny")
+    phylogeny_nodes = nodes(input_phylogeny)
+    phylogeny_edges = edges(input_phylogeny)
+    node_values = _resolve_node_image_values(nodeimages, phylogeny_nodes)
+    edge_values =
+        _resolve_edge_image_values(edgeimages, input_phylogeny, phylogeny_edges)
     node_anchors = Makie.Point2f[
         Makie.Point2f(layout.geometry.node_x[index], layout.geometry.node_y[index]) for
-            index in eachindex(input_net.node)
+            index in eachindex(phylogeny_nodes)
     ]
     edge_anchors = Makie.Point2f[
         Makie.Point2f(row.x, row.y) for row in eachrow(layout.annotations.edge_data)

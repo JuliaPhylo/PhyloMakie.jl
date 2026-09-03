@@ -12,19 +12,19 @@ end
     TextChannel = getfield(PhyloMakie, :TextChannel)
     ArrowheadSpecChannel = getfield(PhyloMakie, :ArrowheadSpecChannel)
     PrimitiveChannels = getfield(PhyloMakie, :PrimitiveChannels)
-    prepare_plot_network = getfield(PhyloMakie, :prepare_plot_network)
-    compute_network_geometry = getfield(PhyloMakie, :compute_network_geometry)
+    prepare_for_layout = getfield(PhyloMakie, :prepare_for_layout)
+    compute_phylogeny_geometry = getfield(PhyloMakie, :compute_phylogeny_geometry)
     compute_layout = getfield(PhyloMakie, :compute_layout)
     compute_arrowhead_channel = getfield(PhyloMakie, :compute_arrowhead_channel)
     compute_primitive_channels = getfield(PhyloMakie, :compute_primitive_channels)
     resolve_plot_config = getfield(PhyloMakie, :resolve_plot_config)
 
     function primitive_channels_for(newick::AbstractString; kwargs...)
-        plot_network = prepare_plot_network(parsephylogeny(NewickFormat(), newick))
+        prepared_phylogeny = prepare_for_layout(parsephylogeny(NewickFormat(), newick))
         config = resolve_plot_config(; kwargs...)
-        geometry = compute_network_geometry(plot_network, config)
-        layout = compute_layout(plot_network, config, geometry)
-        return compute_primitive_channels(plot_network, config, layout)
+        geometry = compute_phylogeny_geometry(prepared_phylogeny, config)
+        layout = compute_layout(prepared_phylogeny, config, geometry)
+        return compute_primitive_channels(prepared_phylogeny, config, layout)
     end
 
     @testset "Segment, text, and data-limit channels are typed" begin
@@ -32,8 +32,8 @@ end
         channels = primitive_channels_for(
             render_case.newick;
             render_case.attribute_kwargs...,
-            xlim=render_case.xlim,
-            ylim=render_case.ylim,
+            xlim = render_case.xlim,
+            ylim = render_case.ylim,
         )
 
         @test channels isa PrimitiveChannels
@@ -56,8 +56,8 @@ end
         channels = primitive_channels_for(
             render_case.newick;
             render_case.attribute_kwargs...,
-            showtiplabel=false,
-            minorlinetype="blank",
+            showtiplabel = false,
+            minorlinetype = "blank",
         )
 
         @test channels.minor_edge_shafts.points == Makie.Point2f[]

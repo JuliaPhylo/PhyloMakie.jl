@@ -14,14 +14,14 @@ using Makie
 
         node_table = node_positions(case.plot)
         edge_table = edge_positions(case.plot)
-        @test nrow(node_table) == case.network.numnodes
-        @test nrow(edge_table) == case.network.numedges
+        @test nrow(node_table) == node_count(case.phylogeny)
+        @test nrow(edge_table) == edge_count(case.phylogeny)
 
         # The historical gap: the display-facing annotation table under this
         # config (no shownodenumber/shownodelabel/nodelabel) only ever covers
         # tips, so it must not be the source for a coordinate query.
-        @test nrow(case.layout.annotations.node_data) == case.network.numtaxa
-        @test case.network.numtaxa < case.network.numnodes
+        @test nrow(case.layout.annotations.node_data) == taxon_count(case.phylogeny)
+        @test taxon_count(case.phylogeny) < node_count(case.phylogeny)
     end
 
     @testset "Tip rows match rendered tip label positions" begin
@@ -63,15 +63,15 @@ using Makie
 
     @testset "Gamma reflects assigned inheritance probability; missing only when unset" begin
         # Non-hybrid edges carry gamma = 1.0 (full inheritance), not missing ---
-        # PhyloNetworks' own default, confirmed directly on a hybrid-free network.
+        # Tree edges carry full inheritance in the native representation.
         no_hybrid_case = FIXTURE_CORPUS.accepted_design_scenarios.simple_tree_no_hybrid
         case = _public_render_case(no_hybrid_case.newick)
         edge_table = edge_positions(case.plot)
         @test all(!, edge_table.ishybrid)
         @test all(==(1.0), edge_table.gamma)
 
-        # A hybrid edge only becomes `missing` when the network itself leaves its
-        # gamma unset (PhyloNetworks' own -1.0 sentinel), not merely by being hybrid.
+        # A hybrid edge only becomes `missing` when its inheritance probability
+        # is unset, not merely by being hybrid.
         with_gamma_case = FIXTURE_CORPUS.upstream_helper_regressions.level2_network_with_gamma
         without_gamma_case =
             FIXTURE_CORPUS.upstream_helper_regressions.level2_network_without_gamma
@@ -125,11 +125,11 @@ using Makie
     end
 
     @testset "Reactive node positions preserve identity across relayout" begin
-        network = parsephylogeny(
+        phylogeny = parsephylogeny(
             NewickFormat(),
             "((A:1.0,B:2.0):1.0,C:3.0);",
         )
-        surface = Makie.plot(network; useedgelength = false)
+        surface = Makie.plot(phylogeny; useedgelength = false)
         plot = surface.plot
         live_positions = node_positions_observable(plot)
         @test live_positions isa Makie.Observable{DataFrame}
@@ -174,10 +174,10 @@ using Makie
         @test live_positions[] == second_table
     end
 
-    @testset "Reactive node positions report changed-network identity" begin
-        first_network = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
-        second_network = parsephylogeny(NewickFormat(), "((D:1.0,E:1.0):2.0,F:2.0);")
-        surface = Makie.plot(first_network; useedgelength = true)
+    @testset "Reactive node positions report changed-phylogeny identity" begin
+        first_phylogeny = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
+        second_phylogeny = parsephylogeny(NewickFormat(), "((D:1.0,E:1.0):2.0,F:2.0);")
+        surface = Makie.plot(first_phylogeny; useedgelength = true)
         plot = surface.plot
         live_positions = node_positions_observable(plot)
         first_identity = [
@@ -189,7 +189,7 @@ using Makie
             return nothing
         end
 
-        Makie.update!(plot; arg1 = second_network)
+        Makie.update!(plot; arg1 = second_phylogeny)
 
         second_identity = [
             (row.number, row.name, row.isleaf) for row in eachrow(live_positions[])

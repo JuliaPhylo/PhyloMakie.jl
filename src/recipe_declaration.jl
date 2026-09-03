@@ -1,20 +1,21 @@
 """
-    phyloplot(net; kwargs...) -> Makie.FigureAxisPlot
-    phyloplot!(axis, net; kwargs...) -> PhyloPlot
+    phyloplot(phylogeny; kwargs...) -> Makie.FigureAxisPlot
+    phyloplot!(axis, phylogeny; kwargs...) -> PhyloPlot
 
-Plot a `PhyloNetworks.HybridNetwork` with the PhyloMakie Makie recipe.
+Plot any [`AbstractPhylogeny`](@ref) implementing the `Phylogenies` accessor
+interface with the PhyloMakie Makie recipe.
 
-Use `plot(net; kwargs...)` and `plot!(axis, net; kwargs...)` for the standard
+Use `plot(phylogeny; kwargs...)` and `plot!(axis, phylogeny; kwargs...)` for the standard
 Makie API. `phyloplot` and `phyloplot!` are package-specific aliases generated
 by the recipe. Supported attributes control layout style, edge lengths, tip
 labels, node labels, edge labels, colors, widths, hybrid-edge arrows, and data
 limits. Use `nodeimages` and `edgeimages` to attach image annotations without
 depending on implementation-assigned node or edge indices.
 """
-Makie.@recipe PhyloPlot (net,) begin
+Makie.@recipe PhyloPlot (phylogeny,) begin
     "Inherited Makie clip planes for the rendered primitives."
     clip_planes = @inherit clip_planes Makie.automatic
-    "Use network edge lengths on the x axis."
+    "Use phylogeny edge lengths on the x axis."
     useedgelength = false
     "Show tip labels."
     showtiplabel = true
@@ -76,4 +77,4 @@ Makie.@recipe PhyloPlot (net,) begin
     style = :fulltree
 end
 
-Makie.plottype(::PhyloNetworks.HybridNetwork) = PhyloPlot
+Makie.plottype(::AbstractPhylogeny) = PhyloPlot

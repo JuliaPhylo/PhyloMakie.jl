@@ -21,29 +21,6 @@ function _registered_reactive_plot(; kwargs...)
     return plot, outputs
 end
 
-function _reactive_network_snapshot(net::PhyloNetworks.HybridNetwork)
-    return (
-        rooti = net.rooti,
-        isrooted = net.isrooted,
-        node_numbers = [node.number for node in net.node],
-        preorder_numbers = [node.number for node in net.vec_node],
-        edge_state = [
-            (
-                    number = edge.number,
-                    parent = PhyloNetworks.getparent(edge).number,
-                    child = PhyloNetworks.getchild(edge).number,
-                    ischild1 = edge.ischild1,
-                    containroot = hasfield(typeof(edge), :containroot) ?
-                    getfield(edge, :containroot) : nothing,
-                    hybrid = edge.hybrid,
-                    ismajor = edge.ismajor,
-                    length = edge.length,
-                    gamma = edge.gamma,
-                ) for edge in net.edge
-        ],
-    )
-end
-
 function _reactive_limits_tuple(rect::Makie.Rect3d)
     rect_min = minimum(rect)
     rect_max = maximum(rect)
@@ -208,10 +185,16 @@ function _assert_all_outputs_match_channels(plot, outputs)::Nothing
 end
 
 function _reactive_annotation_inputs()
-    net = parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK)
+    phylogeny = parsephylogeny(NewickFormat(), REACTIVE_GRAPH_NEWICK)
     return (
-        nodelabel = DataFrame(node = [first(net.node).number], label = ["node label"]),
-        edgelabel = DataFrame(edge = [first(net.edge).number], label = ["edge label"]),
+        nodelabel = DataFrame(
+            node = [node_id(first(nodes(phylogeny)))],
+            label = ["node label"],
+        ),
+        edgelabel = DataFrame(
+            edge = [edge_id(first(edges(phylogeny)))],
+            label = ["edge label"],
+        ),
     )
 end
 
@@ -257,8 +240,8 @@ end
             symbol -> haskey(plot.attributes.outputs, symbol),
             (
                 :plot_config,
-                :plot_network,
-                :network_geometry,
+                :prepared_phylogeny,
+                :phylogeny_geometry,
                 :layout_computation,
                 :node_position_table,
                 :primitive_channels,
@@ -481,19 +464,19 @@ end
         @test plot[outputs.text_outputs.tip_labels.fontsizes][] == Float32[]
     end
 
-    @testset "Makie.update! with arg1 preserves caller-owned networks" begin
+    @testset "Makie.update! preserves caller-owned phylogenies" begin
         plot, outputs = _registered_reactive_plot()
         before_points = copy(plot[outputs.primitive_outputs.edge_segments.points][])
 
-        new_net = parsephylogeny(NewickFormat(), REACTIVE_GRAPH_ALT_NEWICK)
-        before_snapshot = _reactive_network_snapshot(new_net)
-        Makie.update!(plot; arg1 = new_net)
+        new_phylogeny = parsephylogeny(NewickFormat(), REACTIVE_GRAPH_ALT_NEWICK)
+        before_snapshot = _native_phylogeny_snapshot(new_phylogeny)
+        Makie.update!(plot; arg1 = new_phylogeny)
 
         after_points = plot[outputs.primitive_outputs.edge_segments.points][]
-        prepared_network = plot[:plot_network][]
+        prepared_phylogeny = plot[:prepared_phylogeny][]
         @test after_points != before_points
-        @test _reactive_network_snapshot(new_net) == before_snapshot
-        @test prepared_network.net !== new_net
-        @test !isempty(prepared_network.net.vec_node)
+        @test isequal(_native_phylogeny_snapshot(new_phylogeny), before_snapshot)
+        @test prepared_phylogeny.phylogeny === new_phylogeny
+        @test !isempty(prepared_phylogeny.preorder)
     end
 end

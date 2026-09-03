@@ -15,8 +15,8 @@ default `:fulltree`, but by switching it to `:majortree`, we can draw minor
 hybrid edges as diagonal lines.
 
 ```@example better_edges
-net = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
-plot(net; style = :majortree)
+phylogeny = parsephylogeny(NewickFormat(), "(A,((B,#H1),(C,(D)#H1)));")
+plot(phylogeny; style = :majortree)
 ```
 
 ## Using edge lengths
@@ -26,7 +26,7 @@ lengths to determine the lengths of the lines. For this, we'll use a network
 that has edge lengths:
 
 ```@example better_edges
-net = parsephylogeny(NewickFormat(),
+phylogeny = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:0.5):1.5,((C:1)#H1:1.8,D:1.1):0.2):0.3);",
 )
 df = DataFrame(number = [-3, 3], label = ["N", "H1"])
@@ -38,8 +38,8 @@ hidedecorations!(length_axis)
 hidedecorations!(level_axis)
 hidespines!(length_axis)
 hidespines!(level_axis)
-plot!(length_axis, net; useedgelength = true, ylim = (-1.0, 5.5), nodelabel = df)
-plot!(level_axis, net; useedgelength = false, ylim = (-1.0, 5.5), nodelabel = df)
+plot!(length_axis, phylogeny; useedgelength = true, ylim = (-1.0, 5.5), nodelabel = df)
+plot!(level_axis, phylogeny; useedgelength = false, ylim = (-1.0, 5.5), nodelabel = df)
 figure
 ```
 
@@ -71,10 +71,10 @@ This network happens to be time consistent, because the distance along the time
 Time-inconsistent networks like these ones below might cause confusion:
 
 ```@example better_edges
-net1 = parsephylogeny(NewickFormat(),
+phylogeny1 = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:1.2):1.5,((C:1.8)#H1:1,D:1.1):0.2):0.3);",
 )
-net2 = parsephylogeny(NewickFormat(),
+phylogeny2 = parsephylogeny(NewickFormat(),
     "(A:3.3,((B:1.5,#H1:0.2):1.5,((C:1)#H1:1.8,D:1.1):0.2):0.3);",
 )
 
@@ -85,8 +85,8 @@ hidedecorations!(left_axis)
 hidedecorations!(right_axis)
 hidespines!(left_axis)
 hidespines!(right_axis)
-plot!(left_axis, net1; useedgelength = true)
-plot!(right_axis, net2; useedgelength = true)
+plot!(left_axis, phylogeny1; useedgelength = true)
+plot!(right_axis, phylogeny2; useedgelength = true)
 figure
 ```
 
@@ -105,7 +105,7 @@ hidespines!(left_axis)
 hidespines!(right_axis)
 plot!(
     left_axis,
-    net1;
+    phylogeny1;
     useedgelength = true,
     style = :majortree,
     showedgelength = true,
@@ -113,7 +113,7 @@ plot!(
 )
 plot!(
     right_axis,
-    net2;
+    phylogeny2;
     useedgelength = true,
     style = :majortree,
     showedgelength = true,
@@ -133,7 +133,7 @@ First we need to map each edge number to the desired width for that edge.
 We do this with a dictionary.
 
 ```@repl better_edges
-log_populationsize = Dict(edge.number => log10(1_000) for edge in net1.edge);
+log_populationsize = Dict(edge_id(current_edge) => log10(1_000) for current_edge in edges(phylogeny1));
 log_populationsize[9] = log10(100_000); # larger populations on edge 9
 log_populationsize[1] = log10(100_000); #                and on edge 1
 log_populationsize
@@ -147,8 +147,8 @@ hidedecorations!(number_axis)
 hidedecorations!(width_axis)
 hidespines!(number_axis)
 hidespines!(width_axis)
-plot!(number_axis, net1; showedgenumber = true)
-plot!(width_axis, net1; edgewidth = log_populationsize)
+plot!(number_axis, phylogeny1; showedgenumber = true)
+plot!(width_axis, phylogeny1; edgewidth = log_populationsize)
 figure
 ```
 
@@ -177,14 +177,14 @@ hidespines!(color_axis)
 hidespines!(hidden_axis)
 plot!(
     color_axis,
-    net1;
+    phylogeny1;
     edgecolor = ecols,
     defaultedgecolor = "grey80",
     minorlinetype = "solid",
 )
 plot!(
     hidden_axis,
-    net1;
+    phylogeny1;
     style = :majortree,
     majorhybridedgecolor = "red",
     minorlinetype = "blank",

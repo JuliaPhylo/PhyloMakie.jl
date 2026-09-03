@@ -2,12 +2,12 @@ const IMAGE_ANNOTATION_NEWICK = "((A,B)AB,C)Root;"
 const IMAGE_ASSET_DIRECTORY =
     normpath(joinpath(@__DIR__, "..", "examples", "assets", "circles"))
 
-function _image_annotation_layout(net::PhyloNetworks.HybridNetwork; style = :fulltree)
+function _image_annotation_layout(phylogeny::AbstractPhylogeny; style = :fulltree)
     config = getfield(PhyloMakie, :resolve_plot_config)(; style)
-    plot_network = getfield(PhyloMakie, :prepare_plot_network)(net)
-    geometry = getfield(PhyloMakie, :compute_network_geometry)(plot_network, config)
-    layout = getfield(PhyloMakie, :compute_layout)(plot_network, config, geometry)
-    return plot_network, layout
+    prepared_phylogeny = getfield(PhyloMakie, :prepare_for_layout)(phylogeny)
+    geometry = getfield(PhyloMakie, :compute_phylogeny_geometry)(prepared_phylogeny, config)
+    layout = getfield(PhyloMakie, :compute_layout)(prepared_phylogeny, config, geometry)
+    return prepared_phylogeny, layout
 end
 
 function _solid_image(color)::Matrix{RGBAf}
@@ -115,106 +115,114 @@ end
     end
 
     @testset "semantic node and edge mappings" begin
-        net = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
-        plot_network, _ = _image_annotation_layout(net)
+        phylogeny = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
         red = _solid_image(:red)
         blue = _solid_image(:blue)
+        phylogeny_nodes = nodes(phylogeny)
+        phylogeny_edges = edges(phylogeny)
 
-        node_values = resolve_node_values(Dict("A" => red, net.node[2] => blue), net.node)
+        node_values = resolve_node_values(
+            Dict("A" => red, phylogeny_nodes[2] => blue),
+            phylogeny_nodes,
+        )
         @test count(!isnothing, node_values) == 2
-        @test node_values[findfirst(node -> node.name == "A", net.node)] === red
+        @test node_values[findfirst(node -> node_label(node) == "A", phylogeny_nodes)] === red
         @test node_values[2] === blue
 
         callback_values = resolve_node_values(
-            node -> node.name == "C" ? ImageAnnotation(red; scale = 1.25) : nothing,
-            net.node,
+            node -> node_label(node) == "C" ? ImageAnnotation(red; scale = 1.25) : nothing,
+            phylogeny_nodes,
         )
         @test count(!isnothing, callback_values) == 1
         @test only(filter(!isnothing, callback_values)).scale == 1.25f0
 
-        @test_throws ArgumentError resolve_node_values(Dict(1 => red), net.node)
-        @test_throws ArgumentError resolve_node_values(Dict("absent" => red), net.node)
-        stale_net = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
-        @test_throws ArgumentError resolve_node_values(Dict(stale_net.node[1] => red), net.node)
+        @test_throws ArgumentError resolve_node_values(Dict(1 => red), phylogeny_nodes)
+        @test_throws ArgumentError resolve_node_values(Dict("absent" => red), phylogeny_nodes)
+        stale_phylogeny = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
+        @test_throws ArgumentError resolve_node_values(
+            Dict(nodes(stale_phylogeny)[1] => red),
+            phylogeny_nodes,
+        )
 
         duplicate_names = parsephylogeny(NewickFormat(), "((A,A),B);")
-        duplicate_node_values = resolve_node_values(Dict("A" => red), duplicate_names.node)
+        duplicate_nodes = nodes(duplicate_names)
+        duplicate_node_values = resolve_node_values(Dict("A" => red), duplicate_nodes)
         @test count(value -> value === red, duplicate_node_values) == 2
         @test all(
             duplicate_node_values[index] === red for
-                index in findall(node -> node.name == "A", duplicate_names.node)
+                index in findall(node -> node_label(node) == "A", duplicate_nodes)
         )
 
         regex_node_values = resolve_node_values(
             Dict(r"^[AB]$" => blue),
-            duplicate_names.node,
+            duplicate_nodes,
         )
         @test count(value -> value === blue, regex_node_values) == 3
-        @test_throws ArgumentError resolve_node_values(Dict(r"^missing$" => red), net.node)
+        @test_throws ArgumentError resolve_node_values(Dict(r"^missing$" => red), phylogeny_nodes)
         @test_throws ArgumentError resolve_node_values(
             Dict{Any, Any}("A" => red, r"^A$" => blue),
-            net.node,
+            phylogeny_nodes,
         )
 
         edge_values = resolve_edge_values(
             Dict(("Root" => "AB") => red),
-            net.edge,
-            plot_network.net.edge,
+            phylogeny,
+            phylogeny_edges,
         )
         @test count(!isnothing, edge_values) == 1
 
         object_edge_values = resolve_edge_values(
-            Dict(first(net.edge) => blue),
-            net.edge,
-            plot_network.net.edge,
+            Dict(first(phylogeny_edges) => blue),
+            phylogeny,
+            phylogeny_edges,
         )
         @test object_edge_values[1] === blue
         @test_throws ArgumentError resolve_edge_values(
             Dict(1 => red),
-            net.edge,
-            plot_network.net.edge,
+            phylogeny,
+            phylogeny_edges,
         )
         @test_throws ArgumentError resolve_edge_values(
             Dict(("missing" => "C") => red),
-            net.edge,
-            plot_network.net.edge,
+            phylogeny,
+            phylogeny_edges,
         )
         @test_throws ArgumentError resolve_edge_values(
-            Dict(first(stale_net.edge) => red),
-            net.edge,
-            plot_network.net.edge,
+            Dict(first(edges(stale_phylogeny)) => red),
+            phylogeny,
+            phylogeny_edges,
         )
 
         duplicate_endpoints = parsephylogeny(
             NewickFormat(),
             "((A,B)group,(A,C)group)Root;",
         )
-        duplicate_endpoint_plot_network, _ = _image_annotation_layout(duplicate_endpoints)
+        duplicate_edges = edges(duplicate_endpoints)
         duplicate_edge_values = resolve_edge_values(
             Dict(("group" => "A") => red),
-            duplicate_endpoints.edge,
-            duplicate_endpoint_plot_network.net.edge,
+            duplicate_endpoints,
+            duplicate_edges,
         )
         @test count(value -> value === red, duplicate_edge_values) == 2
 
         regex_edge_values = resolve_edge_values(
             Dict((r"^group$" => r"^[AB]$") => blue),
-            duplicate_endpoints.edge,
-            duplicate_endpoint_plot_network.net.edge,
+            duplicate_endpoints,
+            duplicate_edges,
         )
         @test count(value -> value === blue, regex_edge_values) == 3
         @test_throws ArgumentError resolve_edge_values(
             Dict((r"^missing$" => r"^A$") => red),
-            duplicate_endpoints.edge,
-            duplicate_endpoint_plot_network.net.edge,
+            duplicate_endpoints,
+            duplicate_edges,
         )
         @test_throws ArgumentError resolve_edge_values(
             Dict{Any, Any}(
                 ("group" => "A") => red,
                 (r"^group$" => r"^A$") => blue,
             ),
-            duplicate_endpoints.edge,
-            duplicate_endpoint_plot_network.net.edge,
+            duplicate_endpoints,
+            duplicate_edges,
         )
     end
 
@@ -255,17 +263,17 @@ end
 
     @testset "native rendering and reactive cache reuse" begin
         CairoMakie.activate!()
-        net = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
+        phylogeny = parsephylogeny(NewickFormat(), IMAGE_ANNOTATION_NEWICK)
         red_path = joinpath(IMAGE_ASSET_DIRECTORY, "red.png")
         blue_path = joinpath(IMAGE_ASSET_DIRECTORY, "blue.png")
-        node_mapping = node -> node.name == "A" ? red_path : nothing
-        edge_mapping = edge -> begin
-            child = PhyloNetworks.getchild(edge)
-            return child.name == "AB" ?
+        node_mapping = node -> node_label(node) == "A" ? red_path : nothing
+        edge_mapping = (current_phylogeny, edge) -> begin
+            child = child_node(current_phylogeny, edge)
+            return node_label(child) == "AB" ?
                 ImageAnnotation(blue_path; size_space = :pixel, height = 24) : nothing
         end
         surface = plot(
-            net;
+            phylogeny;
             nodeimages = node_mapping,
             edgeimages = edge_mapping,
             showtiplabel = false,
@@ -284,12 +292,12 @@ end
         @test red_pixels > 100
         @test blue_pixels > 25
 
-        repeated_net = parsephylogeny(
+        repeated_phylogeny = parsephylogeny(
             NewickFormat(),
             "((A,B)group,(A,C)group)Root;",
         )
         repeated_surface = plot(
-            repeated_net;
+            repeated_phylogeny;
             nodeimages = Dict(r"^A$" => red_path),
             edgeimages = Dict(("group" => "A") => blue_path),
             showtiplabel = false,

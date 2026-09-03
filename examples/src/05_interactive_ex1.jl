@@ -1,9 +1,10 @@
 using GLMakie
 using PhyloMakie
-using PhyloNetworks: HybridNetwork, readmultinewick
+
+const ViewerPhylogeny = LineageNetwork{Nothing, Nothing, Nothing}
 
 struct ViewerRecord
-    network::HybridNetwork
+    phylogeny::ViewerPhylogeny
     source::String
     record_index::Int
 end
@@ -30,12 +31,12 @@ mutable struct ViewerState
     showedgenumber::Bool
     showgamma::Bool
     edgecolor::String
-    defaultedgecolor::Union{Nothing,String}
+    defaultedgecolor::Union{Nothing, String}
     majorhybridedgecolor::String
     minorhybridedgecolor::String
     edgewidth::Float64
-    minorlinetype::Union{Nothing,String}
-    arrowlen::Union{Nothing,Float64}
+    minorlinetype::Union{Nothing, String}
+    arrowlen::Union{Nothing, Float64}
     nodecex::Float64
     edgecex::Float64
     nodelabelcolor::String
@@ -110,18 +111,18 @@ function parse_positive_float(text::AbstractString, field_label::AbstractString)
 end
 
 function parse_optional_positive_float(
-    text::AbstractString,
-    field_label::AbstractString,
-)::Union{Nothing,Float64}
+        text::AbstractString,
+        field_label::AbstractString,
+    )::Union{Nothing, Float64}
     stripped = strip(text)
     isempty(stripped) && return nothing
     return parse_positive_float(stripped, field_label)
 end
 
 function parse_color_text(
-    text::AbstractString,
-    allow_nothing::Bool,
-)::Union{Nothing,String}
+        text::AbstractString,
+        allow_nothing::Bool,
+    )::Union{Nothing, String}
     stripped = String(strip(text))
     if isempty(stripped)
         allow_nothing && return nothing
@@ -160,16 +161,14 @@ function contains_nexus_treeblock(path::AbstractString)::Bool
     end
 end
 
-function load_records_from_file(path::AbstractString)::Vector{HybridNetwork}
+function load_records_from_file(path::AbstractString)::Vector{ViewerPhylogeny}
     isfile(path) || throw(ArgumentError("File does not exist: $(path)"))
 
     if contains_nexus_treeblock(path)
         return readphylogenies(NexusFormat(), path)
     end
 
-    records = collect(readmultinewick(path, false))
-    isempty(records) || return records
-    return HybridNetwork[readphylogeny(NewickFormat(), path)]
+    return readphylogenies(NewickFormat(), path)
 end
 
 function load_records(paths::AbstractVector{<:AbstractString})::LoadResult
@@ -186,8 +185,8 @@ function load_records(paths::AbstractVector{<:AbstractString})::LoadResult
                 push!(warnings, LoadWarning(String(path), "No tree or network records found."))
                 continue
             end
-            for (record_index, network) in enumerate(loaded)
-                push!(records, ViewerRecord(network, String(path), record_index))
+            for (record_index, phylogeny) in enumerate(loaded)
+                push!(records, ViewerRecord(phylogeny, String(path), record_index))
             end
         catch err
             push!(warnings, LoadWarning(String(path), sprint(showerror, err)))
@@ -229,14 +228,14 @@ function set_status!(status_label, message::AbstractString)::Nothing
 end
 
 function try_update_numeric_state!(
-    plot_handle,
-    state::ViewerState,
-    field::Symbol,
-    text::AbstractString,
-    status_label;
-    optional::Bool = false,
-    axis = nothing,
-)::Bool
+        plot_handle,
+        state::ViewerState,
+        field::Symbol,
+        text::AbstractString,
+        status_label;
+        optional::Bool = false,
+        axis = nothing,
+    )::Bool
     try
         value = if optional
             parse_optional_positive_float(text, String(field))
@@ -254,14 +253,14 @@ function try_update_numeric_state!(
 end
 
 function try_update_color_state!(
-    plot_handle,
-    state::ViewerState,
-    field::Symbol,
-    text::AbstractString,
-    allow_nothing::Bool,
-    status_label;
-    axis = nothing,
-)::Bool
+        plot_handle,
+        state::ViewerState,
+        field::Symbol,
+        text::AbstractString,
+        allow_nothing::Bool,
+        status_label;
+        axis = nothing,
+    )::Bool
     try
         value = parse_color_text(text, allow_nothing)
         setproperty!(state, field, value)
@@ -275,17 +274,17 @@ function try_update_color_state!(
 end
 
 function select_record!(
-    plot_handle,
-    axis,
-    state::ViewerState,
-    records::AbstractVector{ViewerRecord},
-    index::Integer,
-    current_label,
-    status_label,
-)::Nothing
+        plot_handle,
+        axis,
+        state::ViewerState,
+        records::AbstractVector{ViewerRecord},
+        index::Integer,
+        current_label,
+        status_label,
+    )::Nothing
     selected_index = mod1(index, length(records))
-    selected_network = records[selected_index].network
-    Makie.update!(plot_handle; arg1 = selected_network)
+    selected_phylogeny = records[selected_index].phylogeny
+    Makie.update!(plot_handle; arg1 = selected_phylogeny)
     isnothing(axis) || Makie.autolimits!(axis)
     state.current_index = selected_index
     current_label.text[] = record_label(records, selected_index)
@@ -294,28 +293,28 @@ function select_record!(
 end
 
 function select_record!(
-    plot_handle,
-    state::ViewerState,
-    records::AbstractVector{ViewerRecord},
-    index::Integer,
-    current_label,
-    status_label,
-)::Nothing
+        plot_handle,
+        state::ViewerState,
+        records::AbstractVector{ViewerRecord},
+        index::Integer,
+        current_label,
+        status_label,
+    )::Nothing
     return select_record!(plot_handle, nothing, state, records, index, current_label, status_label)
 end
 
 function add_boolean_control!(
-    controls,
-    row::Integer,
-    label::AbstractString,
-    plot_handle,
-    axis,
-    state::ViewerState,
-    field::Symbol,
-    status_label;
-    label_col::Integer = 1,
-    control_col::Integer = 2,
-)::Int
+        controls,
+        row::Integer,
+        label::AbstractString,
+        plot_handle,
+        axis,
+        state::ViewerState,
+        field::Symbol,
+        status_label;
+        label_col::Integer = 1,
+        control_col::Integer = 2,
+    )::Int
     Label(controls[row, label_col], label; halign = :left, tellwidth = false)
     checkbox = Checkbox(controls[row, control_col], checked = getproperty(state, field))
     on(checkbox.checked) do checked
@@ -327,19 +326,19 @@ function add_boolean_control!(
 end
 
 function add_menu_control!(
-    controls,
-    row::Integer,
-    label::AbstractString,
-    plot_handle,
-    axis,
-    state::ViewerState,
-    field::Symbol,
-    options,
-    default_label::AbstractString,
-    status_label;
-    label_col::Integer = 1,
-    control_cols = 2:3,
-)::Int
+        controls,
+        row::Integer,
+        label::AbstractString,
+        plot_handle,
+        axis,
+        state::ViewerState,
+        field::Symbol,
+        options,
+        default_label::AbstractString,
+        status_label;
+        label_col::Integer = 1,
+        control_cols = 2:3,
+    )::Int
     Label(controls[row, label_col], label; halign = :left, tellwidth = false)
     menu = Menu(controls[row, control_cols], options = options, default = default_label)
     on(menu.selection) do selection
@@ -355,19 +354,19 @@ function format_slider_value(value::Real)::String
 end
 
 function add_slider_control!(
-    controls,
-    row::Integer,
-    label::AbstractString,
-    plot_handle,
-    axis,
-    state::ViewerState,
-    field::Symbol,
-    values,
-    status_label;
-    label_col::Integer = 1,
-    slider_col::Integer = 2,
-    value_col::Integer = 3,
-)::Int
+        controls,
+        row::Integer,
+        label::AbstractString,
+        plot_handle,
+        axis,
+        state::ViewerState,
+        field::Symbol,
+        values,
+        status_label;
+        label_col::Integer = 1,
+        slider_col::Integer = 2,
+        value_col::Integer = 3,
+    )::Int
     Label(controls[row, label_col], label; halign = :left, tellwidth = false)
     slider = Slider(controls[row, slider_col], range = values, startvalue = getproperty(state, field))
     value_label = Label(
@@ -391,16 +390,16 @@ function add_slider_control!(
 end
 
 function add_arrow_controls!(
-    controls,
-    row::Integer,
-    plot_handle,
-    axis,
-    state::ViewerState,
-    status_label;
-    label_col::Integer = 1,
-    control_col::Integer = 2,
-    value_col::Integer = 3,
-)::Int
+        controls,
+        row::Integer,
+        plot_handle,
+        axis,
+        state::ViewerState,
+        status_label;
+        label_col::Integer = 1,
+        control_col::Integer = 2,
+        value_col::Integer = 3,
+    )::Int
     Label(controls[row, label_col], "Arrow auto"; halign = :left, tellwidth = false)
     automatic = Checkbox(controls[row, control_col], checked = isnothing(state.arrowlen))
     row += 1
@@ -456,18 +455,18 @@ function color_text(state::ViewerState, field::Symbol)::String
 end
 
 function add_color_control!(
-    controls,
-    row::Integer,
-    label::AbstractString,
-    plot_handle,
-    axis,
-    state::ViewerState,
-    field::Symbol,
-    allow_nothing::Bool,
-    status_label;
-    label_col::Integer = 1,
-    control_cols = 2:3,
-)::Int
+        controls,
+        row::Integer,
+        label::AbstractString,
+        plot_handle,
+        axis,
+        state::ViewerState,
+        field::Symbol,
+        allow_nothing::Bool,
+        status_label;
+        label_col::Integer = 1,
+        control_cols = 2:3,
+    )::Int
     Label(controls[row, label_col], label; halign = :left, tellwidth = false)
     textbox = Textbox(
         controls[row, control_cols],
@@ -773,9 +772,9 @@ function add_sidebar_controls!(controls, plot_handle, axis, state::ViewerState, 
 end
 
 function build_viewer(
-    records::AbstractVector{ViewerRecord},
-    warnings::AbstractVector{LoadWarning} = LoadWarning[],
-)
+        records::AbstractVector{ViewerRecord},
+        warnings::AbstractVector{LoadWarning} = LoadWarning[],
+    )
     isempty(records) && throw(ArgumentError("Cannot build viewer without records."))
 
     GLMakie.activate!()
@@ -810,7 +809,11 @@ function build_viewer(
         fontsize = 12,
     )
 
-    plot_handle = phyloplot!(axis, records[state.current_index].network; viewer_attributes(state)...)
+    plot_handle = phyloplot!(
+        axis,
+        records[state.current_index].phylogeny;
+        viewer_attributes(state)...,
+    )
     add_sidebar_controls!(controls, plot_handle, axis, state, status_label)
     colsize!(controls, 1, Fixed(145))
     colsize!(controls, 2, Fixed(180))

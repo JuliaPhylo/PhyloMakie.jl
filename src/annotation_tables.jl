@@ -25,13 +25,13 @@ struct AnnotationTables
 end
 
 struct LayoutComputation
-    geometry::NetworkGeometry
+    geometry::PhylogenyGeometry
     extent::PlotExtent
     annotations::AnnotationTables
 end
 
 function _validate_node_data(
-        net::PhyloNetworks.HybridNetwork,
+        phylogeny::AbstractPhylogeny,
         nodelabel::DataFrames.DataFrame,
     )::Tuple{Bool, DataFrames.DataFrame}
     labelnodes = size(nodelabel, 1) > 0
@@ -45,10 +45,13 @@ function _validate_node_data(
         labelnodes = size(nodelabel, 1) > 0
     end
     if labelnodes
-        missing_nodes = setdiff(nodelabel[!, 1], [uniqueid(node) for node in getnodes(net)])
+        missing_nodes = setdiff(
+            nodelabel[!, 1],
+            [node_id(current_node) for current_node in nodes(phylogeny)],
+        )
         if !isempty(missing_nodes)
             message =
-                "Some node numbers in the nodelabel data frame are not found in the network:\n"
+                "Some node numbers in the nodelabel data frame are not found in the phylogeny:\n"
             for node_number in missing_nodes
                 message *= string(" ", node_number)
             end
@@ -59,17 +62,17 @@ function _validate_node_data(
 end
 
 function _prepare_node_annotation_data(
-        net::PhyloNetworks.HybridNetwork,
+        phylogeny::AbstractPhylogeny,
         nodelabel::DataFrames.AbstractDataFrame,
         shownodenumber::Bool,
         shownodelabel::Bool,
         labelnodes::Bool,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
     )::DataFrames.DataFrame
     row_count = if shownodenumber || shownodelabel || labelnodes
-        numnodes(net)
+        node_count(phylogeny)
     else
-        numtaxa(net)
+        taxon_count(phylogeny)
     end
     node_data = DataFrames.DataFrame(
         :name => Vector{String}(undef, row_count),
@@ -82,18 +85,18 @@ function _prepare_node_annotation_data(
     )
 
     row_index = 1
-    for (node_index, current_node) in enumerate(getnodes(net))
-        if isleaf(current_node) || shownodenumber || shownodelabel || labelnodes
-            node_data[row_index, :name] = namelabel(current_node)
-            node_data[row_index, :num] = string(uniqueid(current_node))
+    for (current_node_index, current_node) in enumerate(nodes(phylogeny))
+        if is_leaf(phylogeny, current_node) || shownodenumber || shownodelabel || labelnodes
+            node_data[row_index, :name] = node_label(current_node)
+            node_data[row_index, :num] = string(node_id(current_node))
             if labelnodes
-                label_index = findfirst(isequal(uniqueid(current_node)), nodelabel[!, 1])
+                label_index = findfirst(isequal(node_id(current_node)), nodelabel[!, 1])
                 node_data[row_index, :lab] =
                     isnothing(label_index) ? "" : _format_sig3(nodelabel[label_index, 2])
             end
-            node_data[row_index, :lea] = isleaf(current_node)
-            node_data[row_index, :x] = geometry.node_x[node_index]
-            node_data[row_index, :y] = geometry.node_y[node_index]
+            node_data[row_index, :lea] = is_leaf(phylogeny, current_node)
+            node_data[row_index, :x] = geometry.node_x[current_node_index]
+            node_data[row_index, :y] = geometry.node_y[current_node_index]
             row_index += 1
         end
     end
@@ -101,25 +104,25 @@ function _prepare_node_annotation_data(
 end
 
 function _prepare_edge_annotation_data(
-        net::PhyloNetworks.HybridNetwork,
+        phylogeny::AbstractPhylogeny,
         edgelabel::DataFrames.AbstractDataFrame,
         style::Symbol,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
     )::Tuple{Bool, DataFrames.DataFrame}
-    Ne = numedges(net)
+    edge_total = edge_count(phylogeny)
     edge_data = DataFrames.DataFrame(
-        :len => Vector{String}(undef, Ne),
-        :gam => Vector{String}(undef, Ne),
-        :num => Vector{String}(undef, Ne),
-        :lab => fill(""::String, Ne),
-        :hyb => Vector{Bool}(undef, Ne),
-        :min => Vector{Bool}(undef, Ne),
-        :x => Vector{Float64}(undef, Ne),
-        :y => Vector{Float64}(undef, Ne);
+        :len => Vector{String}(undef, edge_total),
+        :gam => Vector{String}(undef, edge_total),
+        :num => Vector{String}(undef, edge_total),
+        :lab => fill(""::String, edge_total),
+        :hyb => Vector{Bool}(undef, edge_total),
+        :min => Vector{Bool}(undef, edge_total),
+        :x => Vector{Float64}(undef, edge_total),
+        :y => Vector{Float64}(undef, edge_total);
         copycols = false,
     )
 
-    annotation_positions = compute_edge_annotation_positions(net, style, geometry)
+    annotation_positions = compute_edge_annotation_positions(phylogeny, style, geometry)
 
     labeledges = size(edgelabel, 1) > 0
     if labeledges &&
@@ -132,10 +135,13 @@ function _prepare_edge_annotation_data(
         labeledges = size(edgelabel, 1) > 0
     end
     if labeledges
-        missing_edges = setdiff(edgelabel[!, 1], [uniqueid(edge) for edge in getedges(net)])
+        missing_edges = setdiff(
+            edgelabel[!, 1],
+            [edge_id(current_edge) for current_edge in edges(phylogeny)],
+        )
         if !isempty(missing_edges)
             message =
-                "Some edge numbers in the edgelabel data frame are not found in the network:\n"
+                "Some edge numbers in the edgelabel data frame are not found in the phylogeny:\n"
             for edge_number in missing_edges
                 message *= string(" ", edge_number)
             end
@@ -143,46 +149,47 @@ function _prepare_edge_annotation_data(
         end
     end
 
-    for (edge_index, current_edge) in enumerate(getedges(net))
-        edge_data[edge_index, :len] = _format_sig3(elength(current_edge))
-        edge_data[edge_index, :gam] = _format_sig3(egamma(current_edge))
-        edge_data[edge_index, :num] = string(uniqueid(current_edge))
+    for (current_edge_index, current_edge) in enumerate(edges(phylogeny))
+        edge_data[current_edge_index, :len] = _format_sig3(branch_length(current_edge))
+        edge_data[current_edge_index, :gam] =
+            _format_sig3(inheritance_probability(current_edge))
+        edge_data[current_edge_index, :num] = string(edge_id(current_edge))
         if labeledges
-            label_index = findfirst(isequal(uniqueid(current_edge)), edgelabel[!, 1])
-            edge_data[edge_index, :lab] =
+            label_index = findfirst(isequal(edge_id(current_edge)), edgelabel[!, 1])
+            edge_data[current_edge_index, :lab] =
                 isnothing(label_index) ? "" : _format_sig3(edgelabel[label_index, 2])
         end
-        edge_data[edge_index, :hyb] = ishybrid(current_edge)
-        edge_data[edge_index, :min] = !ismajor(current_edge)
-        edge_data[edge_index, :x] = annotation_positions[edge_index][1]
-        edge_data[edge_index, :y] = annotation_positions[edge_index][2]
+        edge_data[current_edge_index, :hyb] = is_hybrid(current_edge)
+        edge_data[current_edge_index, :min] = !is_major(current_edge)
+        edge_data[current_edge_index, :x] = annotation_positions[current_edge_index][1]
+        edge_data[current_edge_index, :y] = annotation_positions[current_edge_index][2]
     end
     return labeledges, edge_data
 end
 
 function compute_edge_annotation_positions(
-        net::PhyloNetworks.HybridNetwork,
+        phylogeny::AbstractPhylogeny,
         style::Symbol,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
     )::Vector{Makie.Point2f}
-    positions = Vector{Makie.Point2f}(undef, numedges(net))
+    positions = Vector{Makie.Point2f}(undef, edge_count(phylogeny))
     minor_edge_index = 1
-    for (edge_index, edge) in enumerate(getedges(net))
-        x = (geometry.edge_x_lo[edge_index] + geometry.edge_x_hi[edge_index]) / 2
-        y = (geometry.edge_y_lo[edge_index] + geometry.edge_y_hi[edge_index]) / 2
-        if style === :majortree && !ismajor(edge)
+    for (current_edge_index, current_edge) in enumerate(edges(phylogeny))
+        x = (geometry.edge_x_lo[current_edge_index] + geometry.edge_x_hi[current_edge_index]) / 2
+        y = (geometry.edge_y_lo[current_edge_index] + geometry.edge_y_hi[current_edge_index]) / 2
+        if style === :majortree && !is_major(current_edge)
             x = (geometry.arrow_x_lo[minor_edge_index] + geometry.arrow_x_hi[minor_edge_index]) / 2
             y = (geometry.arrow_y_lo[minor_edge_index] + geometry.arrow_y_hi[minor_edge_index]) / 2
             minor_edge_index += 1
         end
-        positions[edge_index] = Makie.Point2f(x, y)
+        positions[current_edge_index] = Makie.Point2f(x, y)
     end
     return positions
 end
 
 function _resolve_plot_extent(
         config::PhyloPlotConfig,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
         labelnodes::Bool,
     )::PlotExtent
     xmin = geometry.xmin
@@ -209,14 +216,14 @@ function _resolve_plot_extent(
 end
 
 function compute_layout(
-        plot_network::PlotNetwork{<:PhyloNetworks.HybridNetwork},
+        prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
-        geometry::NetworkGeometry,
+        geometry::PhylogenyGeometry,
     )::LayoutComputation
-    net = plot_network.net
-    labelnodes, nodelabel = _validate_node_data(net, config.nodelabel)
+    phylogeny = prepared_phylogeny.phylogeny
+    labelnodes, nodelabel = _validate_node_data(phylogeny, config.nodelabel)
     node_data = _prepare_node_annotation_data(
-        net,
+        phylogeny,
         nodelabel,
         config.shownodenumber,
         config.shownodelabel,
@@ -224,7 +231,7 @@ function compute_layout(
         geometry,
     )
     labeledges, edge_data = _prepare_edge_annotation_data(
-        net,
+        phylogeny,
         config.edgelabel,
         config.style,
         geometry,

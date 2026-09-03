@@ -1,9 +1,47 @@
 # Public API
 
-PhyloMakie extends Makie plotting for `PhyloNetworks.HybridNetwork` and exports
-the package-specific convenience aliases, coordinate-query helpers, and the
-singular `PhyloMakie.parsephylogeny` and `PhyloMakie.readphylogeny` readers and
-plural `PhyloMakie.parsephylogenies` and `PhyloMakie.readphylogenies` readers.
+PhyloMakie extends Makie plotting for `AbstractPhylogeny` implementations. The
+current native representation is `LineageNetwork`, an independent graph model
+containing topology and biological metadata without PhyloNetworks inference
+caches. The package also exports its model accessors and manipulators, plotting
+aliases, coordinate-query helpers, readers, and format-specific string
+literals.
+
+## Phylogeny model and interface
+
+`AbstractPhylogeny` is the common plotting and algorithm interface.
+`AbstractPhylogeneticTree` and `AbstractPhylogeneticNetwork` distinguish
+stronger semantic categories, while `LineageNetwork` is the first concrete
+implementation. Future native tree types can share the same plotting stack by
+implementing the accessor and validation methods used by `preorder`, layout,
+and rendering.
+
+The model exposes node, edge, root, endpoint, adjacency, identifier, label,
+payload, branch-length, inheritance-probability, and classification accessors.
+Its mutators support construction, deletion, labeling, edge metadata, major
+hybrid-parent selection, and transactional rerooting.
+
+PhyloNetworks is confined to an adapter. Newick and NEXUS readers use its
+parsers and immediately return a native `LineageNetwork`. Use
+`from_hybridnetwork`, `to_hybridnetwork`, or `convert` for explicit conversion
+in either direction; conversion does not transfer inference caches.
+
+```@docs
+PhyloMakie.AbstractPhylogeny
+PhyloMakie.AbstractPhylogeneticTree
+PhyloMakie.AbstractPhylogeneticNetwork
+PhyloMakie.LineageNode
+PhyloMakie.LineageEdge
+PhyloMakie.LineageNetwork
+PhyloMakie.preorder
+PhyloMakie.postorder
+PhyloMakie.validate_phylogeny
+PhyloMakie.rotate_children!
+PhyloMakie.reroot!
+PhyloMakie.from_hybridnetwork
+PhyloMakie.to_hybridnetwork
+```
+
 The `newick"..."` and `nexustreeblock"..."` string literals parse exactly one
 phylogeny for direct use with the plotting entry points.
 
@@ -11,10 +49,10 @@ phylogeny for direct use with the plotting entry points.
 
 | Function | Return value | Description |
 | --- | --- | --- |
-| `plot(net)` | `Makie.FigureAxisPlot` | Create a new figure, axis, and `PhyloPlot`. |
-| `plot!(axis, net)` | `PhyloPlot` | Draw a network into an existing Makie axis. |
-| `phyloplot(net)` | `Makie.FigureAxisPlot` | Alias for `plot(net)`. |
-| `phyloplot!(axis, net)` | `PhyloPlot` | Alias for `plot!(axis, net)`. |
+| `plot(phylogeny)` | `Makie.FigureAxisPlot` | Create a new figure, axis, and `PhyloPlot`. |
+| `plot!(axis, phylogeny)` | `PhyloPlot` | Draw a network into an existing Makie axis. |
+| `phyloplot(phylogeny)` | `Makie.FigureAxisPlot` | Alias for `plot(phylogeny)`. |
+| `phyloplot!(axis, phylogeny)` | `PhyloPlot` | Alias for `plot!(axis, phylogeny)`. |
 
 ## Reading phylogenies
 
@@ -27,9 +65,9 @@ plural functions return every phylogeny in a `Vector`.
 | Function | Return value | Description |
 | --- | --- | --- |
 | `parsephylogeny(format, source)` | `LineageNetwork` | Parse exactly one phylogeny from literal content or an `IO` stream. |
-| `parsephylogenies(format, source)` | `Vector{LineageNetwork}` | Parse every phylogeny from literal content or an `IO` stream. |
+| `parsephylogenies(format, source)` | `Vector{<:LineageNetwork}` | Parse every phylogeny from literal content or an `IO` stream. |
 | `readphylogeny(format, path)` | `LineageNetwork` | Read exactly one phylogeny from a file. |
-| `readphylogenies(format, path)` | `Vector{LineageNetwork}` | Read every phylogeny from a file. |
+| `readphylogenies(format, path)` | `Vector{<:LineageNetwork}` | Read every phylogeny from a file. |
 | `newick"..."` | `LineageNetwork` | Parse exactly one Newick topology. |
 | `nexustreeblock"..."` | `LineageNetwork` | Parse exactly one phylogeny from a NEXUS trees block. |
 
@@ -55,7 +93,6 @@ PhyloMakie.PhyloPlot
 PhyloMakie.ImageAnnotation
 PhyloMakie.phyloplot
 PhyloMakie.phyloplot!
-PhyloMakie.LineageNetwork
 PhyloMakie.AbstractPhylogenyFormat
 PhyloMakie.NewickFormat
 PhyloMakie.NexusFormat
