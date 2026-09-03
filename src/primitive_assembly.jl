@@ -3,6 +3,8 @@ struct PhyloPrimitiveHandles{
         TNodeBars,
         TMinorEdgeShafts,
         TMinorArrowheads,
+        TEdgeImages,
+        TNodeImages,
         TTipLabels,
         TInternalNodeNames,
         TNodeNumbers,
@@ -17,6 +19,8 @@ struct PhyloPrimitiveHandles{
     node_bars::TNodeBars
     minor_edge_shafts::TMinorEdgeShafts
     minor_arrowheads::TMinorArrowheads
+    edge_images::TEdgeImages
+    node_images::TNodeImages
     tip_labels::TTipLabels
     internal_node_names::TInternalNodeNames
     node_numbers::TNodeNumbers
@@ -26,6 +30,21 @@ struct PhyloPrimitiveHandles{
     minor_gamma_labels::TMinorGammaLabels
     major_gamma_labels::TMajorGammaLabels
     edge_numbers::TEdgeNumbers
+end
+
+function create_image_primitive!(
+        plot::PhyloPlot,
+        outputs::ImageGraphOutputs,
+    )::Makie.Plot
+    return Makie.scatter!(
+        plot,
+        plot[outputs.positions];
+        marker = plot[outputs.images],
+        markersize = plot[outputs.markersizes],
+        marker_offset = plot[outputs.marker_offsets],
+        markerspace = :pixel,
+        space = :data,
+    )
 end
 
 function create_segment_primitive!(
@@ -97,6 +116,8 @@ function create_phylo_primitives!(
         create_segment_primitive!(plot, primitive_outputs.node_bars),
         create_segment_primitive!(plot, primitive_outputs.minor_edge_shafts),
         create_arrowhead_primitive!(plot, primitive_outputs.minor_arrowheads),
+        create_image_primitive!(plot, primitive_outputs.edge_images),
+        create_image_primitive!(plot, primitive_outputs.node_images),
         create_fonted_text_primitive!(plot, text_outputs.tip_labels),
         create_fonted_text_primitive!(plot, text_outputs.internal_node_names),
         create_text_primitive!(plot, text_outputs.node_numbers),

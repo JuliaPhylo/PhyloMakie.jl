@@ -18,6 +18,7 @@ include("support/render_test_helpers.jl")
     include("test_plot_config.jl")
     include("test_network_layout.jl")
     include("test_annotation_tables.jl")
+    include("test_image_annotations.jl")
     include("test_primitive_channels.jl")
     include("test_arrowhead_geometry.jl")
     include("test_reactive_graph.jl")
@@ -30,7 +31,7 @@ include("support/render_test_helpers.jl")
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(
             PhyloMakie;
-            piracies=(treat_as_own=[Makie.plottype, PhyloNetworks.HybridNetwork],),
+            piracies = (treat_as_own = [Makie.plottype, PhyloNetworks.HybridNetwork],),
         )
     end
     @testset "Code linting (JET.jl)" begin

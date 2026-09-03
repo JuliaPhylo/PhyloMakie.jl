@@ -16,11 +16,20 @@ struct ArrowheadGraphOutputs
     strokewidth::Symbol
 end
 
+struct ImageGraphOutputs
+    positions::Symbol
+    images::Symbol
+    markersizes::Symbol
+    marker_offsets::Symbol
+end
+
 struct PhyloGraphOutputs
     edge_segments::SegmentGraphOutputs
     node_bars::SegmentGraphOutputs
     minor_edge_shafts::SegmentGraphOutputs
     minor_arrowheads::ArrowheadGraphOutputs
+    edge_images::ImageGraphOutputs
+    node_images::ImageGraphOutputs
     data_limits::Symbol
 end
 
@@ -104,6 +113,18 @@ const MINOR_ARROWHEAD_GRAPH_OUTPUTS = ArrowheadGraphOutputs(
     :minor_arrowhead_strokecolors,
     :minor_arrowhead_strokewidth,
 )
+const EDGE_IMAGE_GRAPH_OUTPUTS = ImageGraphOutputs(
+    :edge_image_positions,
+    :edge_image_markers,
+    :edge_image_markersizes,
+    :edge_image_marker_offsets,
+)
+const NODE_IMAGE_GRAPH_OUTPUTS = ImageGraphOutputs(
+    :node_image_positions,
+    :node_image_markers,
+    :node_image_markersizes,
+    :node_image_marker_offsets,
+)
 
 const NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS = (
     EDGE_SEGMENT_GRAPH_OUTPUTS.points,
@@ -126,6 +147,14 @@ const NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS = (
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.colors,
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.strokecolors,
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.strokewidth,
+    EDGE_IMAGE_GRAPH_OUTPUTS.positions,
+    EDGE_IMAGE_GRAPH_OUTPUTS.images,
+    EDGE_IMAGE_GRAPH_OUTPUTS.markersizes,
+    EDGE_IMAGE_GRAPH_OUTPUTS.marker_offsets,
+    NODE_IMAGE_GRAPH_OUTPUTS.positions,
+    NODE_IMAGE_GRAPH_OUTPUTS.images,
+    NODE_IMAGE_GRAPH_OUTPUTS.markersizes,
+    NODE_IMAGE_GRAPH_OUTPUTS.marker_offsets,
     :data_limits,
 )
 
@@ -189,6 +218,10 @@ function _arrowhead_output_symbols(outputs::ArrowheadGraphOutputs)::NTuple{8, Sy
         outputs.strokecolors,
         outputs.strokewidth,
     )
+end
+
+function _image_output_symbols(outputs::ImageGraphOutputs)::NTuple{4, Symbol}
+    return (outputs.positions, outputs.images, outputs.markersizes, outputs.marker_offsets)
 end
 
 function _text_output_symbols(outputs::TextGraphOutputs)::NTuple{6, Symbol}
@@ -402,6 +435,50 @@ function _compute_primitive_channels(
     return (_ref_any(compute_primitive_channels(plot_network, config, layout)),)
 end
 
+function _resolve_image_channels_graph!(
+        input_net::PhyloNetworks.HybridNetwork,
+        plot_network::PlotNetwork,
+        layout::LayoutComputation,
+        nodeimages,
+        edgeimages,
+        cache::ImageAssetCache,
+    )::Tuple{Base.RefValue{Any}, Base.RefValue{Any}}
+    channels = resolve_image_channels!(
+        cache,
+        input_net,
+        plot_network,
+        layout,
+        nodeimages,
+        edgeimages,
+    )
+    return (_ref_any(channels.edge_images), _ref_any(channels.node_images))
+end
+
+function _image_channel_base_outputs(
+        channel::ImageChannel,
+    )::NTuple{4, Base.RefValue{Any}}
+    upper, lower = image_probe_positions(channel)
+    return (
+        _ref_any(channel.positions),
+        _ref_any(channel.images),
+        _ref_any(upper),
+        _ref_any(lower),
+    )
+end
+
+function _compute_image_marker_geometry_outputs(
+        channel::ImageChannel,
+        upper_pixel_positions::AbstractVector,
+        lower_pixel_positions::AbstractVector,
+    )::Tuple{Base.RefValue{Any}, Base.RefValue{Any}}
+    marker_sizes, marker_offsets = compute_image_marker_geometry(
+        channel,
+        upper_pixel_positions,
+        lower_pixel_positions,
+    )
+    return (_ref_any(marker_sizes), _ref_any(marker_offsets))
+end
+
 function _compute_data_limits(channels::PrimitiveChannels)::Tuple{Base.RefValue{Any}}
     return (_ref_any(channels.data_limits),)
 end
@@ -543,6 +620,13 @@ function register_plot_network_node!(plot::PhyloPlot)::Symbol
     return :plot_network
 end
 
+function register_image_asset_cache_node!(plot::PhyloPlot)::Symbol
+    cache_node = :image_asset_cache
+    haskey(plot.attributes, cache_node) ||
+        Makie.ComputePipeline.add_constant!(plot.attributes, cache_node, ImageAssetCache())
+    return cache_node
+end
+
 function register_layout_nodes!(
         plot::PhyloPlot,
         config_node::Symbol,
@@ -592,6 +676,21 @@ function register_primitive_channel_node!(
     return :primitive_channels
 end
 
+function register_image_channel_nodes!(
+        plot::PhyloPlot,
+        network_node::Symbol,
+        layout_node::Symbol,
+    )::NamedTuple{(:edge_images, :node_images), Tuple{Symbol, Symbol}}
+    cache_node = register_image_asset_cache_node!(plot)
+    _register_outputs_once!(
+        _resolve_image_channels_graph!,
+        plot,
+        (:net, network_node, layout_node, :nodeimages, :edgeimages, cache_node),
+        (:edge_image_channel, :node_image_channel),
+    )
+    return (edge_images = :edge_image_channel, node_images = :node_image_channel)
+end
+
 function register_data_limits_node!(
         plot::PhyloPlot,
         primitive_channels_node::Symbol,
@@ -615,9 +714,11 @@ function _register_phylo_intermediate_nodes!(
             :layout,
             :node_positions,
             :primitive_channels,
+            :edge_images,
+            :node_images,
             :data_limits,
         ),
-        NTuple{7, Symbol},
+        NTuple{9, Symbol},
     }
     config_node = register_plot_config_node!(plot)
     network_node = register_plot_network_node!(plot)
@@ -633,6 +734,11 @@ function _register_phylo_intermediate_nodes!(
         config_node,
         layout_nodes.layout,
     )
+    image_channel_nodes = register_image_channel_nodes!(
+        plot,
+        network_node,
+        layout_nodes.layout,
+    )
     data_limits_node = register_data_limits_node!(plot, primitive_channels_node)
     return (
         config = config_node,
@@ -641,6 +747,8 @@ function _register_phylo_intermediate_nodes!(
         layout = layout_nodes.layout,
         node_positions = node_position_table_node,
         primitive_channels = primitive_channels_node,
+        edge_images = image_channel_nodes.edge_images,
+        node_images = image_channel_nodes.node_images,
         data_limits = data_limits_node,
     )
 end
@@ -718,15 +826,72 @@ function register_arrowhead_output_nodes!(
     return MINOR_ARROWHEAD_GRAPH_OUTPUTS
 end
 
+
+function register_image_output_nodes!(
+        plot::PhyloPlot,
+        channel_node::Symbol,
+        outputs::ImageGraphOutputs,
+        prefix::Symbol,
+    )::ImageGraphOutputs
+    upper_positions = Symbol(prefix, "_upper_positions")
+    lower_positions = Symbol(prefix, "_lower_positions")
+    upper_pixel_positions = Symbol(prefix, "_upper_pixel_positions")
+    lower_pixel_positions = Symbol(prefix, "_lower_pixel_positions")
+    _register_outputs_once!(
+        _image_channel_base_outputs,
+        plot,
+        (channel_node,),
+        (outputs.positions, outputs.images, upper_positions, lower_positions),
+    )
+    _ensure_plot_space_node!(plot)
+    Makie.register_projected_positions!(
+        plot,
+        Makie.Point3f;
+        input_space = :space,
+        input_name = upper_positions,
+        output_name = upper_pixel_positions,
+        output_space = :pixel,
+    )
+    Makie.register_projected_positions!(
+        plot,
+        Makie.Point3f;
+        input_space = :space,
+        input_name = lower_positions,
+        output_name = lower_pixel_positions,
+        output_space = :pixel,
+    )
+    _register_outputs_once!(
+        _compute_image_marker_geometry_outputs,
+        plot,
+        (channel_node, upper_pixel_positions, lower_pixel_positions),
+        (outputs.markersizes, outputs.marker_offsets),
+    )
+    return outputs
+end
+
 function register_primitive_graph_outputs!(plot::PhyloPlot)::PhyloGraphOutputs
     intermediate_nodes = _register_phylo_intermediate_nodes!(plot)
     segment_outputs = register_segment_output_nodes!(plot, intermediate_nodes.primitive_channels)
     arrowhead_outputs = register_arrowhead_output_nodes!(plot, intermediate_nodes.primitive_channels)
+    edge_image_outputs = register_image_output_nodes!(
+        plot,
+        intermediate_nodes.edge_images,
+        EDGE_IMAGE_GRAPH_OUTPUTS,
+        :edge_image,
+    )
+    node_image_outputs = register_image_output_nodes!(
+        plot,
+        intermediate_nodes.node_images,
+        NODE_IMAGE_GRAPH_OUTPUTS,
+        :node_image,
+    )
     return PhyloGraphOutputs(
         segment_outputs.edge_segments,
         segment_outputs.node_bars,
         segment_outputs.minor_edge_shafts,
         arrowhead_outputs,
+        edge_image_outputs,
+        node_image_outputs,
         intermediate_nodes.data_limits,
     )
 end

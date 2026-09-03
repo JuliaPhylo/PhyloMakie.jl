@@ -52,6 +52,7 @@ phyloplot(newick"(A, (B, C));")
 
 ```@docs
 PhyloMakie.PhyloPlot
+PhyloMakie.ImageAnnotation
 PhyloMakie.phyloplot
 PhyloMakie.phyloplot!
 PhyloMakie.LineageNetwork
@@ -88,6 +89,8 @@ PhyloMakie.@nexustreeblock_str
 | `arrowlen` | Set minor hybrid edge arrow length. |
 | `nodelabel` | Supply a node label table. |
 | `edgelabel` | Supply an edge label table. |
+| `nodeimages` | Map nodes to image sources or `ImageAnnotation` values. |
+| `edgeimages` | Map edges to image sources or `ImageAnnotation` values. |
 | `nodecex` | Scale node label text. |
 | `edgecex` | Scale edge label text. |
 | `nodelabelcolor` | Set node label color. |

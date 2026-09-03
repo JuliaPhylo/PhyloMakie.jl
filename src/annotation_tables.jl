@@ -119,6 +119,8 @@ function _prepare_edge_annotation_data(
         copycols = false,
     )
 
+    annotation_positions = compute_edge_annotation_positions(net, style, geometry)
+
     labeledges = size(edgelabel, 1) > 0
     if labeledges &&
             (size(edgelabel, 2) < 2 || !(nonmissingtype(eltype(edgelabel[!, 1])) <: Integer))
@@ -141,7 +143,6 @@ function _prepare_edge_annotation_data(
         end
     end
 
-    minor_edge_index = 1
     for (edge_index, current_edge) in enumerate(getedges(net))
         edge_data[edge_index, :len] = _format_sig3(elength(current_edge))
         edge_data[edge_index, :gam] = _format_sig3(egamma(current_edge))
@@ -153,19 +154,30 @@ function _prepare_edge_annotation_data(
         end
         edge_data[edge_index, :hyb] = ishybrid(current_edge)
         edge_data[edge_index, :min] = !ismajor(current_edge)
-        edge_data[edge_index, :x] =
-            (geometry.edge_x_lo[edge_index] + geometry.edge_x_hi[edge_index]) / 2
-        edge_data[edge_index, :y] =
-            (geometry.edge_y_lo[edge_index] + geometry.edge_y_hi[edge_index]) / 2
-        if style == :majortree && !ismajor(current_edge)
-            edge_data[edge_index, :x] =
-                (geometry.arrow_x_lo[minor_edge_index] + geometry.arrow_x_hi[minor_edge_index]) / 2
-            edge_data[edge_index, :y] =
-                (geometry.arrow_y_lo[minor_edge_index] + geometry.arrow_y_hi[minor_edge_index]) / 2
-            minor_edge_index += 1
-        end
+        edge_data[edge_index, :x] = annotation_positions[edge_index][1]
+        edge_data[edge_index, :y] = annotation_positions[edge_index][2]
     end
     return labeledges, edge_data
+end
+
+function compute_edge_annotation_positions(
+        net::PhyloNetworks.HybridNetwork,
+        style::Symbol,
+        geometry::NetworkGeometry,
+    )::Vector{Makie.Point2f}
+    positions = Vector{Makie.Point2f}(undef, numedges(net))
+    minor_edge_index = 1
+    for (edge_index, edge) in enumerate(getedges(net))
+        x = (geometry.edge_x_lo[edge_index] + geometry.edge_x_hi[edge_index]) / 2
+        y = (geometry.edge_y_lo[edge_index] + geometry.edge_y_hi[edge_index]) / 2
+        if style === :majortree && !ismajor(edge)
+            x = (geometry.arrow_x_lo[minor_edge_index] + geometry.arrow_x_hi[minor_edge_index]) / 2
+            y = (geometry.arrow_y_lo[minor_edge_index] + geometry.arrow_y_hi[minor_edge_index]) / 2
+            minor_edge_index += 1
+        end
+        positions[edge_index] = Makie.Point2f(x, y)
+    end
+    return positions
 end
 
 function _resolve_plot_extent(

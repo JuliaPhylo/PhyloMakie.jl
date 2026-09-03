@@ -16,6 +16,7 @@ networks stored as `PhyloNetworks.HybridNetwork`, using the standard Makie
 - `newick"..."` and `nexustreeblock"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
 - Edge-length scaling, gamma display, tip labels, colors, and widths
+- Native node and edge images from matrices, local files, or HTTP(S) URLs
 - Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
 

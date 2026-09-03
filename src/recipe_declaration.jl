@@ -8,7 +8,8 @@ Use `plot(net; kwargs...)` and `plot!(axis, net; kwargs...)` for the standard
 Makie API. `phyloplot` and `phyloplot!` are package-specific aliases generated
 by the recipe. Supported attributes control layout style, edge lengths, tip
 labels, node labels, edge labels, colors, widths, hybrid-edge arrows, and data
-limits.
+limits. Use `nodeimages` and `edgeimages` to attach image annotations without
+depending on implementation-assigned node or edge indices.
 """
 Makie.@recipe PhyloPlot (net,) begin
     "Inherited Makie clip planes for the rendered primitives."
@@ -45,6 +46,10 @@ Makie.@recipe PhyloPlot (net,) begin
     nodelabel = DataFrame()
     "Supply an edge label table."
     edgelabel = DataFrame()
+    "Map nodes to image sources or ImageAnnotation values."
+    nodeimages = nothing
+    "Map edges to image sources or ImageAnnotation values."
+    edgeimages = nothing
     "Scale node label text."
     nodecex = 1
     "Scale edge label text."

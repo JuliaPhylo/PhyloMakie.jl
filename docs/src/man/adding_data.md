@@ -67,6 +67,63 @@ plot(
 )
 ```
 
+## Adding images to nodes and edges
+
+Use `nodeimages` and `edgeimages` to make images part of the live tree plot.
+The mapping receives each node or edge object from the input network and
+returns an image source, an [`ImageAnnotation`](@ref
+PhyloMakie.ImageAnnotation), or `nothing`. An image source may be a decoded
+pixel matrix, a local file path, or an HTTP(S) URL.
+
+This mapping targets tips by name and never depends on node numbers:
+
+```julia
+circle_paths = Dict(
+    "A" => "/path/to/red.png",
+    "B" => "/path/to/blue.png",
+)
+
+function tip_image(node)
+    source = get(circle_paths, node.name, nothing)
+    isnothing(source) && return nothing
+    return ImageAnnotation(source; position = :right, offset = (6, 0))
+end
+
+plot(net; nodeimages = tip_image)
+```
+
+Sparse node dictionaries may use unique node names or node objects as keys.
+Sparse edge dictionaries may use edge objects or unambiguous
+`parent_name => child_name` selectors, for example
+`Dict(("Root" => "Clade") => image)`. Functions are usually the most useful
+edge mapping because they can inspect `PhyloNetworks.getparent(edge)` and
+`PhyloNetworks.getchild(edge)`. Numeric node and edge selectors are not
+accepted because those identifiers are assigned by the network implementation
+and are not a predictable user-facing key.
+
+The default image has a full height of `0.8` y-axis data units. Tip rows are
+normally 1 unit apart, so this leaves a 20 percent gutter and scales with zoom.
+Use `scale = 1.25` for a full 1-row image, set `height` directly for another
+data-space size, or select `size_space = :pixel` for a screen-fixed size. The
+default pixel height is 32 pixels. Width preserves the source aspect ratio in
+screen space.
+
+`position` accepts `:center`, `:left`, `:right`, `:above`, `:below`, and 4
+diagonal values. For exact alignment, use `align = (horizontal, vertical)`;
+for example, `align = (:center, :bottom)` aligns the image's bottom edge with
+the graph anchor. `offset = (x, y)` adds a pixel displacement after alignment.
+
+Image anchors participate in data limits, but their pixel-rendered extents do
+not. Increase the axis `xautolimitmargin` or set `xlim` when images placed to
+the left or right need more margin. PhyloMakie caches decoded file and URL
+sources within each plot, so layout and style updates do not reload them.
+
+The offline `examples/src/07_node_edge_images.jl` script uses checked-in colored
+circle files. `examples/src/08_phylopic_native_images.jl` resolves public
+PhyloPic thumbnail URLs with PhyloPicMakie and passes those URLs to
+`nodeimages`. PhyloPicMakie owns taxon discovery; PhyloMakie owns the image's
+tree anchor and rendering lifecycle.
+
 ## Adding other annotations using Makie
 
 We can use the return value of `plot` and the coordinate query functions to get
@@ -116,8 +173,10 @@ change.
 The optional `examples/src/06_phylopic_composition.jl` example passes tree-tip
 coordinates and scientific names to the discovery-aware
 `PhyloPicMakie.augment_phylopic!` function. PhyloPicMakie resolves and renders
-the silhouettes; the PhyloMakie package itself does not depend on
-PhyloPicMakie.
+the silhouettes as an independently owned overlay. The newer
+`examples/src/08_phylopic_native_images.jl` example instead gives resolved URLs
+to `nodeimages`, making the images native children of the tree plot. The
+PhyloMakie package itself does not depend on PhyloPicMakie in either case.
 
 ## Side clade bars example
 

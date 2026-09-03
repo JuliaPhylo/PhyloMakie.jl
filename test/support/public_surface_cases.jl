@@ -16,6 +16,8 @@ const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :arrowlen,
     :nodelabel,
     :edgelabel,
+    :nodeimages,
+    :edgeimages,
     :nodecex,
     :edgecex,
     :nodelabelcolor,

@@ -12,38 +12,40 @@ function _contract_child_ids(plot)::Vector{UInt}
 end
 
 function _contract_children(plot)::NamedTuple
-    @test length(plot.plots) == 13
+    @test length(plot.plots) == 15
     return (
-        edge_segments=plot.plots[1],
-        node_bars=plot.plots[2],
-        minor_edge_shafts=plot.plots[3],
-        minor_arrowheads=plot.plots[4],
-        tip_labels=plot.plots[5],
-        internal_node_names=plot.plots[6],
-        node_numbers=plot.plots[7],
-        node_labels=plot.plots[8],
-        edge_labels=plot.plots[9],
-        edge_lengths=plot.plots[10],
-        minor_gamma_labels=plot.plots[11],
-        major_gamma_labels=plot.plots[12],
-        edge_numbers=plot.plots[13],
+        edge_segments = plot.plots[1],
+        node_bars = plot.plots[2],
+        minor_edge_shafts = plot.plots[3],
+        minor_arrowheads = plot.plots[4],
+        edge_images = plot.plots[5],
+        node_images = plot.plots[6],
+        tip_labels = plot.plots[7],
+        internal_node_names = plot.plots[8],
+        node_numbers = plot.plots[9],
+        node_labels = plot.plots[10],
+        edge_labels = plot.plots[11],
+        edge_lengths = plot.plots[12],
+        minor_gamma_labels = plot.plots[13],
+        major_gamma_labels = plot.plots[14],
+        edge_numbers = plot.plots[15],
     )
 end
 
 function _contract_network_snapshot(net::PhyloNetworks.HybridNetwork)
     return (
-        rooti=net.rooti,
-        isrooted=net.isrooted,
-        preorder_numbers=[node.number for node in net.vec_node],
-        edge_state=[
+        rooti = net.rooti,
+        isrooted = net.isrooted,
+        preorder_numbers = [node.number for node in net.vec_node],
+        edge_state = [
             (
-                number=edge.number,
-                parent=PhyloNetworks.getparent(edge).number,
-                child=PhyloNetworks.getchild(edge).number,
-                ischild1=edge.ischild1,
-                containroot=hasfield(typeof(edge), :containroot) ?
+                    number = edge.number,
+                    parent = PhyloNetworks.getparent(edge).number,
+                    child = PhyloNetworks.getchild(edge).number,
+                    ischild1 = edge.ischild1,
+                    containroot = hasfield(typeof(edge), :containroot) ?
                     getfield(edge, :containroot) : nothing,
-            ) for edge in net.edge
+                ) for edge in net.edge
         ],
     )
 end
@@ -84,12 +86,12 @@ end
     @testset "Public surface matrix returns live PhyloPlot handles" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
         render_kwargs = (
-            useedgelength=true,
-            showgamma=true,
-            edgecolor=Dict(render_case.edgecolor_overrides),
-            defaultedgecolor=render_case.defaultedgecolor,
-            edgewidth=Dict(render_case.edgewidth_overrides),
-            style=:fulltree,
+            useedgelength = true,
+            showgamma = true,
+            edgecolor = Dict(render_case.edgecolor_overrides),
+            defaultedgecolor = render_case.defaultedgecolor,
+            edgewidth = Dict(render_case.edgewidth_overrides),
+            style = :fulltree,
         )
 
         plot_surface = Makie.plot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
@@ -99,13 +101,13 @@ end
         @test _render_colorbuffer(plot_surface.figure) ==
             _render_colorbuffer(convenience_surface.figure)
 
-        plot_figure = Figure(size=(640, 400))
+        plot_figure = Figure(size = (640, 400))
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
         hidespines!(plot_axis)
         plot_handle = Makie.plot!(plot_axis, parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
 
-        convenience_figure = Figure(size=(640, 400))
+        convenience_figure = Figure(size = (640, 400))
         convenience_axis = Axis(convenience_figure[1, 1])
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
@@ -131,12 +133,12 @@ end
         dotted_case = _public_render_case(
             render_cases.style_fulltree.newick;
             render_cases.style_fulltree.attribute_kwargs...,
-            minorlinetype=3,
+            minorlinetype = 3,
         )
         blank_case = _public_render_case(
             render_cases.style_fulltree.newick;
             render_cases.style_fulltree.attribute_kwargs...,
-            minorlinetype="blank",
+            minorlinetype = "blank",
         )
 
         @test fulltree_case.config.style == :fulltree
@@ -156,8 +158,8 @@ end
         @test dotted_arrowhead_meshes == dotted_case.plot[:minor_arrowhead_pixel_meshes][]
         @test any(dotted_arrowhead_meshes) do polygon
             metrics = _arrowhead_pixel_metrics(polygon)
-            return isapprox(metrics.length, 8.0f0; atol=0.25f0) &&
-                isapprox(metrics.width, 6.4f0; atol=0.25f0)
+            return isapprox(metrics.length, 8.0f0; atol = 0.25f0) &&
+                isapprox(metrics.width, 6.4f0; atol = 0.25f0)
         end
 
         blank_children = _contract_children(blank_case.plot)
@@ -179,9 +181,9 @@ end
         case = _public_render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            edgecolor=edgecolor,
-            defaultedgecolor=render_case.defaultedgecolor,
-            edgewidth=edgewidth,
+            edgecolor = edgecolor,
+            defaultedgecolor = render_case.defaultedgecolor,
+            edgewidth = edgewidth,
         )
 
         expected_edgecolors = Makie.RGBAf[]
@@ -236,13 +238,13 @@ end
         scalar_case = _public_render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            nodelabel=node_labels,
-            edgelabel=edge_labels,
-            xlim=render_case.xlim,
-            ylim=render_case.ylim,
-            tipcex=4.0,
-            nodecex=3.0,
-            edgecex=2.0,
+            nodelabel = node_labels,
+            edgelabel = edge_labels,
+            xlim = render_case.xlim,
+            ylim = render_case.ylim,
+            tipcex = 4.0,
+            nodecex = 3.0,
+            edgecex = 2.0,
         )
 
         node_data = scalar_case.layout.annotations.node_data
@@ -260,41 +262,41 @@ end
             _expected_contract_fontsizes(4.0, length(scalar_case.channels.tip_labels.strings))
         @test scalar_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
-                4.0,
-                length(scalar_case.channels.internal_node_names.strings),
-            )
+            4.0,
+            length(scalar_case.channels.internal_node_names.strings),
+        )
         @test scalar_case.channels.node_numbers.fontsizes ==
             _expected_default_contract_fontsizes(
-                length(scalar_case.channels.node_numbers.strings),
-            )
+            length(scalar_case.channels.node_numbers.strings),
+        )
         @test scalar_case.channels.node_labels.fontsizes ==
             _expected_contract_fontsizes(3.0, length(scalar_case.channels.node_labels.strings))
         @test scalar_case.channels.edge_labels.fontsizes ==
             _expected_contract_fontsizes(2.0, length(scalar_case.channels.edge_labels.strings))
         @test scalar_case.channels.edge_lengths.fontsizes ==
             _expected_default_contract_fontsizes(
-                length(scalar_case.channels.edge_lengths.strings),
-            )
+            length(scalar_case.channels.edge_lengths.strings),
+        )
         @test scalar_case.channels.minor_gamma_labels.fontsizes ==
             _expected_default_contract_fontsizes(
-                length(scalar_case.channels.minor_gamma_labels.strings),
-            )
+            length(scalar_case.channels.minor_gamma_labels.strings),
+        )
         @test scalar_case.channels.major_gamma_labels.fontsizes ==
             _expected_default_contract_fontsizes(
-                length(scalar_case.channels.major_gamma_labels.strings),
-            )
+            length(scalar_case.channels.major_gamma_labels.strings),
+        )
         @test scalar_case.channels.edge_numbers.fontsizes ==
             _expected_default_contract_fontsizes(
-                length(scalar_case.channels.edge_numbers.strings),
-            )
+            length(scalar_case.channels.edge_numbers.strings),
+        )
 
         @test scalar_case.channels.tip_labels.strings == String.(node_data[leaf_rows, :name])
         @test scalar_case.channels.tip_labels.positions ==
             _node_channel_positions(
-                scalar_case.layout,
-                leaf_rows;
-                x_offset=scalar_case.config.tipoffset,
-            )
+            scalar_case.layout,
+            leaf_rows;
+            x_offset = scalar_case.config.tipoffset,
+        )
         @test scalar_case.channels.internal_node_names.strings ==
             String.(node_data[internal_rows, :name])
         @test scalar_case.channels.internal_node_names.positions ==
@@ -326,36 +328,36 @@ end
         vector_case = _public_render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            nodelabel=node_labels,
-            tipcex=[0.5, 1.0, 1.5],
-            nodecex=[0.75, 1.25],
+            nodelabel = node_labels,
+            tipcex = [0.5, 1.0, 1.5],
+            nodecex = [0.75, 1.25],
         )
         @test vector_case.channels.tip_labels.fontsizes ==
             _expected_contract_fontsizes(
-                [0.5, 1.0, 1.5],
-                length(vector_case.channels.tip_labels.strings),
-            )
+            [0.5, 1.0, 1.5],
+            length(vector_case.channels.tip_labels.strings),
+        )
         @test vector_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
-                [0.5, 1.0, 1.5],
-                length(vector_case.channels.internal_node_names.strings),
-            )
+            [0.5, 1.0, 1.5],
+            length(vector_case.channels.internal_node_names.strings),
+        )
         @test vector_case.channels.node_labels.fontsizes ==
             _expected_contract_fontsizes(
-                [0.75, 1.25],
-                length(vector_case.channels.node_labels.strings),
-            )
+            [0.75, 1.25],
+            length(vector_case.channels.node_labels.strings),
+        )
 
         documented_edgecex_case = _public_render_case(
             "(A,((B,#H1),(C,(D)#H1)));";
-            edgelabel=DataFrame(edge=[1, 2], label=["edge number 1", "edge # 2"]),
-            edgecex=[0.9, 1.1],
+            edgelabel = DataFrame(edge = [1, 2], label = ["edge number 1", "edge # 2"]),
+            edgecex = [0.9, 1.1],
         )
         @test documented_edgecex_case.channels.edge_labels.fontsizes ==
             _expected_contract_fontsizes(
-                [0.9, 1.1],
-                length(documented_edgecex_case.channels.edge_labels.strings),
-            )
+            [0.9, 1.1],
+            length(documented_edgecex_case.channels.edge_labels.strings),
+        )
     end
 
     @testset "Coordinate query functions agree with rendered channels" begin
@@ -363,8 +365,8 @@ end
         case = _public_render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
-            xlim=render_case.xlim,
-            ylim=render_case.ylim,
+            xlim = render_case.xlim,
+            ylim = render_case.ylim,
         )
 
         node_table = node_positions(case.plot)
@@ -380,19 +382,19 @@ end
 
         internal_node_positions = Makie.Point2f[
             Makie.Point2f(Float32(row.x), Float32(row.y))
-            for row in eachrow(node_table) if !row.isleaf
+                for row in eachrow(node_table) if !row.isleaf
         ]
         @test internal_node_positions == case.channels.internal_node_names.positions
 
         minor_gamma_positions = Makie.Point2f[
             Makie.Point2f(Float32(row.x), Float32(row.y))
-            for row in eachrow(edge_table) if row.ishybrid && !row.ismajor
+                for row in eachrow(edge_table) if row.ishybrid && !row.ismajor
         ]
         @test minor_gamma_positions == case.channels.minor_gamma_labels.positions
 
         major_gamma_positions = Makie.Point2f[
             Makie.Point2f(Float32(row.x), Float32(row.y))
-            for row in eachrow(edge_table) if row.ishybrid && row.ismajor
+                for row in eachrow(edge_table) if row.ishybrid && row.ismajor
         ]
         @test major_gamma_positions == case.channels.major_gamma_labels.positions
     end
@@ -405,26 +407,26 @@ end
         original_child_ids = _contract_child_ids(plot)
 
         before_color = _render_colorbuffer(surface.figure)
-        Makie.update!(plot; edgecolor="firebrick")
+        Makie.update!(plot; edgecolor = "firebrick")
         after_color = _render_colorbuffer(surface.figure)
         @test after_color != before_color
         @test _contract_child_ids(plot) == original_child_ids
         @test children.edge_segments.color[] == plot[:edge_segment_colors][]
 
         before_widths = copy(children.edge_segments.linewidth[])
-        Makie.update!(plot; edgewidth=4.0)
+        Makie.update!(plot; edgewidth = 4.0)
         @test _contract_child_ids(plot) == original_child_ids
         @test children.edge_segments.linewidth[] != before_widths
         @test children.edge_segments.linewidth[] == plot[:edge_segment_linewidths][]
 
         new_net = parsephylogeny(NewickFormat(), FIXTURE_CORPUS.render_regression_cases.style_majortree.newick)
         before_network = _contract_network_snapshot(new_net)
-        Makie.update!(plot; arg1=new_net)
+        Makie.update!(plot; arg1 = new_net)
         @test _contract_child_ids(plot) == original_child_ids
         @test _contract_network_snapshot(new_net) == before_network
         @test plot[:plot_network][].net !== new_net
 
-        Makie.update!(plot; showtiplabel=false, minorlinetype="blank")
+        Makie.update!(plot; showtiplabel = false, minorlinetype = "blank")
         @test _contract_child_ids(plot) == original_child_ids
         @test children.tip_labels[1][] == Makie.Point2f[]
         @test children.minor_edge_shafts[1][] == Makie.Point2f[]

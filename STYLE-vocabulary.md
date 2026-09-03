@@ -47,6 +47,16 @@ Use "edge label" as the default project term.
 Do not use "branch label" as the default term in project-owned code or docs
 for this production run.
 
+### Image annotation
+
+An image annotation is a raster image attached to a node or edge annotation
+anchor and owned by the `PhyloPlot` recipe. Use "node image" and "edge image"
+when the target kind matters. Use `ImageAnnotation` for the public value that
+configures an image source's size, placement, alignment, aspect, and offset.
+
+Do not use "glyph" as the default term for arbitrary images. Reserve that term
+for APIs that define it explicitly, such as PhyloPicMakie's silhouette glyphs.
+
 ### FigureAxisPlot
 
 `Makie.FigureAxisPlot` is the canonical non-mutating return contract for

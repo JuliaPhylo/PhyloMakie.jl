@@ -20,21 +20,23 @@ function _primitive_assembly_outputs(plot)
 end
 
 function _primitive_assembly_children(plot)::NamedTuple
-    @test length(plot.plots) == 13
+    @test length(plot.plots) == 15
     return (
         edge_segments = plot.plots[1],
         node_bars = plot.plots[2],
         minor_edge_shafts = plot.plots[3],
         minor_arrowheads = plot.plots[4],
-        tip_labels = plot.plots[5],
-        internal_node_names = plot.plots[6],
-        node_numbers = plot.plots[7],
-        node_labels = plot.plots[8],
-        edge_labels = plot.plots[9],
-        edge_lengths = plot.plots[10],
-        minor_gamma_labels = plot.plots[11],
-        major_gamma_labels = plot.plots[12],
-        edge_numbers = plot.plots[13],
+        edge_images = plot.plots[5],
+        node_images = plot.plots[6],
+        tip_labels = plot.plots[7],
+        internal_node_names = plot.plots[8],
+        node_numbers = plot.plots[9],
+        node_labels = plot.plots[10],
+        edge_labels = plot.plots[11],
+        edge_lengths = plot.plots[12],
+        minor_gamma_labels = plot.plots[13],
+        major_gamma_labels = plot.plots[14],
+        edge_numbers = plot.plots[15],
     )
 end
 
@@ -54,6 +56,14 @@ function _assert_arrowhead_child_matches_outputs(plot, child, outputs)::Nothing
     @test child.color[] == plot[outputs.colors][]
     @test child.strokecolor[] == plot[outputs.strokecolors][]
     @test child.strokewidth[] == plot[outputs.strokewidth][]
+    return nothing
+end
+
+function _assert_image_child_matches_outputs(plot, child, outputs)::Nothing
+    @test child[1][] == plot[outputs.positions][]
+    @test child.marker[] == plot[outputs.images][]
+    @test child.markersize[] == plot[outputs.markersizes][]
+    @test child.marker_offset[] == plot[outputs.marker_offsets][]
     return nothing
 end
 
@@ -87,6 +97,8 @@ function _assert_children_match_outputs(plot, outputs)::Nothing
         children.minor_arrowheads,
         primitive_outputs.minor_arrowheads,
     )
+    _assert_image_child_matches_outputs(plot, children.edge_images, primitive_outputs.edge_images)
+    _assert_image_child_matches_outputs(plot, children.node_images, primitive_outputs.node_images)
 
     _assert_text_child_matches_outputs(plot, children.tip_labels, text_outputs.tip_labels)
     _assert_text_child_matches_outputs(
@@ -124,11 +136,17 @@ end
         @test children.node_bars isa Makie.LineSegments
         @test children.minor_edge_shafts isa Makie.LineSegments
         @test children.minor_arrowheads isa Makie.Poly
-        @test all(child -> child isa Makie.Text, plot.plots[5:13])
+        @test children.edge_images isa Makie.Scatter
+        @test children.node_images isa Makie.Scatter
+        @test all(child -> child isa Makie.Text, plot.plots[7:15])
         @test !any(child -> child isa Makie.Arrows2D, plot.plots)
         @test children.minor_arrowheads.space[] == :pixel
         @test children.minor_arrowheads.xautolimits[] == false
         @test children.minor_arrowheads.yautolimits[] == false
+        @test children.edge_images.markerspace[] == :pixel
+        @test children.node_images.markerspace[] == :pixel
+        @test children.edge_images.space[] == :data
+        @test children.node_images.space[] == :data
         @test Makie.boundingbox(plot) == Makie.data_limits(plot)
 
         _assert_children_match_outputs(plot, outputs)
@@ -191,6 +209,8 @@ end
         @test isempty(children.minor_arrowheads[1][])
         @test isempty(children.tip_labels[1][])
         @test isempty(children.internal_node_names[1][])
+        @test isempty(children.edge_images[1][])
+        @test isempty(children.node_images[1][])
         @test plot[outputs.text_outputs.tip_labels.font][] == :italic
         @test plot[outputs.text_outputs.internal_node_names.font][] == :italic
         @test children.tip_labels.font[] == :italic

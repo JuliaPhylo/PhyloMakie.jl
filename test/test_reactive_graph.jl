@@ -109,6 +109,27 @@ function _assert_arrowhead_meshes_match_projected_shafts(plot, outputs)::Nothing
     return nothing
 end
 
+function _assert_image_outputs_match_channel(
+        plot,
+        outputs,
+        channel,
+        prefix::Symbol,
+    )::Nothing
+    @test plot[outputs.positions][] == channel.positions
+    @test plot[outputs.images][] == channel.images
+    upper_pixel_positions = plot[Symbol(prefix, "_upper_pixel_positions")][]
+    lower_pixel_positions = plot[Symbol(prefix, "_lower_pixel_positions")][]
+    compute_geometry = getfield(PhyloMakie, :compute_image_marker_geometry)
+    expected_sizes, expected_offsets = compute_geometry(
+        channel,
+        upper_pixel_positions,
+        lower_pixel_positions,
+    )
+    @test plot[outputs.markersizes][] == expected_sizes
+    @test plot[outputs.marker_offsets][] == expected_offsets
+    return nothing
+end
+
 function _assert_text_outputs_match_channel(plot, outputs, channel)::Nothing
     @test plot[outputs.positions][] == channel.positions
     @test plot[outputs.strings][] == channel.strings
@@ -148,6 +169,18 @@ function _assert_all_outputs_match_channels(plot, outputs)::Nothing
         primitive_outputs.minor_arrowheads,
         channels.minor_arrowheads,
     )
+    _assert_image_outputs_match_channel(
+        plot,
+        primitive_outputs.edge_images,
+        plot[:edge_image_channel][],
+        :edge_image,
+    )
+    _assert_image_outputs_match_channel(
+        plot,
+        primitive_outputs.node_images,
+        plot[:node_image_channel][],
+        :node_image,
+    )
     @test plot[primitive_outputs.data_limits][] == channels.data_limits
 
     _assert_text_outputs_match_channel(plot, text_outputs.tip_labels, channels.tip_labels)
@@ -185,6 +218,7 @@ end
 @testset "Reactive graph registration" begin
     SegmentGraphOutputs = getfield(PhyloMakie, :SegmentGraphOutputs)
     ArrowheadGraphOutputs = getfield(PhyloMakie, :ArrowheadGraphOutputs)
+    ImageGraphOutputs = getfield(PhyloMakie, :ImageGraphOutputs)
     PhyloGraphOutputs = getfield(PhyloMakie, :PhyloGraphOutputs)
     TextGraphOutputs = getfield(PhyloMakie, :TextGraphOutputs)
     PhyloTextGraphOutputs = getfield(PhyloMakie, :PhyloTextGraphOutputs)
@@ -206,11 +240,13 @@ end
         @test outputs.primitive_outputs isa PhyloGraphOutputs
         @test outputs.primitive_outputs.edge_segments isa SegmentGraphOutputs
         @test outputs.primitive_outputs.minor_arrowheads isa ArrowheadGraphOutputs
+        @test outputs.primitive_outputs.edge_images isa ImageGraphOutputs
+        @test outputs.primitive_outputs.node_images isa ImageGraphOutputs
         @test outputs.text_outputs isa PhyloTextGraphOutputs
         @test outputs.text_outputs.tip_labels isa TextGraphOutputs
 
         required_symbols = phylo_graph_output_symbols()
-        @test length(required_symbols) == 75
+        @test length(required_symbols) == 83
         @test allunique(required_symbols)
         @test all(symbol -> haskey(plot.attributes.outputs, symbol), required_symbols)
         @test !(:minor_arrowhead_pixel_startpoints in required_symbols)
@@ -226,6 +262,9 @@ end
                 :layout_computation,
                 :node_position_table,
                 :primitive_channels,
+                :edge_image_channel,
+                :node_image_channel,
+                :image_asset_cache,
                 :data_limits,
                 :minor_arrowhead_pixel_startpoints,
                 :minor_arrowhead_pixel_endpoints,
