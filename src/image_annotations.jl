@@ -327,19 +327,25 @@ function _as_image_annotation(value)::ImageAnnotation
     )
 end
 
-function _unique_named_node_index(
+function _image_label_matches(
+        selector::Union{AbstractString, Symbol, Regex},
+        label::AbstractString,
+    )::Bool
+    selector isa Regex && return occursin(selector, label)
+    return String(selector) == label
+end
+
+function _named_node_indices(
         nodes::AbstractVector,
-        selector::Union{AbstractString, Symbol},
-    )::Int
-    name = String(selector)
-    matches = findall(node -> namelabel(node) == name, nodes)
-    isempty(matches) && throw(ArgumentError("node image selector names no node: $(repr(name))"))
-    length(matches) == 1 || throw(
+        selector::Union{AbstractString, Symbol, Regex},
+    )::Vector{Int}
+    matches = findall(node -> _image_label_matches(selector, namelabel(node)), nodes)
+    isempty(matches) && throw(
         ArgumentError(
-            "node image selector $(repr(name)) is ambiguous because $(length(matches)) nodes share that name",
+            "node image selector matches no node label: $(repr(selector))",
         ),
     )
-    return only(matches)
+    return matches
 end
 
 function _node_object_index(nodes::AbstractVector, selector::PhyloNetworks.Node)::Int
@@ -355,24 +361,26 @@ function _resolve_node_image_values(mapping, nodes::AbstractVector)::Vector{Any}
     if mapping isa AbstractDict
         values = Any[nothing for _ in nodes]
         for (selector, value) in pairs(mapping)
-            index = if selector isa PhyloNetworks.Node
-                _node_object_index(nodes, selector)
-            elseif selector isa Union{AbstractString, Symbol}
-                _unique_named_node_index(nodes, selector)
+            indices = if selector isa PhyloNetworks.Node
+                [_node_object_index(nodes, selector)]
+            elseif selector isa Union{AbstractString, Symbol, Regex}
+                _named_node_indices(nodes, selector)
             elseif selector isa Integer
                 throw(
                     ArgumentError(
                         "numeric node image selectors are not supported; use a node name, " *
-                            "node object, or callable mapping",
+                            "regular expression, node object, or callable mapping",
                     ),
                 )
             else
                 throw(ArgumentError("unsupported node image selector type $(typeof(selector))"))
             end
-            isnothing(values[index]) || throw(
-                ArgumentError("multiple node image selectors target the same node"),
-            )
-            values[index] = value
+            for index in indices
+                isnothing(values[index]) || throw(
+                    ArgumentError("multiple node image selectors target the same node"),
+                )
+                values[index] = value
+            end
         end
         return values
     end
@@ -390,7 +398,7 @@ function _edge_object_index(edges::AbstractVector, selector::PhyloNetworks.Edge)
     return index
 end
 
-function _edge_endpoint_names(selector)
+function _edge_endpoint_selectors(selector)
     endpoints = if selector isa Pair
         (first(selector), last(selector))
     elseif selector isa Tuple && length(selector) == 2
@@ -398,36 +406,34 @@ function _edge_endpoint_names(selector)
     else
         return nothing
     end
-    all(endpoint -> endpoint isa Union{AbstractString, Symbol}, endpoints) || return nothing
-    return (String(endpoints[1]), String(endpoints[2]))
+    all(endpoint -> endpoint isa Union{AbstractString, Symbol, Regex}, endpoints) ||
+        return nothing
+    return endpoints
 end
 
-function _unique_endpoint_edge_index(
+function _endpoint_edge_indices(
         prepared_edges::AbstractVector,
         selector,
-    )::Int
-    endpoint_names = _edge_endpoint_names(selector)
-    isnothing(endpoint_names) && throw(
+    )::Vector{Int}
+    endpoint_selectors = _edge_endpoint_selectors(selector)
+    isnothing(endpoint_selectors) && throw(
         ArgumentError(
-            "edge endpoint selectors must be parent => child or (parent, child) names",
+            "edge endpoint selectors must be parent => child or (parent, child), " *
+                "with each endpoint given as a name or regular expression",
         ),
     )
-    parent_name, child_name = endpoint_names
+    parent_selector, child_selector = endpoint_selectors
     matches = findall(prepared_edges) do edge
-        return namelabel(getparent(edge)) == parent_name &&
-            namelabel(getchild(edge)) == child_name
+        return _image_label_matches(parent_selector, namelabel(getparent(edge))) &&
+            _image_label_matches(child_selector, namelabel(getchild(edge)))
     end
     isempty(matches) && throw(
         ArgumentError(
-            "edge image selector names no plotted edge: $(repr(parent_name)) => $(repr(child_name))",
+            "edge image selector matches no plotted edge: " *
+                "$(repr(parent_selector)) => $(repr(child_selector))",
         ),
     )
-    length(matches) == 1 || throw(
-        ArgumentError(
-            "edge image selector $(repr(parent_name)) => $(repr(child_name)) is ambiguous",
-        ),
-    )
-    return only(matches)
+    return matches
 end
 
 function _resolve_edge_image_values(
@@ -439,22 +445,24 @@ function _resolve_edge_image_values(
     if mapping isa AbstractDict
         values = Any[nothing for _ in edges]
         for (selector, value) in pairs(mapping)
-            index = if selector isa PhyloNetworks.Edge
-                _edge_object_index(edges, selector)
+            indices = if selector isa PhyloNetworks.Edge
+                [_edge_object_index(edges, selector)]
             elseif selector isa Integer
                 throw(
                     ArgumentError(
                         "numeric edge image selectors are not supported; use an edge object, " *
-                            "endpoint names, or callable mapping",
+                            "endpoint names or regular expressions, or callable mapping",
                     ),
                 )
             else
-                _unique_endpoint_edge_index(prepared_edges, selector)
+                _endpoint_edge_indices(prepared_edges, selector)
             end
-            isnothing(values[index]) || throw(
-                ArgumentError("multiple edge image selectors target the same edge"),
-            )
-            values[index] = value
+            for index in indices
+                isnothing(values[index]) || throw(
+                    ArgumentError("multiple edge image selectors target the same edge"),
+                )
+                values[index] = value
+            end
         end
         return values
     end

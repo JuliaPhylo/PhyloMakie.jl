@@ -138,7 +138,23 @@ end
         @test_throws ArgumentError resolve_node_values(Dict(stale_net.node[1] => red), net.node)
 
         duplicate_names = parsephylogeny(NewickFormat(), "((A,A),B);")
-        @test_throws ArgumentError resolve_node_values(Dict("A" => red), duplicate_names.node)
+        duplicate_node_values = resolve_node_values(Dict("A" => red), duplicate_names.node)
+        @test count(value -> value === red, duplicate_node_values) == 2
+        @test all(
+            duplicate_node_values[index] === red for
+                index in findall(node -> node.name == "A", duplicate_names.node)
+        )
+
+        regex_node_values = resolve_node_values(
+            Dict(r"^[AB]$" => blue),
+            duplicate_names.node,
+        )
+        @test count(value -> value === blue, regex_node_values) == 3
+        @test_throws ArgumentError resolve_node_values(Dict(r"^missing$" => red), net.node)
+        @test_throws ArgumentError resolve_node_values(
+            Dict{Any, Any}("A" => red, r"^A$" => blue),
+            net.node,
+        )
 
         edge_values = resolve_edge_values(
             Dict(("Root" => "AB") => red),
@@ -167,6 +183,38 @@ end
             Dict(first(stale_net.edge) => red),
             net.edge,
             plot_network.net.edge,
+        )
+
+        duplicate_endpoints = parsephylogeny(
+            NewickFormat(),
+            "((A,B)group,(A,C)group)Root;",
+        )
+        duplicate_endpoint_plot_network, _ = _image_annotation_layout(duplicate_endpoints)
+        duplicate_edge_values = resolve_edge_values(
+            Dict(("group" => "A") => red),
+            duplicate_endpoints.edge,
+            duplicate_endpoint_plot_network.net.edge,
+        )
+        @test count(value -> value === red, duplicate_edge_values) == 2
+
+        regex_edge_values = resolve_edge_values(
+            Dict((r"^group$" => r"^[AB]$") => blue),
+            duplicate_endpoints.edge,
+            duplicate_endpoint_plot_network.net.edge,
+        )
+        @test count(value -> value === blue, regex_edge_values) == 3
+        @test_throws ArgumentError resolve_edge_values(
+            Dict((r"^missing$" => r"^A$") => red),
+            duplicate_endpoints.edge,
+            duplicate_endpoint_plot_network.net.edge,
+        )
+        @test_throws ArgumentError resolve_edge_values(
+            Dict{Any, Any}(
+                ("group" => "A") => red,
+                (r"^group$" => r"^A$") => blue,
+            ),
+            duplicate_endpoints.edge,
+            duplicate_endpoint_plot_network.net.edge,
         )
     end
 
@@ -235,6 +283,19 @@ end
         blue_pixels = count(_is_blue_image_pixel, before)
         @test red_pixels > 100
         @test blue_pixels > 25
+
+        repeated_net = parsephylogeny(
+            NewickFormat(),
+            "((A,B)group,(A,C)group)Root;",
+        )
+        repeated_surface = plot(
+            repeated_net;
+            nodeimages = Dict(r"^A$" => red_path),
+            edgeimages = Dict(("group" => "A") => blue_path),
+            showtiplabel = false,
+        )
+        @test length(repeated_surface.plot[:node_image_markers][]) == 2
+        @test length(repeated_surface.plot[:edge_image_markers][]) == 2
 
         Makie.update!(plot_handle; edgecolor = "firebrick")
         @test objectid.(plot_handle.plots) == child_ids

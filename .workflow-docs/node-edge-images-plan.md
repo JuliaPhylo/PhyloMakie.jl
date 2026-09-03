@@ -16,8 +16,10 @@ same native `nodeimages` mechanism.
 - Add `nodeimages` and `edgeimages` to the public attribute surface. Each
   accepts `nothing`, a callable evaluated on the caller's original node or
   edge objects, or a sparse dictionary. Node dictionaries accept node objects
-  and unique node names. Edge dictionaries accept edge objects and unambiguous
-  `(parent_name, child_name)` selectors. Numeric indices are rejected.
+  plus exact-label and regular-expression selectors. Edge dictionaries accept
+  edge objects plus exact-label and regular-expression endpoint selectors.
+  Label selectors apply to every match, including repeated labels. Numeric
+  indices are rejected.
 - Add an exported `ImageAnnotation` value type. A bare source uses its defaults;
   the type provides per-image `height`, `scale`, `size_space`, `position`,
   `align`, `aspect`, and pixel `offset` controls.
@@ -73,9 +75,10 @@ Add the public type and attributes, semantic mapping validation, shared edge
 anchors, matrix normalization, local and remote loaders, per-plot cache, and
 focused unit tests. Add FileIO, ImageIO, and Downloads as direct dependencies.
 
-Verification: constructor/default/validation tests, object/name/endpoint
-selector tests, duplicate and stale-target failures, local-file decoding, URL
-loader injection, cache deduplication, and unchanged layout-anchor tests.
+Verification: constructor/default/validation tests, object/name/regular-
+expression/endpoint selector tests, repeated-label matches, overlapping-
+selector and stale-target failures, local-file decoding, URL loader injection,
+cache deduplication, and unchanged layout-anchor tests.
 
 ### Reactive channels and native rendering
 
@@ -91,9 +94,10 @@ decode for unrelated restyling, and pixel checks on CairoMakie output.
 
 ### Examples and documentation
 
-Create static colored-circle PNG files and a simple 6-tip example that reuses
-the red asset through semantic tip names. Add a second example that resolves
-PhyloPic records with PhyloPicMakie and gives their thumbnail URLs to
+Create static colored-circle PNG files and a deliberately repetitive REPL
+walkthrough of node and edge selector forms. Keep a compact 6-tip example that
+reuses the red asset through semantic tip names. Add another example that
+resolves PhyloPic records with PhyloPicMakie and gives their thumbnail URLs to
 `nodeimages`. Document sources, mappings, sizing, placement, alignment,
 reactivity, URL behavior, limits, and package separation.
 

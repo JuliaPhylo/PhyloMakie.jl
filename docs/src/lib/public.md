@@ -89,8 +89,8 @@ PhyloMakie.@nexustreeblock_str
 | `arrowlen` | Set minor hybrid edge arrow length. |
 | `nodelabel` | Supply a node label table. |
 | `edgelabel` | Supply an edge label table. |
-| `nodeimages` | Map nodes to image sources or `ImageAnnotation` values. |
-| `edgeimages` | Map edges to image sources or `ImageAnnotation` values. |
+| `nodeimages` | Map node labels, regular expressions, or objects to images. |
+| `edgeimages` | Map edge endpoint selectors or objects to images. |
 | `nodecex` | Scale node label text. |
 | `edgecex` | Scale edge label text. |
 | `nodelabelcolor` | Set node label color. |

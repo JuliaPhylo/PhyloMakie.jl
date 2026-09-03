@@ -92,14 +92,22 @@ end
 plot(net; nodeimages = tip_image)
 ```
 
-Sparse node dictionaries may use unique node names or node objects as keys.
-Sparse edge dictionaries may use edge objects or unambiguous
-`parent_name => child_name` selectors, for example
-`Dict(("Root" => "Clade") => image)`. Functions are usually the most useful
-edge mapping because they can inspect `PhyloNetworks.getparent(edge)` and
-`PhyloNetworks.getchild(edge)`. Numeric node and edge selectors are not
-accepted because those identifiers are assigned by the network implementation
-and are not a predictable user-facing key.
+Sparse node dictionaries may use node labels, regular expressions, or node
+objects as keys. A label selects every node with that exact label, including
+when several nodes share it. A regular expression selects every node whose
+label contains a match; use anchors such as `r"^cat$"` when the complete label
+must match.
+
+Sparse edge dictionaries may use edge objects or `parent_label => child_label`
+selectors, for example `Dict(("Root" => "Clade") => image)`. Each endpoint may
+be an exact label or a regular expression. An endpoint selector applies to
+every matching edge, including edges that share the same endpoint labels.
+Separate dictionary selectors may not overlap on the same node or edge.
+
+Functions remain available when selection requires other node or edge
+properties. Numeric node and edge selectors are not accepted because those
+identifiers are assigned by the network implementation and are not a
+predictable user-facing key.
 
 The default image has a full height of `0.8` y-axis data units. Tip rows are
 normally 1 unit apart, so this leaves a 20 percent gutter and scales with zoom.
@@ -118,16 +126,20 @@ not. Increase the axis `xautolimitmargin` or set `xlim` when images placed to
 the left or right need more margin. PhyloMakie caches decoded file and URL
 sources within each plot, so layout and style updates do not reload them.
 
-The offline `examples/src/07_node_edge_images.jl` script uses checked-in colored
-circle files. `examples/src/08_phylopic_native_images.jl` resolves public
+The offline `examples/src/06b_image_annotations_repl_walkthrough.jl` script is
+a deliberately repetitive REPL walkthrough of exact, repeated, and
+regular-expression selectors for node and edge images. The more compact
+`examples/src/07_node_edge_images.jl` script uses checked-in colored circle
+files. `examples/src/09_phylopic_native_images.jl` resolves public
 PhyloPic thumbnail URLs with PhyloPicMakie and passes those URLs to
 `nodeimages`. PhyloPicMakie owns taxon discovery; PhyloMakie owns the image's
 tree anchor and rendering lifecycle.
 
 For a short REPL-style recipe focused only on placement, see
-`examples/src/09_image_placement_recipe.jl`. It maps the named tips `cat`,
-`dog`, `bear`, `horse`, and `mouse` directly to URL-backed images and shows the
-`:left`, `:above`, `:center`, `:below`, and `:right` positions side by side.
+`examples/src/08_phylopic_image_placement_recipe.jl`. It maps the named tips
+`cat`, `dog`, `bear`, `horse`, and `mouse` directly to URL-backed images and
+shows the `:left`, `:above`, `:center`, `:below`, and `:right` positions side by
+side.
 
 ## Adding other annotations using Makie
 
@@ -179,7 +191,7 @@ The optional `examples/src/06_phylopic_composition.jl` example passes tree-tip
 coordinates and scientific names to the discovery-aware
 `PhyloPicMakie.augment_phylopic!` function. PhyloPicMakie resolves and renders
 the silhouettes as an independently owned overlay. The newer
-`examples/src/08_phylopic_native_images.jl` example instead gives resolved URLs
+`examples/src/09_phylopic_native_images.jl` example instead gives resolved URLs
 to `nodeimages`, making the images native children of the tree plot. The
 PhyloMakie package itself does not depend on PhyloPicMakie in either case.
 

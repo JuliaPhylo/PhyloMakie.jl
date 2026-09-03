@@ -46,9 +46,9 @@ Makie.@recipe PhyloPlot (net,) begin
     nodelabel = DataFrame()
     "Supply an edge label table."
     edgelabel = DataFrame()
-    "Map nodes to image sources or ImageAnnotation values."
+    "Map node labels, regular expressions, or objects to images."
     nodeimages = nothing
-    "Map edges to image sources or ImageAnnotation values."
+    "Map edge endpoints or objects to images."
     edgeimages = nothing
     "Scale node label text."
     nodecex = 1
