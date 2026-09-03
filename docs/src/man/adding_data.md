@@ -124,6 +124,11 @@ PhyloPic thumbnail URLs with PhyloPicMakie and passes those URLs to
 `nodeimages`. PhyloPicMakie owns taxon discovery; PhyloMakie owns the image's
 tree anchor and rendering lifecycle.
 
+For a short REPL-style recipe focused only on placement, see
+`examples/src/09_image_placement_recipe.jl`. It maps the named tips `cat`,
+`dog`, `bear`, `horse`, and `mouse` directly to URL-backed images and shows the
+`:left`, `:above`, `:center`, `:below`, and `:right` positions side by side.
+
 ## Adding other annotations using Makie
 
 We can use the return value of `plot` and the coordinate query functions to get
