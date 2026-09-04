@@ -1,6 +1,6 @@
 @testset "Interactive viewer construction" begin
     CairoMakie.activate!()
-    records = PhyloMakieCLI.demo_records()
+    records = cli_fixture_records()
     viewer = PhyloMakieCLI.build_viewer(
         records,
         PhyloMakieCLI.LoadWarning[],
@@ -21,7 +21,7 @@
 
     PhyloMakieCLI.select_record!(viewer, records, 2)
     @test viewer.state.current_index == 2
-    @test occursin("Demo tree", viewer.current_label.text[])
+    @test occursin("standard input", viewer.current_label.text[])
     buffer = Makie.colorbuffer(viewer.figure; backend = CairoMakie)
     @test size(viewer.figure.scene) == (800, 500)
     @test size(buffer, 2) > size(buffer, 1) > 0
@@ -30,7 +30,7 @@ end
 @testset "GLMakie displays a viewer without image annotations" begin
     GLMakie.activate!()
     try
-        records = PhyloMakieCLI.demo_records()[1:1]
+        records = cli_fixture_records()[1:1]
         viewer = PhyloMakieCLI.build_viewer(
             records,
             PhyloMakieCLI.LoadWarning[],

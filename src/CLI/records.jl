@@ -1,21 +1,3 @@
-const DEMO_NEWICKS = (
-    (
-        "Demo network",
-        "(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);",
-    ),
-    ("Demo tree", "(A:1,(B:1,C:1):1);"),
-)
-
-function demo_records()::Vector{SourceRecord}
-    return [
-        SourceRecord(
-                PhyloMakie.parsephylogeny(PhyloMakie.NewickFormat(), newick),
-                source,
-                record_index,
-            ) for (record_index, (source, newick)) in enumerate(DEMO_NEWICKS)
-    ]
-end
-
 function _format_tag(format::Symbol)::PhyloMakie.AbstractPhylogenyFormat
     format === :newick && return PhyloMakie.NewickFormat()
     format === :nexus && return PhyloMakie.NexusFormat()
@@ -48,12 +30,10 @@ end
 
 function load_records(
         input::InputOptions;
-        allow_demo::Bool = false,
         stdin_io::IO = stdin,
     )::LoadResult
     if isempty(input.sources)
-        allow_demo && return (records = demo_records(), warnings = LoadWarning[])
-        throw(CLIUsageError("At least one input path is required; use `-` for standard input."))
+        throw(CLIUsageError("Input is required; use `-` for standard input."))
     end
     count(==("-"), input.sources) <= 1 || throw(
         CLIUsageError("Standard input (`-`) may be specified only once."),
@@ -125,31 +105,20 @@ function selected_indices(specification::Union{Nothing, AbstractString}, record_
     return sort!(collect(selected))
 end
 
-function _matches_selection(record::SourceRecord, selection::SelectionOptions)::Bool
-    phylogeny = record.phylogeny
-    labels = Set(PhyloMakie.tip_labels(phylogeny))
-    all(taxon -> taxon in labels, selection.taxa) || return false
-
-    tree = PhyloMakie.is_tree(phylogeny)
-    selection.tree_type === :tree && !tree && return false
-    selection.tree_type === :network && tree && return false
-
-    rooted = PhyloMakie.is_rooted(phylogeny)
-    selection.rootedness === :rooted && !rooted && return false
-    selection.rootedness === :unrooted && rooted && return false
-
-    tips = PhyloMakie.taxon_count(phylogeny)
-    !isnothing(selection.minimum_tips) && tips < selection.minimum_tips && return false
-    !isnothing(selection.maximum_tips) && tips > selection.maximum_tips && return false
-    return true
-end
-
 function select_records(
         records::AbstractVector{SourceRecord},
         selection::SelectionOptions,
     )::Vector{SourceRecord}
     indices = selected_indices(selection.indices, length(records))
-    return [records[index] for index in indices if _matches_selection(records[index], selection)]
+    first_index = min(selection.skip, length(indices)) + 1
+    indices = indices[first_index:end]
+    if !isnothing(selection.head)
+        indices = indices[begin:min(selection.head, length(indices))]
+    elseif !isnothing(selection.tail)
+        first_tail_index = max(length(indices) - selection.tail + 1, 1)
+        indices = indices[first_tail_index:end]
+    end
+    return [records[index] for index in indices]
 end
 
 function display_source_label(source::AbstractString)::String

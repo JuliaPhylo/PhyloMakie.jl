@@ -1,6 +1,6 @@
 @testset "File rendering" begin
     CairoMakie.activate!()
-    records = PhyloMakieCLI.demo_records()
+    records = cli_fixture_records()
     figure = PhyloMakieCLI.build_render_figure(
         records,
         Dict{Symbol, Any}(:showtiplabel => true);
@@ -14,7 +14,7 @@
     common = PhyloMakieCLI.InputOptions(
         ["-"],
         :newick,
-        PhyloMakieCLI.SelectionOptions(nothing, String[], :any, :any, nothing, nothing),
+        PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0),
     )
     mktempdir() do directory
         template = joinpath(directory, "tree.svg")

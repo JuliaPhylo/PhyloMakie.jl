@@ -1,11 +1,9 @@
 const SUPPORTED_INPUT_FORMATS = (:newick, :nexus, :auto)
-const SUPPORTED_TREE_TYPES = (:any, :tree, :network)
-const SUPPORTED_ROOTEDNESS = (:any, :rooted, :unrooted)
 const SUPPORTED_OUTPUT_FORMATS = (:auto, :png, :svg, :pdf)
 const SUPPORTED_MULTIPLE_MODES = (:grid, :files)
 
 const GENERAL_HELP = """
-Usage: phylomakie <command> [options] [INPUT ...]
+Usage: phylomakie <command> [options] INPUT ...
 
 Commands:
   view       Display selected phylogenies in an interactive viewer.
@@ -16,29 +14,66 @@ Run `phylomakie <command> --help` for command-specific options.
 """
 
 const COMMON_HELP = """
-Input and selection options:
+Input and record options:
   -f, --input-format FORMAT   newick (default), nexus, or auto.
   -s, --select SPEC           Global record indices, for example 1,3-5.
-      --taxon NAME            Keep records containing NAME; repeatable.
-      --tree-type TYPE        any (default), tree, or network.
-      --rootedness VALUE      any (default), rooted, or unrooted.
-      --min-tips N            Keep records with at least N tips.
-      --max-tips N            Keep records with at most N tips.
+      --head N                Keep the first N selected records.
+      --tail N                Keep the last N selected records.
+      --skip N                Skip the first N selected records (default: 0).
 
 Use `-` as an input path to read from standard input.
+`--head` and `--tail` are mutually exclusive. `--select` is applied first,
+followed by `--skip`, then `--head` or `--tail`.
+"""
+
+const PLOT_HELP = """
+Plot attributes accepted by -p/--plot NAME=VALUE:
+  clip_planes             Makie clip planes (default: automatic).
+  useedgelength           Use branch lengths on the x axis (default: false).
+  showtiplabel            Show tip labels (default: true).
+  shownodelabel           Show internal node names (default: false).
+  shownodenumber          Show node numbers (default: false).
+  showedgelength          Show branch lengths (default: false).
+  showedgenumber          Show edge numbers (default: false).
+  showgamma               Show inheritance probabilities (default: false).
+  edgecolor               Edge color or edge-number dictionary (default: black).
+  defaultedgecolor        Fallback for an edge-color dictionary (default: nothing).
+  majorhybridedgecolor    Major hybrid edge color (default: deepskyblue4).
+  minorhybridedgecolor    Minor hybrid edge color (default: deepskyblue).
+  edgewidth               Edge width or edge-number dictionary (default: 1).
+  minorlinetype           Minor hybrid edge line style (default: automatic).
+  arrowlen                Minor hybrid edge arrow length (default: automatic).
+  nodelabel               Node label table (default: empty).
+  edgelabel               Edge label table (default: empty).
+  nodeimages              Node-to-image mapping (default: nothing).
+  edgeimages              Edge-to-image mapping (default: nothing).
+  nodecex                 Node label scale (default: 1).
+  edgecex                 Edge label scale (default: 1).
+  nodelabelcolor          Node label color (default: black).
+  edgelabelcolor          Edge label color (default: black).
+  edgenumbercolor         Edge number color (default: grey).
+  nodelabeladj            Node label alignment (default: 1).
+  edgelabeladj            Edge label alignment (default: [0.5, 0]).
+  tipoffset               Tip label offset (default: 0).
+  tipcex                  Tip label scale (default: 1).
+  xlim                    X-axis data limits (default: nothing).
+  ylim                    Y-axis data limits (default: nothing).
+  style                   :fulltree or :majortree (default: :fulltree).
+
+Values use Julia literal syntax. Repeat -p/--plot for multiple attributes.
 """
 
 const VIEW_HELP = """
-Usage: phylomakie view [options] [INPUT ...]
+Usage: phylomakie view [options] INPUT ...
 
-Display selected phylogenies in the interactive viewer. With no input, the
-viewer opens two built-in demonstrations.
+Display selected phylogenies in the interactive viewer.
 
   -p, --plot NAME=VALUE       Set a PhyloPlot attribute; repeatable.
       --size WIDTHxHEIGHT     Window size (default: 1700x950).
   -h, --help                  Show this help.
 
 $(COMMON_HELP)
+$(PLOT_HELP)
 """
 
 const INSPECT_HELP = """
@@ -65,6 +100,7 @@ Usage: phylomakie render [options] INPUT ...
   -h, --help                  Show this help.
 
 $(COMMON_HELP)
+$(PLOT_HELP)
 """
 
 help_text(::Val{:general})::String = GENERAL_HELP
@@ -99,6 +135,17 @@ function _parse_positive_integer(value::AbstractString, option::AbstractString):
     )
     parsed > 0 || throw(
         CLIUsageError("Option $(option) requires a positive integer; received $(repr(value))."),
+    )
+    return parsed
+end
+
+function _parse_nonnegative_integer(value::AbstractString, option::AbstractString)::Int
+    parsed = tryparse(Int, value)
+    isnothing(parsed) && throw(
+        CLIUsageError("Option $(option) requires a nonnegative integer; received $(repr(value))."),
+    )
+    parsed >= 0 || throw(
+        CLIUsageError("Option $(option) requires a nonnegative integer; received $(repr(value))."),
     )
     return parsed
 end
@@ -177,28 +224,21 @@ function _build_input_options(
         sources::Vector{String},
         format::Symbol,
         indices::Union{Nothing, String},
-        taxa::Vector{String},
-        tree_type::Symbol,
-        rootedness::Symbol,
-        minimum_tips::Union{Nothing, Int},
-        maximum_tips::Union{Nothing, Int},
+        head::Union{Nothing, Int},
+        tail::Union{Nothing, Int},
+        skip::Int,
     )::InputOptions
-    if !isnothing(minimum_tips) && !isnothing(maximum_tips) && minimum_tips > maximum_tips
-        throw(CLIUsageError("--min-tips cannot exceed --max-tips."))
-    end
-    selection = SelectionOptions(
-        indices,
-        taxa,
-        tree_type,
-        rootedness,
-        minimum_tips,
-        maximum_tips,
+    !isnothing(head) && !isnothing(tail) && throw(
+        CLIUsageError("--head and --tail cannot be used together."),
     )
+    selection = SelectionOptions(indices, head, tail, skip)
     return InputOptions(sources, format, selection)
 end
 
 function parse_command(args::AbstractVector{<:AbstractString})::AbstractCLICommand
-    isempty(args) && return HelpCommand(:general)
+    isempty(args) && throw(
+        CLIUsageError("Input is required. Run `phylomakie --help` for usage."),
+    )
     first_argument = String(first(args))
     first_argument in ("-h", "--help", "help") && return HelpCommand(:general)
     command = Symbol(lowercase(first_argument))
@@ -215,11 +255,9 @@ function _parse_command_options(
     sources = String[]
     format = :newick
     indices = nothing
-    taxa = String[]
-    tree_type = :any
-    rootedness = :any
-    minimum_tips = nothing
-    maximum_tips = nothing
+    head = nothing
+    tail = nothing
+    skip = 0
     plot_options = PlotOptions()
     size = command === :view ? (1700, 950) : (900, 700)
     verbosity = 0
@@ -248,22 +286,14 @@ function _parse_command_options(
         elseif argument in ("-s", "--select")
             indices = _option_value(args, index, argument)
             index += 1
-        elseif argument == "--taxon"
-            push!(taxa, _option_value(args, index, argument))
+        elseif argument == "--head"
+            head = _parse_nonnegative_integer(_option_value(args, index, argument), argument)
             index += 1
-        elseif argument == "--tree-type"
-            value = _option_value(args, index, argument)
-            tree_type = _parse_choice(value, SUPPORTED_TREE_TYPES, argument)
+        elseif argument == "--tail"
+            tail = _parse_nonnegative_integer(_option_value(args, index, argument), argument)
             index += 1
-        elseif argument == "--rootedness"
-            value = _option_value(args, index, argument)
-            rootedness = _parse_choice(value, SUPPORTED_ROOTEDNESS, argument)
-            index += 1
-        elseif argument == "--min-tips"
-            minimum_tips = _parse_positive_integer(_option_value(args, index, argument), argument)
-            index += 1
-        elseif argument == "--max-tips"
-            maximum_tips = _parse_positive_integer(_option_value(args, index, argument), argument)
+        elseif argument == "--skip"
+            skip = _parse_nonnegative_integer(_option_value(args, index, argument), argument)
             index += 1
         elseif argument in ("-p", "--plot")
             command in (:view, :render) || throw(
@@ -319,15 +349,16 @@ function _parse_command_options(
         index += 1
     end
 
+    isempty(sources) && throw(
+        CLIUsageError("Input is required; use `-` for standard input."),
+    )
     input = _build_input_options(
         sources,
         format,
         indices,
-        taxa,
-        tree_type,
-        rootedness,
-        minimum_tips,
-        maximum_tips,
+        head,
+        tail,
+        skip,
     )
     command === :view && return ViewCommand(input, plot_options, size)
     command === :inspect && return InspectCommand(input, min(verbosity, 2), taxa_only)

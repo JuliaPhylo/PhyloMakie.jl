@@ -25,11 +25,9 @@ const LoadResult = NamedTuple{
 
 struct SelectionOptions
     indices::Union{Nothing, String}
-    taxa::Vector{String}
-    tree_type::Symbol
-    rootedness::Symbol
-    minimum_tips::Union{Nothing, Int}
-    maximum_tips::Union{Nothing, Int}
+    head::Union{Nothing, Int}
+    tail::Union{Nothing, Int}
+    skip::Int
 end
 
 struct InputOptions

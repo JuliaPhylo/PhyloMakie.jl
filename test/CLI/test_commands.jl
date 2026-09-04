@@ -5,6 +5,16 @@
     @test occursin("Usage: phylomakie", String(take!(output_io)))
     @test isempty(String(take!(error_io)))
 
+    @test PhyloMakieCLI.run(String[]; output_io, error_io) == 2
+    @test isempty(String(take!(output_io)))
+    @test occursin("usage error: Input is required", String(take!(error_io)))
+
+    for command in ("view", "inspect", "render")
+        @test PhyloMakieCLI.run([command]; output_io, error_io) == 2
+        @test isempty(String(take!(output_io)))
+        @test occursin("usage error: Input is required", String(take!(error_io)))
+    end
+
     @test PhyloMakieCLI.run(
         ["inspect", "--taxa-only", "-"],
         output_io = output_io,
@@ -18,7 +28,7 @@
     @test occursin("usage error: Unknown option", String(take!(error_io)))
 
     @test PhyloMakieCLI.run(
-        ["inspect", "--taxon", "missing", "-"],
+        ["inspect", "--skip", "1", "-"],
         output_io = output_io,
         error_io = error_io,
         stdin_io = IOBuffer("(A,B);"),

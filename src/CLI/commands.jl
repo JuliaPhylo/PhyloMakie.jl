@@ -1,15 +1,14 @@
-function _selected_records(
+function _load_selected_records(
         input::InputOptions;
-        allow_demo::Bool,
         stdin_io::IO,
         error_io::IO,
-    )::Vector{SourceRecord}
-    result = load_records(input; allow_demo, stdin_io)
+    )::LoadResult
+    result = load_records(input; stdin_io)
     emit_load_warnings(result.warnings; io = error_io)
     isempty(result.records) && throw(ArgumentError("No phylogeny records could be loaded."))
     selected = select_records(result.records, input.selection)
     isempty(selected) && throw(ArgumentError("No phylogeny records matched the selection options."))
-    return selected
+    return (records = selected, warnings = result.warnings)
 end
 
 function _load_backend(name::Symbol)::Module
@@ -57,15 +56,14 @@ function run_command(
         error_io::IO = stderr,
         stdin_io::IO = stdin,
     )::Int
-    records = _selected_records(
+    result = _load_selected_records(
         command.input;
-        allow_demo = false,
         stdin_io,
         error_io,
     )
     write_inspection(
         output_io,
-        collection_statistics(records);
+        collection_statistics(result.records);
         verbosity = command.verbosity,
         taxa_only = command.taxa_only,
     )
@@ -78,16 +76,12 @@ function run_command(
         error_io::IO = stderr,
         stdin_io::IO = stdin,
     )::Int
-    result = load_records(command.input; allow_demo = true, stdin_io)
-    emit_load_warnings(result.warnings; io = error_io)
-    isempty(result.records) && throw(ArgumentError("No phylogeny records could be loaded."))
-    records = select_records(result.records, command.input.selection)
-    isempty(records) && throw(ArgumentError("No phylogeny records matched the selection options."))
+    result = _load_selected_records(command.input; stdin_io, error_io)
     backend = _load_backend(:GLMakie)
     return Base.invokelatest(
         _run_view_backend,
         backend,
-        records,
+        result.records,
         result.warnings,
         command.plot_options,
         command.size,
@@ -100,14 +94,13 @@ function run_command(
         error_io::IO = stderr,
         stdin_io::IO = stdin,
     )::Int
-    records = _selected_records(
+    result = _load_selected_records(
         command.input;
-        allow_demo = false,
         stdin_io,
         error_io,
     )
     backend = _load_backend(:CairoMakie)
-    paths = Base.invokelatest(_run_render_backend, backend, records, command)
+    paths = Base.invokelatest(_run_render_backend, backend, result.records, command)
     foreach(path -> println(output_io, path), paths)
     return 0
 end

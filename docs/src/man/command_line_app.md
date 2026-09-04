@@ -34,32 +34,27 @@ loads successfully.
 
 ## Record selection
 
-All commands accept the same record filters:
+All commands accept the same positional record selectors. `--select` first
+chooses global record indices from the concatenated inputs, `--skip` discards
+records from the start of that selection, and `--head` or `--tail` limits the
+remaining records:
 
 ```sh
 phylomakie inspect \
     --select '1,3-5' \
-    --taxon Homo_sapiens \
-    --tree-type tree \
-    --rootedness rooted \
-    --min-tips 10 \
-    --max-tips 100 \
+    --skip 1 \
+    --head 3 \
     posterior.trees
+
+phylomakie inspect --tail 10 posterior.trees
 ```
 
-Repeat `--taxon` to require every listed taxon. `--tree-type` accepts `any`,
-`tree`, or `network`; `--rootedness` accepts `any`, `rooted`, or `unrooted`.
+`--head` and `--tail` cannot be used together.
 
 ## Interactive viewing
 
-Open the built-in demonstrations by omitting input paths:
-
-```sh
-phylomakie view
-```
-
-With input paths, the viewer provides previous and next navigation plus live
-controls for labels, lengths, colors, line styles, arrow length, and scale.
+The viewer provides previous and next navigation plus live controls for labels,
+lengths, colors, line styles, arrow length, and scale.
 Use `-p` or `--plot` repeatedly to initialize any public `PhyloPlot` attribute:
 
 ```sh
