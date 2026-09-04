@@ -125,13 +125,14 @@ function render_records(
         records::AbstractVector{SourceRecord},
         command::RenderCommand,
         backend::Module,
+        plot_options::AbstractDict{Symbol} = command.plot_options,
     )::Vector{String}
     paths = output_paths(command, length(records))
     _check_output_paths(paths, command.force)
     if command.multiple === :grid
         figure = build_render_figure(
             records,
-            command.plot_options;
+            plot_options;
             columns = command.columns,
             panel_size = command.panel_size,
             show_titles = command.show_titles,
@@ -142,7 +143,7 @@ function render_records(
     for (record, path) in zip(records, paths)
         figure = build_render_figure(
             [record],
-            command.plot_options;
+            plot_options;
             columns = 1,
             panel_size = command.panel_size,
             show_titles = command.show_titles,

@@ -1,0 +1,148 @@
+const GENERAL_HELP = """
+Usage: phylomakie <command> [options] INPUT ...
+
+Commands:
+  view       Display selected phylogenies in an interactive viewer.
+  inspect    Summarize source and phylogeny metadata.
+  render     Render selected phylogenies to one or more files.
+
+Examples:
+  phylomakie inspect trees.nwk
+  phylomakie view trees.nwk
+  phylomakie render --output tree.svg trees.nwk
+
+Run `phylomakie <command> --help` for command-specific options and examples.
+"""
+
+const COMMON_HELP = """
+Input and record options:
+  -f, --input-format FORMAT   newick (default), nexus, or auto.
+  -s, --select SPEC           Global record indices, for example 1,3-5.
+      --head N                Keep the first N selected records.
+      --tail N                Keep the last N selected records.
+      --skip N                Skip the first N selected records (default: 0).
+
+Use `-` as an input path to read from standard input.
+`--head` and `--tail` are mutually exclusive. `--select` is applied first,
+followed by `--skip`, then `--head` or `--tail`.
+"""
+
+const PLOT_HELP = """
+Custom node labels:
+  --node-labels PATH
+      Read a headered .csv or .tsv file with exactly 2 columns: number,label.
+      `number` is an integer node ID and `label` is the displayed annotation.
+      Use -p 'shownodenumber=true' to display the IDs that a file can target.
+      Use -p 'showtiplabel=false' when these annotations should replace tip text.
+
+      CSV example:                 TSV example:
+        number,label                 number<TAB>label
+        1,Ancestor                   1<TAB>Ancestor
+        4,Focal clade                4<TAB>Focal clade
+
+Plot options (repeat -p/--plot NAME=VALUE):
+  -p 'useedgelength=true'                  Use edge lengths on the x axis (false).
+  -p 'showtiplabel=false'                  Show tip labels (true).
+  -p 'shownodelabel=true'                  Show existing internal names (false).
+  -p 'shownodenumber=true'                 Show node numbers (false).
+  -p 'showedgelength=true'                 Show edge lengths (false).
+  -p 'showedgenumber=true'                 Show edge numbers (false).
+  -p 'showgamma=true'                      Show inheritance probabilities (false).
+  -p 'edgecolor="navy"'                    Set one edge color ("black").
+  -p 'edgecolor=Dict(1=>"red",2=>"blue")' Set colors by edge number.
+  -p 'defaultedgecolor="gray"'             Set the dictionary fallback (nothing).
+  -p 'majorhybridedgecolor="navy"'         Set major hybrid edges ("deepskyblue4").
+  -p 'minorhybridedgecolor="skyblue"'      Set minor hybrid edges ("deepskyblue").
+  -p 'edgewidth=2.5'                       Set one edge width (1).
+  -p 'edgewidth=Dict(1=>2.5,2=>0.5)'       Set widths by edge number.
+  -p 'minorlinetype=:dash'                 Set the minor edge line style (automatic).
+  -p 'arrowlen=0.15'                       Set minor edge arrow length (automatic).
+  -p 'nodeimages=Dict("A"=>"/tmp/a.png")'  Map node names to images (nothing).
+  -p 'edgeimages=Dict(("R","A")=>"a.png")'
+                                             Map parent/child names to images (nothing).
+  -p 'nodecex=1.2'                         Scale custom node labels (1).
+  -p 'nodelabelcolor="purple"'             Set custom node label color ("black").
+  -p 'edgenumbercolor="gray"'              Set edge number color ("grey").
+  -p 'nodelabeladj=[0.5,0]'                Align custom node labels (1).
+  -p 'tipoffset=0.1'                       Offset tip labels (0).
+  -p 'tipcex=1.2'                          Scale tip and internal names (1).
+  -p 'xlim=(-1,10)'                        Set x-axis data limits (nothing).
+  -p 'ylim=(0,20)'                         Set y-axis data limits (nothing).
+  -p 'style=:majortree'                    Use :fulltree or :majortree (:fulltree).
+
+Values use Julia literal syntax. Supported forms are numbers, booleans, strings,
+symbols, tuples, arrays, and dictionaries. Constructors other than Dict,
+regular expressions, functions, image matrices, and arbitrary Julia expressions
+are not accepted.
+"""
+
+const VIEW_HELP = """
+Usage: phylomakie view [options] INPUT ...
+
+Display selected phylogenies in the interactive viewer.
+
+  -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
+      --node-labels PATH      Read custom node labels from CSV or TSV.
+      --size WIDTHxHEIGHT     Window size (default: 1700x950).
+  -h, --help                  Show this help.
+
+$(COMMON_HELP)
+$(PLOT_HELP)
+
+Examples:
+  phylomakie view --input-format auto --select '1,3-5' --head 2 trees.nwk
+  phylomakie view --tail 10 --size 1400x900 posterior.trees
+  phylomakie view -p 'useedgelength=true' -p 'showgamma=true' trees.nwk
+  phylomakie view --node-labels labels.tsv -p 'showtiplabel=false' trees.nwk
+"""
+
+const INSPECT_HELP = """
+Usage: phylomakie inspect [options] INPUT ...
+
+  -v, --verbose               Add record detail; repeat for full listings.
+      --taxa-only             Print sorted unique taxon names only.
+  -h, --help                  Show this help.
+
+$(COMMON_HELP)
+
+Examples:
+  phylomakie inspect --input-format auto --select '1,3-5' --skip 1 -v trees.nwk
+  phylomakie inspect --tail 10 -vv posterior.trees
+  phylomakie inspect --taxa-only trees.nwk
+  printf '(A,(B,C));' | phylomakie inspect -
+"""
+
+const RENDER_HELP = """
+Usage: phylomakie render [options] INPUT ...
+
+  -o, --output PATH           Output path; repeat for exact per-record paths.
+      --output-format FORMAT  auto (default), png, svg, or pdf.
+      --multiple MODE         grid (default) or files.
+      --columns N             Grid column count.
+      --size WIDTHxHEIGHT     Per-panel size (default: 900x700).
+      --no-titles             Omit source and record titles.
+      --force                 Replace existing output files.
+  -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
+      --node-labels PATH      Read custom node labels from CSV or TSV.
+  -h, --help                  Show this help.
+
+$(COMMON_HELP)
+$(PLOT_HELP)
+
+Examples:
+  phylomakie render --output tree.svg --size 1200x900 --force trees.nwk
+  phylomakie render --output grid.pdf --multiple grid --columns 3 --no-titles trees.nwk
+  phylomakie render --output tree --output-format png --tail 5 trees.nwk
+  phylomakie render --output tree.png --node-labels labels.csv trees.nwk
+  phylomakie render --multiple files --output 'tree-{index}.pdf' trees.nwk
+"""
+
+help_text(::Val{:general})::String = GENERAL_HELP
+help_text(::Val{:view})::String = VIEW_HELP
+help_text(::Val{:inspect})::String = INSPECT_HELP
+help_text(::Val{:render})::String = RENDER_HELP
+
+function help_text(topic::Symbol)::String
+    topic in (:general, :view, :inspect, :render) || return GENERAL_HELP
+    return help_text(Val(topic))
+end

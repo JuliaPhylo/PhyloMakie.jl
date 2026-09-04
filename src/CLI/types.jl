@@ -45,6 +45,7 @@ end
 struct ViewCommand{TOptions <: AbstractDict{Symbol}} <: AbstractCLICommand
     input::InputOptions
     plot_options::TOptions
+    node_label_path::Union{Nothing, String}
     size::Tuple{Int, Int}
 end
 
@@ -57,6 +58,7 @@ end
 struct RenderCommand{TOptions <: AbstractDict{Symbol}} <: AbstractCLICommand
     input::InputOptions
     plot_options::TOptions
+    node_label_path::Union{Nothing, String}
     outputs::Vector{String}
     output_format::Symbol
     multiple::Symbol

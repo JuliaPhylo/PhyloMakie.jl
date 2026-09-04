@@ -46,5 +46,27 @@
         @test String(take!(output_io)) == "$(output)\n"
         @test isempty(String(take!(error_io)))
         @test isfile(output) && filesize(output) > 0
+
+        labels = joinpath(directory, "labels.tsv")
+        write(labels, "number\tlabel\n1\tFirst tip\n2\tSecond tip\n")
+        labeled_output = joinpath(directory, "labeled.svg")
+        @test PhyloMakieCLI.run(
+            [
+                "render",
+                "--output",
+                labeled_output,
+                "--node-labels",
+                labels,
+                "-p",
+                "showtiplabel=false",
+                "-",
+            ],
+            output_io = output_io,
+            error_io = error_io,
+            stdin_io = IOBuffer("(A:1,(B:2,C:3):4);"),
+        ) == 0
+        @test String(take!(output_io)) == "$(labeled_output)\n"
+        @test isempty(String(take!(error_io)))
+        @test isfile(labeled_output) && filesize(labeled_output) > 0
     end
 end

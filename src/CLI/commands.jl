@@ -35,9 +35,10 @@ function _run_render_backend(
         backend::Module,
         records::AbstractVector{SourceRecord},
         command::RenderCommand,
+        plot_options::AbstractDict{Symbol},
     )::Vector{String}
     backend.activate!()
-    return render_records(records, command, backend)
+    return render_records(records, command, backend, plot_options)
 end
 
 function run_command(
@@ -77,13 +78,14 @@ function run_command(
         stdin_io::IO = stdin,
     )::Int
     result = _load_selected_records(command.input; stdin_io, error_io)
+    plot_options = load_plot_options(command.plot_options, command.node_label_path)
     backend = _load_backend(:GLMakie)
     return Base.invokelatest(
         _run_view_backend,
         backend,
         result.records,
         result.warnings,
-        command.plot_options,
+        plot_options,
         command.size,
     )
 end
@@ -99,8 +101,15 @@ function run_command(
         stdin_io,
         error_io,
     )
+    plot_options = load_plot_options(command.plot_options, command.node_label_path)
     backend = _load_backend(:CairoMakie)
-    paths = Base.invokelatest(_run_render_backend, backend, result.records, command)
+    paths = Base.invokelatest(
+        _run_render_backend,
+        backend,
+        result.records,
+        command,
+        plot_options,
+    )
     foreach(path -> println(output_io, path), paths)
     return 0
 end

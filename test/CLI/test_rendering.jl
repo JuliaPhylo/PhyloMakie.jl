@@ -21,6 +21,7 @@
         command = PhyloMakieCLI.RenderCommand(
             common,
             Dict{Symbol, Any}(:useedgelength => false),
+            nothing,
             [template],
             :auto,
             :files,
@@ -45,6 +46,7 @@
             grid_command = PhyloMakieCLI.RenderCommand(
                 common,
                 Dict{Symbol, Any}(),
+                nothing,
                 [grid_path],
                 :auto,
                 :grid,

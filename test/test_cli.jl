@@ -18,6 +18,7 @@ end
     include("CLI/test_types.jl")
     include("CLI/test_arguments.jl")
     include("CLI/test_records.jl")
+    include("CLI/test_node_label_files.jl")
     include("CLI/test_inspection.jl")
     include("CLI/test_viewer.jl")
     include("CLI/test_rendering.jl")

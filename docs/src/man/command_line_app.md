@@ -54,8 +54,9 @@ phylomakie inspect --tail 10 posterior.trees
 ## Interactive viewing
 
 The viewer provides previous and next navigation plus live controls for labels,
-lengths, colors, line styles, arrow length, and scale.
-Use `-p` or `--plot` repeatedly to initialize any public `PhyloPlot` attribute:
+lengths, colors, line styles, arrow length, and scale. Use `-p` or `--plot`
+repeatedly to initialize a plot attribute supported by the command-line literal
+syntax:
 
 ```sh
 phylomakie view \
@@ -68,7 +69,53 @@ phylomakie view \
 Plot values use Julia literal syntax. Supported forms include booleans,
 numbers, strings, symbols, tuples, arrays, and dictionaries such as
 `Dict(1 => "red", 2 => "blue")`. Shell quoting prevents spaces and symbols
-from being interpreted by the shell.
+from being interpreted by the shell. Run `phylomakie view --help` for a
+copyable example of every supported plot attribute.
+
+The CLI supports node and edge image dictionaries whose values are local image
+paths or HTTP(S) URLs. Node keys are node names. Edge keys are parent/child name
+pairs:
+
+```sh
+phylomakie view \
+    -p 'nodeimages=Dict("A"=>"/absolute/path/a.png")' \
+    -p 'edgeimages=Dict(("Root","A")=>"https://example.org/a.png")' \
+    trees.nwk
+```
+
+The Julia API also accepts table, callable, regular-expression, object, and
+image-matrix values that cannot be represented by this CLI literal syntax.
+Those forms are intentionally not advertised or accepted by `-p`.
+
+## Custom node labels
+
+Pass `--node-labels PATH` to `view` or `render` to add node annotations from a
+headered CSV or TSV file. The file must have exactly the columns `number` and
+`label`; `number` contains an integer node ID and `label` contains the text to
+display. Use `-p 'shownodenumber=true'` to display the node IDs that a file can
+target:
+
+```csv
+number,label
+1,Ancestor
+4,Focal clade
+```
+
+```sh
+phylomakie view \
+    --node-labels labels.csv \
+    -p 'showtiplabel=false' \
+    trees.nwk
+
+phylomakie render \
+    --output labeled-tree.svg \
+    --node-labels labels.tsv \
+    trees.nwk
+```
+
+Custom labels are a separate annotation channel. Keep the default
+`showtiplabel=true` to display original tip names as well, or set it to `false`
+when the file's annotations should replace the visible tip text.
 
 ## Metadata inspection
 

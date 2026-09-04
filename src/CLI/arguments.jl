@@ -1,117 +1,33 @@
 const SUPPORTED_INPUT_FORMATS = (:newick, :nexus, :auto)
 const SUPPORTED_OUTPUT_FORMATS = (:auto, :png, :svg, :pdf)
 const SUPPORTED_MULTIPLE_MODES = (:grid, :files)
-
-const GENERAL_HELP = """
-Usage: phylomakie <command> [options] INPUT ...
-
-Commands:
-  view       Display selected phylogenies in an interactive viewer.
-  inspect    Summarize source and phylogeny metadata.
-  render     Render selected phylogenies to one or more files.
-
-Run `phylomakie <command> --help` for command-specific options.
-"""
-
-const COMMON_HELP = """
-Input and record options:
-  -f, --input-format FORMAT   newick (default), nexus, or auto.
-  -s, --select SPEC           Global record indices, for example 1,3-5.
-      --head N                Keep the first N selected records.
-      --tail N                Keep the last N selected records.
-      --skip N                Skip the first N selected records (default: 0).
-
-Use `-` as an input path to read from standard input.
-`--head` and `--tail` are mutually exclusive. `--select` is applied first,
-followed by `--skip`, then `--head` or `--tail`.
-"""
-
-const PLOT_HELP = """
-Plot attributes accepted by -p/--plot NAME=VALUE:
-  clip_planes             Makie clip planes (default: automatic).
-  useedgelength           Use branch lengths on the x axis (default: false).
-  showtiplabel            Show tip labels (default: true).
-  shownodelabel           Show internal node names (default: false).
-  shownodenumber          Show node numbers (default: false).
-  showedgelength          Show branch lengths (default: false).
-  showedgenumber          Show edge numbers (default: false).
-  showgamma               Show inheritance probabilities (default: false).
-  edgecolor               Edge color or edge-number dictionary (default: black).
-  defaultedgecolor        Fallback for an edge-color dictionary (default: nothing).
-  majorhybridedgecolor    Major hybrid edge color (default: deepskyblue4).
-  minorhybridedgecolor    Minor hybrid edge color (default: deepskyblue).
-  edgewidth               Edge width or edge-number dictionary (default: 1).
-  minorlinetype           Minor hybrid edge line style (default: automatic).
-  arrowlen                Minor hybrid edge arrow length (default: automatic).
-  nodelabel               Node label table (default: empty).
-  edgelabel               Edge label table (default: empty).
-  nodeimages              Node-to-image mapping (default: nothing).
-  edgeimages              Edge-to-image mapping (default: nothing).
-  nodecex                 Node label scale (default: 1).
-  edgecex                 Edge label scale (default: 1).
-  nodelabelcolor          Node label color (default: black).
-  edgelabelcolor          Edge label color (default: black).
-  edgenumbercolor         Edge number color (default: grey).
-  nodelabeladj            Node label alignment (default: 1).
-  edgelabeladj            Edge label alignment (default: [0.5, 0]).
-  tipoffset               Tip label offset (default: 0).
-  tipcex                  Tip label scale (default: 1).
-  xlim                    X-axis data limits (default: nothing).
-  ylim                    Y-axis data limits (default: nothing).
-  style                   :fulltree or :majortree (default: :fulltree).
-
-Values use Julia literal syntax. Repeat -p/--plot for multiple attributes.
-"""
-
-const VIEW_HELP = """
-Usage: phylomakie view [options] INPUT ...
-
-Display selected phylogenies in the interactive viewer.
-
-  -p, --plot NAME=VALUE       Set a PhyloPlot attribute; repeatable.
-      --size WIDTHxHEIGHT     Window size (default: 1700x950).
-  -h, --help                  Show this help.
-
-$(COMMON_HELP)
-$(PLOT_HELP)
-"""
-
-const INSPECT_HELP = """
-Usage: phylomakie inspect [options] INPUT ...
-
-  -v, --verbose               Add record detail; repeat for full listings.
-      --taxa-only             Print sorted unique taxon names only.
-  -h, --help                  Show this help.
-
-$(COMMON_HELP)
-"""
-
-const RENDER_HELP = """
-Usage: phylomakie render [options] INPUT ...
-
-  -o, --output PATH           Output path; repeat for exact per-record paths.
-      --output-format FORMAT  auto (default), png, svg, or pdf.
-      --multiple MODE         grid (default) or files.
-      --columns N             Grid column count.
-      --size WIDTHxHEIGHT     Per-panel size (default: 900x700).
-      --no-titles             Omit source and record titles.
-      --force                 Replace existing output files.
-  -p, --plot NAME=VALUE       Set a PhyloPlot attribute; repeatable.
-  -h, --help                  Show this help.
-
-$(COMMON_HELP)
-$(PLOT_HELP)
-"""
-
-help_text(::Val{:general})::String = GENERAL_HELP
-help_text(::Val{:view})::String = VIEW_HELP
-help_text(::Val{:inspect})::String = INSPECT_HELP
-help_text(::Val{:render})::String = RENDER_HELP
-
-function help_text(topic::Symbol)::String
-    topic in (:general, :view, :inspect, :render) || return GENERAL_HELP
-    return help_text(Val(topic))
-end
+const SUPPORTED_CLI_PLOT_ATTRIBUTES = (
+    :useedgelength,
+    :showtiplabel,
+    :shownodelabel,
+    :shownodenumber,
+    :showedgelength,
+    :showedgenumber,
+    :showgamma,
+    :edgecolor,
+    :defaultedgecolor,
+    :majorhybridedgecolor,
+    :minorhybridedgecolor,
+    :edgewidth,
+    :minorlinetype,
+    :arrowlen,
+    :nodeimages,
+    :edgeimages,
+    :nodecex,
+    :nodelabelcolor,
+    :edgenumbercolor,
+    :nodelabeladj,
+    :tipoffset,
+    :tipcex,
+    :xlim,
+    :ylim,
+    :style,
+)
 
 function _option_value(args::AbstractVector{<:AbstractString}, index::Int, option::AbstractString)::String
     index < length(args) || throw(CLIUsageError("Option $(option) requires a value."))
@@ -194,6 +110,52 @@ function _decode_plot_literal(expression)
     )
 end
 
+function _is_cli_node_image_mapping(value)::Bool
+    isnothing(value) && return true
+    value isa AbstractDict || return false
+    return all(pairs(value)) do (selector, image)
+        selector isa Union{AbstractString, Symbol} &&
+            (image isa AbstractString || isnothing(image) || ismissing(image))
+    end
+end
+
+function _is_cli_edge_image_selector(selector)::Bool
+    endpoints = if selector isa Pair
+        (first(selector), last(selector))
+    elseif selector isa Tuple && length(selector) == 2
+        selector
+    else
+        return false
+    end
+    return all(endpoint -> endpoint isa Union{AbstractString, Symbol}, endpoints)
+end
+
+function _is_cli_edge_image_mapping(value)::Bool
+    isnothing(value) && return true
+    value isa AbstractDict || return false
+    return all(pairs(value)) do (selector, image)
+        _is_cli_edge_image_selector(selector) &&
+            (image isa AbstractString || isnothing(image) || ismissing(image))
+    end
+end
+
+function _validate_cli_plot_value(name::Symbol, value)
+    if name === :nodeimages && !_is_cli_node_image_mapping(value)
+        throw(
+            CLIUsageError(
+                "nodeimages requires Dict(\"NODE\" => \"PATH_OR_URL\", ...), or nothing.",
+            ),
+        )
+    elseif name === :edgeimages && !_is_cli_edge_image_mapping(value)
+        throw(
+            CLIUsageError(
+                "edgeimages requires Dict((\"PARENT\", \"CHILD\") => \"PATH_OR_URL\", ...), or nothing.",
+            ),
+        )
+    end
+    return value
+end
+
 # Makie plot attributes are intentionally heterogeneous. This dictionary is
 # confined to the CLI boundary and is splatted directly into the public recipe.
 function parse_plot_assignment(text::AbstractString)::Pair{Symbol, Any}
@@ -206,10 +168,10 @@ function parse_plot_assignment(text::AbstractString)::Pair{Symbol, Any}
     isempty(name_text) && throw(CLIUsageError("A plot option name cannot be empty."))
     isempty(value_text) && throw(CLIUsageError("Plot option $(name_text) requires a value."))
     name = Symbol(name_text)
-    name in PhyloMakie.SUPPORTED_PHYLOPLOT_ATTRIBUTES || throw(
+    name in SUPPORTED_CLI_PLOT_ATTRIBUTES || throw(
         CLIUsageError(
-            "Unknown PhyloPlot attribute $(name_text). Supported attributes: " *
-                join(string.(PhyloMakie.SUPPORTED_PHYLOPLOT_ATTRIBUTES), ", ") * ".",
+            "Unknown or unsupported CLI plot attribute $(name_text). Supported attributes: " *
+                join(string.(SUPPORTED_CLI_PLOT_ATTRIBUTES), ", ") * ".",
         ),
     )
     expression = try
@@ -217,7 +179,7 @@ function parse_plot_assignment(text::AbstractString)::Pair{Symbol, Any}
     catch error
         throw(CLIUsageError("Cannot parse value for plot option $(name_text): $(sprint(showerror, error))."))
     end
-    return name => _decode_plot_literal(expression)
+    return name => _validate_cli_plot_value(name, _decode_plot_literal(expression))
 end
 
 function _build_input_options(
@@ -259,6 +221,7 @@ function _parse_command_options(
     tail = nothing
     skip = 0
     plot_options = PlotOptions()
+    node_label_path = nothing
     size = command === :view ? (1700, 950) : (900, 700)
     verbosity = 0
     taxa_only = false
@@ -301,6 +264,12 @@ function _parse_command_options(
             )
             assignment = parse_plot_assignment(_option_value(args, index, argument))
             plot_options[first(assignment)] = last(assignment)
+            index += 1
+        elseif argument == "--node-labels"
+            command in (:view, :render) || throw(
+                CLIUsageError("Option --node-labels is only valid for view and render."),
+            )
+            node_label_path = _option_value(args, index, argument)
             index += 1
         elseif argument == "--size"
             command in (:view, :render) || throw(
@@ -360,12 +329,13 @@ function _parse_command_options(
         tail,
         skip,
     )
-    command === :view && return ViewCommand(input, plot_options, size)
+    command === :view && return ViewCommand(input, plot_options, node_label_path, size)
     command === :inspect && return InspectCommand(input, min(verbosity, 2), taxa_only)
     isempty(outputs) && throw(CLIUsageError("render requires at least one --output PATH."))
     return RenderCommand(
         input,
         plot_options,
+        node_label_path,
         outputs,
         output_format,
         multiple,
