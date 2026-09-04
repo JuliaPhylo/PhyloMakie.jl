@@ -21,6 +21,8 @@ that interface.
 - Native node and edge images from matrices, local files, or HTTP(S) URLs
 - Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
+- An installable `phylomakie` app for interactive viewing, metadata inspection,
+  and static rendering
 
 ## API
 
@@ -43,13 +45,17 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
 ```
 
-The quickstart example below also requires CairoMakie:
+Julia 1.12 can install the command-line app separately:
 
 ```julia
-Pkg.add([
-    "CairoMakie",
-])
+using Pkg
+Pkg.Apps.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
 ```
+
+Ensure that the first Julia depot's `bin` directory, normally `~/.julia/bin`,
+is on `PATH`. See the [command-line app guide](docs/src/man/command_line_app.md)
+for input formats, filters, plot attributes, inspection levels, and output
+modes.
 
 ## Quickstart
 

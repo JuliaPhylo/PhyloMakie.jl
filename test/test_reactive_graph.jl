@@ -94,6 +94,8 @@ function _assert_image_outputs_match_channel(
     )::Nothing
     @test plot[outputs.positions][] == channel.positions
     @test plot[outputs.images][] == channel.images
+    image_render_markers = getfield(PhyloMakie, :image_render_markers)
+    @test plot[outputs.render_markers][] == image_render_markers(channel.images)
     upper_pixel_positions = plot[Symbol(prefix, "_upper_pixel_positions")][]
     lower_pixel_positions = plot[Symbol(prefix, "_lower_pixel_positions")][]
     compute_geometry = getfield(PhyloMakie, :compute_image_marker_geometry)
@@ -229,13 +231,17 @@ end
         @test outputs.text_outputs.tip_labels isa TextGraphOutputs
 
         required_symbols = phylo_graph_output_symbols()
-        @test length(required_symbols) == 83
+        @test length(required_symbols) == 85
         @test allunique(required_symbols)
         @test all(symbol -> haskey(plot.attributes.outputs, symbol), required_symbols)
         @test !(:minor_arrowhead_pixel_startpoints in required_symbols)
         @test !(:minor_arrowhead_pixel_endpoints in required_symbols)
         @test outputs.primitive_outputs.minor_arrowheads.meshes ==
             :minor_arrowhead_pixel_meshes
+        @test outputs.primitive_outputs.edge_images.render_markers ==
+            :edge_image_render_markers
+        @test outputs.primitive_outputs.node_images.render_markers ==
+            :node_image_render_markers
         @test all(
             symbol -> haskey(plot.attributes.outputs, symbol),
             (

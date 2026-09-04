@@ -37,7 +37,12 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      - name: Install virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+      - name: Run tests under a virtual display
+        run: xvfb-run -a julia --project --color=yes -e 'using Pkg; Pkg.test(; coverage=true)'
   docs:
     name: Documentation
     runs-on: ubuntu-latest

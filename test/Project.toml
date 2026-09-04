@@ -2,6 +2,7 @@
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
@@ -9,9 +10,10 @@ PhyloMakie = "ccbd7354-87c9-452d-961c-17247803ee9f"
 PhyloNetworks = "33ad39ac-ed31-50eb-9b15-43d0656eaa72"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[compat]
-CairoMakie = "0.15.10"
-Makie = "0.24.10"
-
 [sources]
 PhyloMakie = {path = ".."}
+
+[compat]
+CairoMakie = "0.15.10"
+GLMakie = "0.13.13"
+Makie = "0.24.10"

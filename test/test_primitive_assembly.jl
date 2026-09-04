@@ -61,7 +61,7 @@ end
 
 function _assert_image_child_matches_outputs(plot, child, outputs)::Nothing
     @test child[1][] == plot[outputs.positions][]
-    @test child.marker[] == plot[outputs.images][]
+    @test child.marker[] == plot[outputs.render_markers][]
     @test child.markersize[] == plot[outputs.markersizes][]
     @test child.marker_offset[] == plot[outputs.marker_offsets][]
     return nothing
@@ -147,6 +147,12 @@ end
         @test children.node_images.markerspace[] == :pixel
         @test children.edge_images.space[] == :data
         @test children.node_images.space[] == :data
+        @test isempty(plot[outputs.primitive_outputs.edge_images.images][])
+        @test isempty(plot[outputs.primitive_outputs.node_images.images][])
+        @test length(children.edge_images.marker[]) == 1
+        @test length(children.node_images.marker[]) == 1
+        @test size(only(children.edge_images.marker[])) == (1, 1)
+        @test size(only(children.node_images.marker[])) == (1, 1)
         @test Makie.boundingbox(plot) == Makie.data_limits(plot)
 
         _assert_children_match_outputs(plot, outputs)

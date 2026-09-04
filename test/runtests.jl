@@ -3,6 +3,7 @@ using DataFrames: DataFrame
 using JET
 using Makie
 using CairoMakie
+using GLMakie
 using PhyloMakie
 import PhyloNetworks # not "using" to avoid importing accessor names
 using Test
@@ -27,12 +28,17 @@ include("support/render_test_helpers.jl")
     include("test_public_render_contracts.jl")
     include("test_recipe.jl")
     include("test_coordinate_queries.jl")
+    include("test_cli.jl")
     include("test_architecture_audits.jl")
 
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(
             PhyloMakie;
             piracies = false,
+            # App-only renderers are loaded when their subcommands run, not with the library.
+            stale_deps = (; ignore = [:CairoMakie, :GLMakie]),
+            # Fresh app environments may still be precompiling both renderers after load.
+            persistent_tasks = (; tmax = 300),
         )
     end
     @testset "Code linting (JET.jl)" begin

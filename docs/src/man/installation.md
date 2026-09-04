@@ -11,15 +11,18 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
 ```
 
-PhyloMakie depends on Makie and PhyloNetworks. Examples in this manual also use
-CairoMakie for static rendering:
+Julia 1.12 can install PhyloMakie's command-line app into the first Julia
+depot:
 
 ```julia
 using Pkg
-Pkg.add([
-    "CairoMakie",
-])
+Pkg.Apps.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
 ```
+
+The app executable is named `phylomakie`. Add the first Julia depot's `bin`
+directory, normally `~/.julia/bin`, to `PATH`. Pkg app support is experimental
+and is not available in Julia 1.11, although the PhyloMakie library remains
+compatible with Julia 1.11.
 
 Load the packages needed for most examples with:
 

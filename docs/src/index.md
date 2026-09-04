@@ -22,6 +22,7 @@ aliases for the same plotting behavior.
 ```@contents
 Pages = [
     "man/installation.md",
+    "man/command_line_app.md",
     "man/getting_started.md",
     "man/untangling_edges.md",
     "man/better_edges.md",

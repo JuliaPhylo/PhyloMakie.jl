@@ -39,7 +39,7 @@ function create_image_primitive!(
     return Makie.scatter!(
         plot,
         plot[outputs.positions];
-        marker = plot[outputs.images],
+        marker = plot[outputs.render_markers],
         markersize = plot[outputs.markersizes],
         marker_offset = plot[outputs.marker_offsets],
         markerspace = :pixel,

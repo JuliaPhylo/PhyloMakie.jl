@@ -24,6 +24,7 @@ include("reactive_graph.jl")
 include("primitive_assembly.jl")
 include("recipe.jl")
 include("coordinate_queries.jl")
+include("CLI/CLI.jl")
 
 export phyloplot,
     phyloplot!,

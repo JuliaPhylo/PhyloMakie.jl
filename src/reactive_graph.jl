@@ -19,6 +19,7 @@ end
 struct ImageGraphOutputs
     positions::Symbol
     images::Symbol
+    render_markers::Symbol
     markersizes::Symbol
     marker_offsets::Symbol
 end
@@ -116,12 +117,14 @@ const MINOR_ARROWHEAD_GRAPH_OUTPUTS = ArrowheadGraphOutputs(
 const EDGE_IMAGE_GRAPH_OUTPUTS = ImageGraphOutputs(
     :edge_image_positions,
     :edge_image_markers,
+    :edge_image_render_markers,
     :edge_image_markersizes,
     :edge_image_marker_offsets,
 )
 const NODE_IMAGE_GRAPH_OUTPUTS = ImageGraphOutputs(
     :node_image_positions,
     :node_image_markers,
+    :node_image_render_markers,
     :node_image_markersizes,
     :node_image_marker_offsets,
 )
@@ -149,10 +152,12 @@ const NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS = (
     MINOR_ARROWHEAD_GRAPH_OUTPUTS.strokewidth,
     EDGE_IMAGE_GRAPH_OUTPUTS.positions,
     EDGE_IMAGE_GRAPH_OUTPUTS.images,
+    EDGE_IMAGE_GRAPH_OUTPUTS.render_markers,
     EDGE_IMAGE_GRAPH_OUTPUTS.markersizes,
     EDGE_IMAGE_GRAPH_OUTPUTS.marker_offsets,
     NODE_IMAGE_GRAPH_OUTPUTS.positions,
     NODE_IMAGE_GRAPH_OUTPUTS.images,
+    NODE_IMAGE_GRAPH_OUTPUTS.render_markers,
     NODE_IMAGE_GRAPH_OUTPUTS.markersizes,
     NODE_IMAGE_GRAPH_OUTPUTS.marker_offsets,
     :data_limits,
@@ -220,8 +225,14 @@ function _arrowhead_output_symbols(outputs::ArrowheadGraphOutputs)::NTuple{8, Sy
     )
 end
 
-function _image_output_symbols(outputs::ImageGraphOutputs)::NTuple{4, Symbol}
-    return (outputs.positions, outputs.images, outputs.markersizes, outputs.marker_offsets)
+function _image_output_symbols(outputs::ImageGraphOutputs)::NTuple{5, Symbol}
+    return (
+        outputs.positions,
+        outputs.images,
+        outputs.render_markers,
+        outputs.markersizes,
+        outputs.marker_offsets,
+    )
 end
 
 function _text_output_symbols(outputs::TextGraphOutputs)::NTuple{6, Symbol}
@@ -468,6 +479,29 @@ function _image_channel_base_outputs(
         _ref_any(upper),
         _ref_any(lower),
     )
+end
+
+const EMPTY_IMAGE_RENDER_MARKER = fill(
+    Makie.RGBA{Makie.N0f8}(0, 0, 0, 0),
+    1,
+    1,
+)
+
+function image_render_markers(
+        images::Vector{NormalizedImageMatrix},
+    )::Vector{NormalizedImageMatrix}
+    # GLMakie treats a typed vector of image markers as a texture-atlas input
+    # and rejects an empty vector. An empty positions vector means this
+    # transparent marker is never drawn, while retaining the marker input's
+    # concrete type for reactive updates.
+    isempty(images) && return NormalizedImageMatrix[EMPTY_IMAGE_RENDER_MARKER]
+    return images
+end
+
+function _compute_image_render_markers(
+        images::Vector{NormalizedImageMatrix},
+    )::Tuple{Base.RefValue{Any}}
+    return (_ref_any(image_render_markers(images)),)
 end
 
 function _compute_image_marker_geometry_outputs(
@@ -846,6 +880,12 @@ function register_image_output_nodes!(
         plot,
         (channel_node,),
         (outputs.positions, outputs.images, upper_positions, lower_positions),
+    )
+    _register_outputs_once!(
+        _compute_image_render_markers,
+        plot,
+        (outputs.images,),
+        (outputs.render_markers,),
     )
     _ensure_plot_space_node!(plot)
     Makie.register_projected_positions!(
