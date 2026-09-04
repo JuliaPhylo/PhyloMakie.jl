@@ -4,7 +4,6 @@
     @test !isdefined(PhyloMakieCLI, :GLMakie)
     @test !isdefined(PhyloMakieCLI, :CairoMakie)
 
-    project_text = read(joinpath(@__DIR__, "..", "..", "Project.toml"), String)
-    @test occursin("[apps]", project_text)
-    @test occursin("phylomakie = {submodule = \"CLI\"}", project_text)
+    project = parsefile(joinpath(@__DIR__, "..", "..", "Project.toml"))
+    @test project["apps"]["phylomakie"]["submodule"] == "CLI"
 end

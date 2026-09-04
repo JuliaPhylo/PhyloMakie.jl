@@ -7,6 +7,7 @@ using GLMakie
 using PhyloMakie
 import PhyloNetworks # not "using" to avoid importing accessor names
 using Test
+using TOML: parsefile
 
 include("support/fixture_corpus.jl")
 include("support/public_surface_cases.jl")
