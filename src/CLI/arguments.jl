@@ -280,9 +280,9 @@ function _parse_command_options(
             assignment = parse_plot_assignment(_option_value(args, index, argument))
             plot_options[first(assignment)] = last(assignment)
             index += 1
-        elseif argument == "--nodelabels"
+        elseif argument in ("--nodelabels", "--node-labels")
             command in (:view, :render) || throw(
-                CLIUsageError("Option --nodelabels is only valid for view and render."),
+                CLIUsageError("Option $(argument) is only valid for view and render."),
             )
             node_label_path = _option_value(args, index, argument)
             index += 1

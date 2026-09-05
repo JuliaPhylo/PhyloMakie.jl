@@ -39,6 +39,7 @@ Display-name remapping:
       accepted. Input data and --selected-output-file retain the original names.
       Tip names are shown by default. Use -p 'shownodelabel=true' to show mapped
       internal names. Image selectors still use the original input names.
+      --node-labels is accepted as an alias.
 
       CSV example:                 TSV example:
         name,display                 name<TAB>display
@@ -85,7 +86,8 @@ Usage: phylomakie view [options] INPUT ...
 Display selected phylogenies in the interactive viewer.
 
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --nodelabels PATH       Remap node names for display from CSV or TSV.
+      --nodelabels PATH       Remap node names for display from CSV or TSV
+                              (alias: --node-labels).
       --size WIDTHxHEIGHT     Window size (default: 1700x950).
   -h, --help                  Show this help.
 
@@ -128,7 +130,8 @@ Usage: phylomakie render [options] INPUT ...
       --no-titles             Omit source and record titles.
       --force                 Replace existing image output files.
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --nodelabels PATH       Remap node names for display from CSV or TSV.
+      --nodelabels PATH       Remap node names for display from CSV or TSV
+                              (alias: --node-labels).
   -h, --help                  Show this help.
 
 $(COMMON_HELP)

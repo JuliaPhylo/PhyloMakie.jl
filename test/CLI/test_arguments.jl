@@ -22,6 +22,7 @@
             @test !occursin("-p '$(unsupported)=", help)
         end
         @test occursin("--nodelabels PATH", help)
+        @test occursin("alias: --node-labels", help)
         @test occursin("name,display", help)
         @test occursin("Examples:", help)
     end
@@ -94,6 +95,11 @@
     @test view_command.plot_options[:useedgelength] === true
     @test view_command.plot_options[:style] === :majortree
     @test view_command.node_label_path == "labels.tsv"
+    node_labels_alias_command = PhyloMakieCLI.parse_command(
+        ["view", "--node-labels", "labels.csv", "trees.nwk"],
+    )
+    @test node_labels_alias_command.node_label_path == "labels.csv"
+    @test node_labels_alias_command.input.sources == ["trees.nwk"]
 
     @test PhyloMakieCLI.parse_plot_assignment("ylim = (-1, 5.5)") == (:ylim => (-1, 5.5))
     colors = last(
@@ -187,10 +193,9 @@
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_plot_assignment(
         "edgeimages = Dict(1 => \"a.png\")",
     )
-    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
-        ["inspect", "--nodelabels", "labels.csv", "-"],
-    )
-    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
-        ["view", "--node-labels", "labels.csv", "-"],
-    )
+    for option in ("--nodelabels", "--node-labels")
+        @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
+            ["inspect", option, "labels.csv", "-"],
+        )
+    end
 end

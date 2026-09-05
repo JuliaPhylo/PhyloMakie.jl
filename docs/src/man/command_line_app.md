@@ -116,7 +116,8 @@ Pass `--nodelabels PATH` to `view` or `render` to replace node names for
 display from a headered CSV or TSV file. The file must have exactly the columns
 `name` and `display`. `name` is an existing node name in the Newick or NEXUS
 data, and `display` is the replacement text. Dense node positions and node
-numbers are not accepted as mapping keys:
+numbers are not accepted as mapping keys. The previous spelling,
+`--node-labels PATH`, remains available as an alias:
 
 ```csv
 name,display
