@@ -86,7 +86,7 @@
                 "render",
                 "--output",
                 labeled_output,
-                "--node-labels",
+                "--nodelabels",
                 labels,
                 "--selected-output-file",
                 original_output,

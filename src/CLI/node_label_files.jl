@@ -100,7 +100,7 @@ function _remap_node_images(
         displayed_selector = _display_name(selector, display_names)
         haskey(remapped, displayed_selector) && throw(
             CLIUsageError(
-                "Node image selectors become ambiguous after applying --node-labels: " *
+                "Node image selectors become ambiguous after applying --nodelabels: " *
                     "multiple names display as $(repr(displayed_selector)).",
             ),
         )
@@ -123,7 +123,7 @@ function _remap_edge_images(
         )
         haskey(remapped, displayed_selector) && throw(
             CLIUsageError(
-                "Edge image selectors become ambiguous after applying --node-labels: " *
+                "Edge image selectors become ambiguous after applying --nodelabels: " *
                     "multiple edges display as $(repr(displayed_selector)).",
             ),
         )

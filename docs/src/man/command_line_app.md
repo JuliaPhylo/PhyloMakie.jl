@@ -112,7 +112,7 @@ Those forms are intentionally not advertised or accepted by `-p`.
 
 ## Display-name remapping
 
-Pass `--node-labels PATH` to `view` or `render` to replace node names for
+Pass `--nodelabels PATH` to `view` or `render` to replace node names for
 display from a headered CSV or TSV file. The file must have exactly the columns
 `name` and `display`. `name` is an existing node name in the Newick or NEXUS
 data, and `display` is the replacement text. Dense node positions and node
@@ -126,13 +126,13 @@ Root,Common ancestor
 
 ```sh
 phylomakie view \
-    --node-labels labels.csv \
+    --nodelabels labels.csv \
     -p 'shownodelabel=true' \
     trees.nwk
 
 phylomakie render \
     --output labeled-tree.svg \
-    --node-labels labels.tsv \
+    --nodelabels labels.tsv \
     trees.nwk
 ```
 

@@ -32,7 +32,7 @@ may be combined; overlapping records are written or shown only once.
 
 const PLOT_HELP = """
 Display-name remapping:
-  --node-labels PATH
+  --nodelabels PATH
       Read a headered .csv or .tsv file with exactly 2 columns: name,display.
       `name` is an existing node name in the Newick/NEXUS data; `display` is
       the replacement text used by view/render. Numeric node positions are not
@@ -76,7 +76,7 @@ Values use Julia literal syntax. Supported forms are numbers, booleans, strings,
 symbols, tuples, arrays, and dictionaries. Constructors other than Dict,
 regular expressions, functions, image matrices, and arbitrary Julia expressions
 are not accepted. Node/edge image values may be local paths or HTTP(S) URLs;
-their selectors use original input names even when --node-labels is present.
+their selectors use original input names even when --nodelabels is present.
 """
 
 const VIEW_HELP = """
@@ -85,7 +85,7 @@ Usage: phylomakie view [options] INPUT ...
 Display selected phylogenies in the interactive viewer.
 
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --node-labels PATH      Remap node names for display from CSV or TSV.
+      --nodelabels PATH       Remap node names for display from CSV or TSV.
       --size WIDTHxHEIGHT     Window size (default: 1700x950).
   -h, --help                  Show this help.
 
@@ -96,7 +96,7 @@ Examples:
   phylomakie view --head 3 --tail 3 posterior.trees
   phylomakie view --skip 9 --stride 10 --size 1400x900 posterior.trees
   phylomakie view -p 'useedgelength=true' -p 'showgamma=true' trees.nwk
-  phylomakie view --node-labels display.csv -p 'shownodelabel=true' trees.nwk
+  phylomakie view --nodelabels display.csv -p 'shownodelabel=true' trees.nwk
 """
 
 const INSPECT_HELP = """
@@ -128,7 +128,7 @@ Usage: phylomakie render [options] INPUT ...
       --no-titles             Omit source and record titles.
       --force                 Replace existing image output files.
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --node-labels PATH      Remap node names for display from CSV or TSV.
+      --nodelabels PATH       Remap node names for display from CSV or TSV.
   -h, --help                  Show this help.
 
 $(COMMON_HELP)
@@ -138,7 +138,7 @@ Examples:
   phylomakie render --output tree.svg --size 1200x900 --force trees.nwk
   phylomakie render --output grid.pdf --multiple grid --columns 3 --no-titles trees.nwk
   phylomakie render --output sample.pdf --skip 9 --stride 10 posterior.trees
-  phylomakie render --output tree.png --node-labels display.csv trees.nwk
+  phylomakie render --output tree.png --nodelabels display.csv trees.nwk
   phylomakie render --multiple files --output 'tree-{index}.pdf' trees.nwk
 """
 

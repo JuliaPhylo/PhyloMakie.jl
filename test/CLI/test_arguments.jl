@@ -21,7 +21,7 @@
             )
             @test !occursin("-p '$(unsupported)=", help)
         end
-        @test occursin("--node-labels PATH", help)
+        @test occursin("--nodelabels PATH", help)
         @test occursin("name,display", help)
         @test occursin("Examples:", help)
     end
@@ -75,7 +75,7 @@
             "useedgelength = true",
             "-p",
             "style = :majortree",
-            "--node-labels",
+            "--nodelabels",
             "labels.tsv",
             "trees.nwk",
         ]
@@ -188,6 +188,9 @@
         "edgeimages = Dict(1 => \"a.png\")",
     )
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
-        ["inspect", "--node-labels", "labels.csv", "-"],
+        ["inspect", "--nodelabels", "labels.csv", "-"],
+    )
+    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
+        ["view", "--node-labels", "labels.csv", "-"],
     )
 end
