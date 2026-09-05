@@ -1,46 +1,79 @@
-@testset "Node label files" begin
+@testset "Node display-name files" begin
+    records = PhyloMakieCLI.load_records(
+        PhyloMakieCLI.InputOptions(
+            ["-"],
+            :newick,
+            PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0, 1),
+        );
+        stdin_io = IOBuffer("(A,(B,C)Inner)Root;"),
+    ).records
+
     mktempdir() do directory
         csv_path = joinpath(directory, "labels.csv")
-        write(csv_path, "number,label\n1,Ancestor\n4,Focal clade\n")
+        write(csv_path, "name,display\nA,Canis lupus\nInner,Focal clade\nRoot,Ancestor\n")
         csv_labels = PhyloMakieCLI.load_node_labels(csv_path)
-        @test names(csv_labels) == ["number", "label"]
-        @test csv_labels.number == [1, 4]
-        @test csv_labels.label == ["Ancestor", "Focal clade"]
+        @test csv_labels == Dict(
+            "A" => "Canis lupus",
+            "Inner" => "Focal clade",
+            "Root" => "Ancestor",
+        )
 
         tsv_path = joinpath(directory, "labels.tsv")
-        write(tsv_path, "number\tlabel\n2\tTip A\n3\tTip B\n")
+        write(tsv_path, "name\tdisplay\nB\tTip B\nC\tTip C\n")
         tsv_labels = PhyloMakieCLI.load_node_labels(tsv_path)
-        @test tsv_labels.number == [2, 3]
-        @test tsv_labels.label == ["Tip A", "Tip B"]
+        @test tsv_labels == Dict("B" => "Tip B", "C" => "Tip C")
 
-        original = Dict{Symbol, Any}(:showtiplabel => false)
-        loaded = PhyloMakieCLI.load_plot_options(original, csv_path)
-        @test loaded[:showtiplabel] === false
-        @test loaded[:nodelabel] == csv_labels
-        @test !haskey(original, :nodelabel)
+        original_options = Dict{Symbol, Any}(
+            :showtiplabel => true,
+            :nodeimages => Dict("A" => "a.png"),
+            :edgeimages => Dict(("Root", "Inner") => "inner.png"),
+        )
+        loaded = PhyloMakieCLI.load_display_inputs(records, original_options, csv_path)
+        original_names = PhyloMakie.node_label.(PhyloMakie.nodes(only(records).phylogeny))
+        display_names = PhyloMakie.node_label.(
+            PhyloMakie.nodes(only(loaded.records).phylogeny),
+        )
+        @test original_names == ["A", "B", "C", "Inner", "Root"]
+        @test display_names == ["Canis lupus", "B", "C", "Focal clade", "Ancestor"]
+        @test loaded.plot_options[:showtiplabel] === true
+        @test loaded.plot_options[:nodeimages] == Dict("Canis lupus" => "a.png")
+        @test loaded.plot_options[:edgeimages] ==
+            Dict(("Ancestor", "Focal clade") => "inner.png")
+        @test original_options[:nodeimages] == Dict("A" => "a.png")
 
         wrong_extension = joinpath(directory, "labels.txt")
-        write(wrong_extension, "number,label\n1,Ancestor\n")
+        write(wrong_extension, "name,display\nA,Canis lupus\n")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_node_labels(
             wrong_extension,
         )
 
         wrong_header = joinpath(directory, "wrong.csv")
-        write(wrong_header, "node,text\n1,Ancestor\n")
+        write(wrong_header, "number,label\n1,Ancestor\n")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_node_labels(
             wrong_header,
         )
 
-        invalid_number = joinpath(directory, "invalid.csv")
-        write(invalid_number, "number,label\nroot,Ancestor\n")
+        empty_name = joinpath(directory, "empty.csv")
+        write(empty_name, "name,display\n,Ancestor\n")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_node_labels(
-            invalid_number,
+            empty_name,
         )
 
-        duplicate_number = joinpath(directory, "duplicate.tsv")
-        write(duplicate_number, "number\tlabel\n1\tFirst\n1\tSecond\n")
+        duplicate_name = joinpath(directory, "duplicate.tsv")
+        write(duplicate_name, "name\tdisplay\nA\tFirst\nA\tSecond\n")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_node_labels(
-            duplicate_number,
+            duplicate_name,
+        )
+
+        ambiguous_images = Dict{Symbol, Any}(
+            :nodeimages => Dict("A" => "a.png", "B" => "b.png"),
+        )
+        ambiguous_path = joinpath(directory, "ambiguous.csv")
+        write(ambiguous_path, "name,display\nA,Same\nB,Same\n")
+        @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_display_inputs(
+            records,
+            ambiguous_images,
+            ambiguous_path,
         )
     end
 

@@ -1,5 +1,6 @@
 const SUPPORTED_INPUT_FORMATS = (:newick, :nexus, :auto)
 const SUPPORTED_OUTPUT_FORMATS = (:auto, :png, :svg, :pdf)
+const SUPPORTED_SELECTED_OUTPUT_FORMATS = (:newick, :nexus)
 const SUPPORTED_MULTIPLE_MODES = (:grid, :files)
 const SUPPORTED_CLI_PLOT_ATTRIBUTES = (
     :useedgelength,
@@ -18,10 +19,7 @@ const SUPPORTED_CLI_PLOT_ATTRIBUTES = (
     :arrowlen,
     :nodeimages,
     :edgeimages,
-    :nodecex,
-    :nodelabelcolor,
     :edgenumbercolor,
-    :nodelabeladj,
     :tipoffset,
     :tipcex,
     :xlim,
@@ -189,11 +187,9 @@ function _build_input_options(
         head::Union{Nothing, Int},
         tail::Union{Nothing, Int},
         skip::Int,
+        stride::Int,
     )::InputOptions
-    !isnothing(head) && !isnothing(tail) && throw(
-        CLIUsageError("--head and --tail cannot be used together."),
-    )
-    selection = SelectionOptions(indices, head, tail, skip)
+    selection = SelectionOptions(indices, head, tail, skip, stride)
     return InputOptions(sources, format, selection)
 end
 
@@ -220,6 +216,10 @@ function _parse_command_options(
     head = nothing
     tail = nothing
     skip = 0
+    stride = 1
+    selected_output_path = nothing
+    selected_output_format = :newick
+    selected_output_format_set = false
     plot_options = PlotOptions()
     node_label_path = nothing
     size = command === :view ? (1700, 950) : (900, 700)
@@ -257,6 +257,21 @@ function _parse_command_options(
             index += 1
         elseif argument == "--skip"
             skip = _parse_nonnegative_integer(_option_value(args, index, argument), argument)
+            index += 1
+        elseif argument == "--stride"
+            stride = _parse_positive_integer(_option_value(args, index, argument), argument)
+            index += 1
+        elseif argument == "--selected-output-file"
+            selected_output_path = _option_value(args, index, argument)
+            index += 1
+        elseif argument == "--selected-output-format"
+            value = _option_value(args, index, argument)
+            selected_output_format = _parse_choice(
+                value,
+                SUPPORTED_SELECTED_OUTPUT_FORMATS,
+                argument,
+            )
+            selected_output_format_set = true
             index += 1
         elseif argument in ("-p", "--plot")
             command in (:view, :render) || throw(
@@ -328,12 +343,29 @@ function _parse_command_options(
         head,
         tail,
         skip,
+        stride,
     )
-    command === :view && return ViewCommand(input, plot_options, node_label_path, size)
-    command === :inspect && return InspectCommand(input, min(verbosity, 2), taxa_only)
+    isnothing(selected_output_path) && selected_output_format_set && throw(
+        CLIUsageError("--selected-output-format requires --selected-output-file PATH."),
+    )
+    selected_output = SelectedOutputOptions(selected_output_path, selected_output_format)
+    command === :view && return ViewCommand(
+        input,
+        selected_output,
+        plot_options,
+        node_label_path,
+        size,
+    )
+    command === :inspect && return InspectCommand(
+        input,
+        selected_output,
+        min(verbosity, 2),
+        taxa_only,
+    )
     isempty(outputs) && throw(CLIUsageError("render requires at least one --output PATH."))
     return RenderCommand(
         input,
+        selected_output,
         plot_options,
         node_label_path,
         outputs,

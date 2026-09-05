@@ -34,22 +34,45 @@ loads successfully.
 
 ## Record selection
 
-All commands accept the same positional record selectors. `--select` first
-chooses global record indices from the concatenated inputs, `--skip` discards
-records from the start of that selection, and `--head` or `--tail` limits the
-remaining records:
+All commands accept the same record selectors. `--select` first chooses global
+record positions from the concatenated inputs, `--skip` discards records from
+the start of that selection, and `--stride` keeps every Nth remaining record.
+`--head` and `--tail` then keep the requested records from both ends:
 
 ```sh
 phylomakie inspect \
     --select '1,3-5' \
     --skip 1 \
-    --head 3 \
+    --stride 2 \
+    --head 3 --tail 3 \
     posterior.trees
 
 phylomakie inspect --tail 10 posterior.trees
 ```
 
-`--head` and `--tail` cannot be used together.
+`--head` and `--tail` may be used separately or together. If their ranges
+overlap, each record appears only once. Thus `--head 5 --tail 5` yields up to
+10 records in their original order, without duplicating records in a collection
+with fewer than 10.
+
+## Saving selected records
+
+Every command can save exactly the records produced by `--select`, `--skip`,
+`--stride`, `--head`, and `--tail`. `--selected-output-format` accepts `newick`
+(the default) or `nexus`:
+
+```sh
+phylomakie inspect \
+    --skip 9 --stride 10 \
+    --head 5 --tail 5 \
+    --selected-output-file sampled.trees \
+    --selected-output-format nexus \
+    posterior.trees
+```
+
+The output path is replaced if it already exists. Node display-name remapping
+does not modify this file: exported records retain the names stored in the
+input phylogenies.
 
 ## Interactive viewing
 
@@ -87,24 +110,24 @@ The Julia API also accepts table, callable, regular-expression, object, and
 image-matrix values that cannot be represented by this CLI literal syntax.
 Those forms are intentionally not advertised or accepted by `-p`.
 
-## Custom node labels
+## Display-name remapping
 
-Pass `--node-labels PATH` to `view` or `render` to add node annotations from a
-headered CSV or TSV file. The file must have exactly the columns `number` and
-`label`; `number` contains an integer node ID and `label` contains the text to
-display. Use `-p 'shownodenumber=true'` to display the node IDs that a file can
-target:
+Pass `--node-labels PATH` to `view` or `render` to replace node names for
+display from a headered CSV or TSV file. The file must have exactly the columns
+`name` and `display`. `name` is an existing node name in the Newick or NEXUS
+data, and `display` is the replacement text. Dense node positions and node
+numbers are not accepted as mapping keys:
 
 ```csv
-number,label
-1,Ancestor
-4,Focal clade
+name,display
+A,Canis lupus
+Root,Common ancestor
 ```
 
 ```sh
 phylomakie view \
     --node-labels labels.csv \
-    -p 'showtiplabel=false' \
+    -p 'shownodelabel=true' \
     trees.nwk
 
 phylomakie render \
@@ -113,9 +136,11 @@ phylomakie render \
     trees.nwk
 ```
 
-Custom labels are a separate annotation channel. Keep the default
-`showtiplabel=true` to display original tip names as well, or set it to `false`
-when the file's annotations should replace the visible tip text.
+The mapping changes display copies only. Input records and files written by
+`--selected-output-file` keep their original names. Tip names are visible by
+default; use `-p 'shownodelabel=true'` to show mapped internal names. Node and
+edge image dictionaries continue to use the original input names even when a
+display-name file is active.
 
 ## Metadata inspection
 

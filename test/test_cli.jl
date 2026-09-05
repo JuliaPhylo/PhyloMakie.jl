@@ -6,7 +6,7 @@ function cli_fixture_records()::Vector{PhyloMakieCLI.SourceRecord}
     input = PhyloMakieCLI.InputOptions(
         ["-"],
         :newick,
-        PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0),
+        PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0, 1),
     )
     return PhyloMakieCLI.load_records(
         input;
@@ -19,6 +19,7 @@ end
     include("CLI/test_arguments.jl")
     include("CLI/test_records.jl")
     include("CLI/test_node_label_files.jl")
+    include("CLI/test_selected_output.jl")
     include("CLI/test_inspection.jl")
     include("CLI/test_viewer.jl")
     include("CLI/test_rendering.jl")

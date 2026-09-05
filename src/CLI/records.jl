@@ -112,11 +112,21 @@ function select_records(
     indices = selected_indices(selection.indices, length(records))
     first_index = min(selection.skip, length(indices)) + 1
     indices = indices[first_index:end]
-    if !isnothing(selection.head)
-        indices = indices[begin:min(selection.head, length(indices))]
-    elseif !isnothing(selection.tail)
+    indices = indices[begin:selection.stride:end]
+
+    head_indices = if isnothing(selection.head)
+        Int[]
+    else
+        indices[begin:min(selection.head, length(indices))]
+    end
+    tail_indices = if isnothing(selection.tail)
+        Int[]
+    else
         first_tail_index = max(length(indices) - selection.tail + 1, 1)
-        indices = indices[first_tail_index:end]
+        indices[first_tail_index:end]
+    end
+    if !isnothing(selection.head) || !isnothing(selection.tail)
+        indices = unique(vcat(head_indices, tail_indices))
     end
     return [records[index] for index in indices]
 end

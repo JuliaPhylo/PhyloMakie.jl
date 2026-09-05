@@ -14,12 +14,13 @@
     common = PhyloMakieCLI.InputOptions(
         ["-"],
         :newick,
-        PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0),
+        PhyloMakieCLI.SelectionOptions(nothing, nothing, nothing, 0, 1),
     )
     mktempdir() do directory
         template = joinpath(directory, "tree.svg")
         command = PhyloMakieCLI.RenderCommand(
             common,
+            PhyloMakieCLI.SelectedOutputOptions(nothing, :newick),
             Dict{Symbol, Any}(:useedgelength => false),
             nothing,
             [template],
@@ -45,6 +46,7 @@
             grid_path = joinpath(directory, "grid.$(extension)")
             grid_command = PhyloMakieCLI.RenderCommand(
                 common,
+                PhyloMakieCLI.SelectedOutputOptions(nothing, :newick),
                 Dict{Symbol, Any}(),
                 nothing,
                 [grid_path],

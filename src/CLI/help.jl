@@ -15,56 +15,58 @@ Run `phylomakie <command> --help` for command-specific options and examples.
 """
 
 const COMMON_HELP = """
-Input and record options:
-  -f, --input-format FORMAT   newick (default), nexus, or auto.
-  -s, --select SPEC           Global record indices, for example 1,3-5.
-      --head N                Keep the first N selected records.
-      --tail N                Keep the last N selected records.
-      --skip N                Skip the first N selected records (default: 0).
+Input, selection, and selected-record output:
+  -f, --input-format FORMAT        newick (default), nexus, or auto.
+  -s, --select SPEC                Global record positions, for example 1,3-5.
+      --skip N                     Drop the first N records after --select (0).
+      --stride N                   Keep every Nth remaining record (default: 1).
+      --head N                     Keep the first N records after skip/stride.
+      --tail N                     Keep the last N records after skip/stride.
+      --selected-output-file PATH  Write/replace PATH with the selected records.
+      --selected-output-format FMT newick (default) or nexus.
 
-Use `-` as an input path to read from standard input.
-`--head` and `--tail` are mutually exclusive. `--select` is applied first,
-followed by `--skip`, then `--head` or `--tail`.
+Use `-` as an input path to read from standard input. Selection is applied in
+this order: --select, --skip, --stride, then --head/--tail. --head and --tail
+may be combined; overlapping records are written or shown only once.
 """
 
 const PLOT_HELP = """
-Custom node labels:
+Display-name remapping:
   --node-labels PATH
-      Read a headered .csv or .tsv file with exactly 2 columns: number,label.
-      `number` is an integer node ID and `label` is the displayed annotation.
-      Use -p 'shownodenumber=true' to display the IDs that a file can target.
-      Use -p 'showtiplabel=false' when these annotations should replace tip text.
+      Read a headered .csv or .tsv file with exactly 2 columns: name,display.
+      `name` is an existing node name in the Newick/NEXUS data; `display` is
+      the replacement text used by view/render. Numeric node positions are not
+      accepted. Input data and --selected-output-file retain the original names.
+      Tip names are shown by default. Use -p 'shownodelabel=true' to show mapped
+      internal names. Image selectors still use the original input names.
 
       CSV example:                 TSV example:
-        number,label                 number<TAB>label
-        1,Ancestor                   1<TAB>Ancestor
-        4,Focal clade                4<TAB>Focal clade
+        name,display                 name<TAB>display
+        A,Canis lupus                A<TAB>Canis lupus
+        Root,Common ancestor         Root<TAB>Common ancestor
 
 Plot options (repeat -p/--plot NAME=VALUE):
   -p 'useedgelength=true'                  Use edge lengths on the x axis (false).
-  -p 'showtiplabel=false'                  Show tip labels (true).
-  -p 'shownodelabel=true'                  Show existing internal names (false).
-  -p 'shownodenumber=true'                 Show node numbers (false).
-  -p 'showedgelength=true'                 Show edge lengths (false).
-  -p 'showedgenumber=true'                 Show edge numbers (false).
+  -p 'showtiplabel=false'                  Show tip names (true).
+  -p 'shownodelabel=true'                  Show named internal nodes (false).
+  -p 'shownodenumber=true'                 Show stable node IDs (false).
+  -p 'showedgelength=true'                 Show branch lengths (false).
+  -p 'showedgenumber=true'                 Show stable edge IDs (false).
   -p 'showgamma=true'                      Show inheritance probabilities (false).
   -p 'edgecolor="navy"'                    Set one edge color ("black").
-  -p 'edgecolor=Dict(1=>"red",2=>"blue")' Set colors by edge number.
+  -p 'edgecolor=Dict(1=>"red",2=>"blue")' Set colors by stable edge ID.
   -p 'defaultedgecolor="gray"'             Set the dictionary fallback (nothing).
   -p 'majorhybridedgecolor="navy"'         Set major hybrid edges ("deepskyblue4").
   -p 'minorhybridedgecolor="skyblue"'      Set minor hybrid edges ("deepskyblue").
   -p 'edgewidth=2.5'                       Set one edge width (1).
-  -p 'edgewidth=Dict(1=>2.5,2=>0.5)'       Set widths by edge number.
+  -p 'edgewidth=Dict(1=>2.5,2=>0.5)'       Set widths by stable edge ID.
   -p 'minorlinetype=:dash'                 Set the minor edge line style (automatic).
   -p 'arrowlen=0.15'                       Set minor edge arrow length (automatic).
-  -p 'nodeimages=Dict("A"=>"/tmp/a.png")'  Map node names to images (nothing).
+  -p 'nodeimages=Dict("A"=>"/tmp/a.png")'  Map input node names to images (nothing).
   -p 'edgeimages=Dict(("R","A")=>"a.png")'
-                                             Map parent/child names to images (nothing).
-  -p 'nodecex=1.2'                         Scale custom node labels (1).
-  -p 'nodelabelcolor="purple"'             Set custom node label color ("black").
-  -p 'edgenumbercolor="gray"'              Set edge number color ("grey").
-  -p 'nodelabeladj=[0.5,0]'                Align custom node labels (1).
-  -p 'tipoffset=0.1'                       Offset tip labels (0).
+                                             Map input parent/child names to images.
+  -p 'edgenumbercolor="gray"'              Set edge-ID text color ("grey").
+  -p 'tipoffset=0.1'                       Offset tip names from their nodes (0).
   -p 'tipcex=1.2'                          Scale tip and internal names (1).
   -p 'xlim=(-1,10)'                        Set x-axis data limits (nothing).
   -p 'ylim=(0,20)'                         Set y-axis data limits (nothing).
@@ -73,7 +75,8 @@ Plot options (repeat -p/--plot NAME=VALUE):
 Values use Julia literal syntax. Supported forms are numbers, booleans, strings,
 symbols, tuples, arrays, and dictionaries. Constructors other than Dict,
 regular expressions, functions, image matrices, and arbitrary Julia expressions
-are not accepted.
+are not accepted. Node/edge image values may be local paths or HTTP(S) URLs;
+their selectors use original input names even when --node-labels is present.
 """
 
 const VIEW_HELP = """
@@ -82,7 +85,7 @@ Usage: phylomakie view [options] INPUT ...
 Display selected phylogenies in the interactive viewer.
 
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --node-labels PATH      Read custom node labels from CSV or TSV.
+      --node-labels PATH      Remap node names for display from CSV or TSV.
       --size WIDTHxHEIGHT     Window size (default: 1700x950).
   -h, --help                  Show this help.
 
@@ -90,10 +93,10 @@ $(COMMON_HELP)
 $(PLOT_HELP)
 
 Examples:
-  phylomakie view --input-format auto --select '1,3-5' --head 2 trees.nwk
-  phylomakie view --tail 10 --size 1400x900 posterior.trees
+  phylomakie view --head 3 --tail 3 posterior.trees
+  phylomakie view --skip 9 --stride 10 --size 1400x900 posterior.trees
   phylomakie view -p 'useedgelength=true' -p 'showgamma=true' trees.nwk
-  phylomakie view --node-labels labels.tsv -p 'showtiplabel=false' trees.nwk
+  phylomakie view --node-labels display.csv -p 'shownodelabel=true' trees.nwk
 """
 
 const INSPECT_HELP = """
@@ -107,7 +110,9 @@ $(COMMON_HELP)
 
 Examples:
   phylomakie inspect --input-format auto --select '1,3-5' --skip 1 -v trees.nwk
-  phylomakie inspect --tail 10 -vv posterior.trees
+  phylomakie inspect --head 5 --tail 5 -vv posterior.trees
+  phylomakie inspect --stride 100 --selected-output-file sample.nwk posterior.trees
+  phylomakie inspect --selected-output-file sample.nex --selected-output-format nexus trees.nwk
   phylomakie inspect --taxa-only trees.nwk
   printf '(A,(B,C));' | phylomakie inspect -
 """
@@ -121,9 +126,9 @@ Usage: phylomakie render [options] INPUT ...
       --columns N             Grid column count.
       --size WIDTHxHEIGHT     Per-panel size (default: 900x700).
       --no-titles             Omit source and record titles.
-      --force                 Replace existing output files.
+      --force                 Replace existing image output files.
   -p, --plot NAME=VALUE       Set a supported plot attribute; repeatable.
-      --node-labels PATH      Read custom node labels from CSV or TSV.
+      --node-labels PATH      Remap node names for display from CSV or TSV.
   -h, --help                  Show this help.
 
 $(COMMON_HELP)
@@ -132,8 +137,8 @@ $(PLOT_HELP)
 Examples:
   phylomakie render --output tree.svg --size 1200x900 --force trees.nwk
   phylomakie render --output grid.pdf --multiple grid --columns 3 --no-titles trees.nwk
-  phylomakie render --output tree --output-format png --tail 5 trees.nwk
-  phylomakie render --output tree.png --node-labels labels.csv trees.nwk
+  phylomakie render --output sample.pdf --skip 9 --stride 10 posterior.trees
+  phylomakie render --output tree.png --node-labels display.csv trees.nwk
   phylomakie render --multiple files --output 'tree-{index}.pdf' trees.nwk
 """
 

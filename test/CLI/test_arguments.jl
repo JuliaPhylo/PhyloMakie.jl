@@ -12,14 +12,17 @@
                 :clip_planes,
                 :nodelabel,
                 :edgelabel,
+                :nodecex,
                 :edgecex,
+                :nodelabelcolor,
                 :edgelabelcolor,
+                :nodelabeladj,
                 :edgelabeladj,
             )
             @test !occursin("-p '$(unsupported)=", help)
         end
         @test occursin("--node-labels PATH", help)
-        @test occursin("number,label", help)
+        @test occursin("name,display", help)
         @test occursin("Examples:", help)
     end
     cli_attributes = getfield(PhyloMakieCLI, :SUPPORTED_CLI_PLOT_ATTRIBUTES)
@@ -28,8 +31,11 @@
         :clip_planes,
         :nodelabel,
         :edgelabel,
+        :nodecex,
         :edgecex,
+        :nodelabelcolor,
         :edgelabelcolor,
+        :nodelabeladj,
         :edgelabeladj,
     ]
     example_matches = eachmatch(r"-p '([^']+)'", getfield(PhyloMakieCLI, :PLOT_HELP))
@@ -38,6 +44,9 @@
     @test Set(example_names) == Set(cli_attributes)
     for topic in (:view, :inspect, :render)
         help = PhyloMakieCLI.help_text(topic)
+        @test occursin("--stride N", help)
+        @test occursin("--selected-output-file PATH", help)
+        @test occursin("--selected-output-format FMT", help)
         for removed in ("--taxon", "--tree-type", "--rootedness", "--min-tips", "--max-tips")
             @test !occursin(removed, help)
         end
@@ -50,8 +59,16 @@
             "auto",
             "--skip",
             "2",
+            "--stride",
+            "4",
             "--head",
             "3",
+            "--tail",
+            "2",
+            "--selected-output-file",
+            "selected.trees",
+            "--selected-output-format",
+            "nexus",
             "--size",
             "800x600",
             "-p",
@@ -68,8 +85,11 @@
     @test view_command.input.sources == ["trees.nwk"]
     record_options = getfield(view_command.input, Symbol("selec", "tion"))
     @test record_options.skip == 2
+    @test record_options.stride == 4
     @test record_options.head == 3
-    @test isnothing(record_options.tail)
+    @test record_options.tail == 2
+    @test view_command.selected_output.path == "selected.trees"
+    @test view_command.selected_output.format === :nexus
     @test view_command.size == (800, 600)
     @test view_command.plot_options[:useedgelength] === true
     @test view_command.plot_options[:style] === :majortree
@@ -102,17 +122,38 @@
     render_command = PhyloMakieCLI.parse_command(["render", "--output", "tree.svg", "-"])
     @test render_command isa PhyloMakieCLI.RenderCommand
     @test isnothing(render_command.node_label_path)
+    @test isnothing(render_command.selected_output.path)
+    @test render_command.selected_output.format === :newick
     zero_head_command = PhyloMakieCLI.parse_command(["inspect", "--head", "0", "-"])
     zero_head_options = getfield(zero_head_command.input, Symbol("selec", "tion"))
     @test zero_head_options.head == 0
 
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(["compose"])
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(["unknown"])
-    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
-        ["inspect", "--head", "4", "--tail", "2", "-"]
+    both_ends_command = PhyloMakieCLI.parse_command(
+        ["inspect", "--head", "4", "--tail", "2", "-"],
     )
+    both_ends_options = getfield(both_ends_command.input, Symbol("selec", "tion"))
+    @test both_ends_options.head == 4
+    @test both_ends_options.tail == 2
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
         ["inspect", "--skip", "-1", "-"]
+    )
+    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
+        ["inspect", "--stride", "0", "-"],
+    )
+    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
+        ["inspect", "--selected-output-format", "nexus", "-"],
+    )
+    @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
+        [
+            "inspect",
+            "--selected-output-file",
+            "selected.txt",
+            "--selected-output-format",
+            "json",
+            "-",
+        ],
     )
     for removed in ("--taxon", "--tree-type", "--rootedness", "--min-tips", "--max-tips")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
@@ -126,8 +167,11 @@
             :clip_planes,
             :nodelabel,
             :edgelabel,
+            :nodecex,
             :edgecex,
+            :nodelabelcolor,
             :edgelabelcolor,
+            :nodelabeladj,
             :edgelabeladj,
         )
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_plot_assignment(

@@ -13,8 +13,6 @@ const VIEWER_COLOR_CONTROLS = (
     ("Default edge", :defaultedgecolor, true),
     ("Major hybrid", :majorhybridedgecolor, false),
     ("Minor hybrid", :minorhybridedgecolor, false),
-    ("Node label", :nodelabelcolor, false),
-    ("Edge label", :edgelabelcolor, false),
     ("Edge number", :edgenumbercolor, false),
 )
 
@@ -35,10 +33,6 @@ function default_viewer_state()::ViewerState
         1.0,
         nothing,
         nothing,
-        1.0,
-        1.0,
-        "black",
-        "black",
         "grey",
         :fulltree,
     )
@@ -47,7 +41,7 @@ end
 function _apply_viewer_override!(state::ViewerState, name::Symbol, value)::Nothing
     if name in last.(VIEWER_BOOLEAN_CONTROLS)
         value isa Bool && setproperty!(state, name, value)
-    elseif name in (:edgewidth, :nodecex, :edgecex)
+    elseif name === :edgewidth
         value isa Real && setproperty!(state, name, Float64(value))
     elseif name === :arrowlen
         (isnothing(value) || value isa Real) &&
@@ -59,7 +53,7 @@ function _apply_viewer_override!(state::ViewerState, name::Symbol, value)::Nothi
         value isa Symbol && setproperty!(state, name, value)
     elseif name in (
             :edgecolor, :majorhybridedgecolor, :minorhybridedgecolor,
-            :nodelabelcolor, :edgelabelcolor, :edgenumbercolor,
+            :edgenumbercolor,
         )
         value isa AbstractString && setproperty!(state, name, String(value))
     elseif name === :defaultedgecolor
@@ -91,10 +85,6 @@ function viewer_attributes(state::ViewerState)::NamedTuple
         edgewidth = state.edgewidth,
         minorlinetype = state.minorlinetype,
         arrowlen = state.arrowlen,
-        nodecex = state.nodecex,
-        edgecex = state.edgecex,
-        nodelabelcolor = state.nodelabelcolor,
-        edgelabelcolor = state.edgelabelcolor,
         edgenumbercolor = state.edgenumbercolor,
         style = state.style,
     )
@@ -336,23 +326,17 @@ function _add_viewer_controls!(
     _add_color_controls!(controls, 15, plot, axis, state, status_label)
     row = _add_menu_controls!(controls, 7, plot, axis, state, status_label)
     row += 1
-    for (label_text, field, values) in (
-            ("Edge width", :edgewidth, 0.25:0.25:5.0),
-            ("Node scale", :nodecex, 0.5:0.1:3.0),
-            ("Edge scale", :edgecex, 0.5:0.1:3.0),
-        )
-        row = _add_slider_control!(
-            controls,
-            row,
-            label_text,
-            field,
-            values,
-            plot,
-            axis,
-            state,
-            status_label,
-        )
-    end
+    row = _add_slider_control!(
+        controls,
+        row,
+        "Edge width",
+        :edgewidth,
+        0.25:0.25:5.0,
+        plot,
+        axis,
+        state,
+        status_label,
+    )
     _add_arrow_controls!(controls, row, plot, axis, state, status_label)
     return nothing
 end

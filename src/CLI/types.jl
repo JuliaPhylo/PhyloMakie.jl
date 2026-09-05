@@ -28,6 +28,7 @@ struct SelectionOptions
     head::Union{Nothing, Int}
     tail::Union{Nothing, Int}
     skip::Int
+    stride::Int
 end
 
 struct InputOptions
@@ -38,12 +39,18 @@ end
 
 abstract type AbstractCLICommand end
 
+struct SelectedOutputOptions
+    path::Union{Nothing, String}
+    format::Symbol
+end
+
 struct HelpCommand <: AbstractCLICommand
     topic::Symbol
 end
 
 struct ViewCommand{TOptions <: AbstractDict{Symbol}} <: AbstractCLICommand
     input::InputOptions
+    selected_output::SelectedOutputOptions
     plot_options::TOptions
     node_label_path::Union{Nothing, String}
     size::Tuple{Int, Int}
@@ -51,12 +58,14 @@ end
 
 struct InspectCommand <: AbstractCLICommand
     input::InputOptions
+    selected_output::SelectedOutputOptions
     verbosity::Int
     taxa_only::Bool
 end
 
 struct RenderCommand{TOptions <: AbstractDict{Symbol}} <: AbstractCLICommand
     input::InputOptions
+    selected_output::SelectedOutputOptions
     plot_options::TOptions
     node_label_path::Union{Nothing, String}
     outputs::Vector{String}
@@ -108,10 +117,6 @@ mutable struct ViewerState
     edgewidth::Float64
     minorlinetype::Union{Nothing, String}
     arrowlen::Union{Nothing, Float64}
-    nodecex::Float64
-    edgecex::Float64
-    nodelabelcolor::String
-    edgelabelcolor::String
     edgenumbercolor::String
     style::Symbol
 end

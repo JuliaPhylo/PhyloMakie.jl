@@ -1,13 +1,15 @@
 function _load_selected_records(
-        input::InputOptions;
+        command::Union{ViewCommand, InspectCommand, RenderCommand};
         stdin_io::IO,
         error_io::IO,
     )::LoadResult
+    input = command.input
     result = load_records(input; stdin_io)
     emit_load_warnings(result.warnings; io = error_io)
     isempty(result.records) && throw(ArgumentError("No phylogeny records could be loaded."))
     selected = select_records(result.records, input.selection)
     isempty(selected) && throw(ArgumentError("No phylogeny records matched the selection options."))
+    write_selected_records(selected, command.selected_output)
     return (records = selected, warnings = result.warnings)
 end
 
@@ -58,7 +60,7 @@ function run_command(
         stdin_io::IO = stdin,
     )::Int
     result = _load_selected_records(
-        command.input;
+        command;
         stdin_io,
         error_io,
     )
@@ -77,15 +79,19 @@ function run_command(
         error_io::IO = stderr,
         stdin_io::IO = stdin,
     )::Int
-    result = _load_selected_records(command.input; stdin_io, error_io)
-    plot_options = load_plot_options(command.plot_options, command.node_label_path)
+    result = _load_selected_records(command; stdin_io, error_io)
+    display_inputs = load_display_inputs(
+        result.records,
+        command.plot_options,
+        command.node_label_path,
+    )
     backend = _load_backend(:GLMakie)
     return Base.invokelatest(
         _run_view_backend,
         backend,
-        result.records,
+        display_inputs.records,
         result.warnings,
-        plot_options,
+        display_inputs.plot_options,
         command.size,
     )
 end
@@ -97,18 +103,22 @@ function run_command(
         stdin_io::IO = stdin,
     )::Int
     result = _load_selected_records(
-        command.input;
+        command;
         stdin_io,
         error_io,
     )
-    plot_options = load_plot_options(command.plot_options, command.node_label_path)
+    display_inputs = load_display_inputs(
+        result.records,
+        command.plot_options,
+        command.node_label_path,
+    )
     backend = _load_backend(:CairoMakie)
     paths = Base.invokelatest(
         _run_render_backend,
         backend,
-        result.records,
+        display_inputs.records,
         command,
-        plot_options,
+        display_inputs.plot_options,
     )
     foreach(path -> println(output_io, path), paths)
     return 0

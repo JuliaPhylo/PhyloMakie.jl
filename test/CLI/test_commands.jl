@@ -36,6 +36,36 @@
     @test occursin("No phylogeny records matched", String(take!(error_io)))
 
     mktempdir() do directory
+        selected_path = joinpath(directory, "selected.nwk")
+        @test PhyloMakieCLI.run(
+            [
+                "inspect",
+                "--skip",
+                "1",
+                "--stride",
+                "2",
+                "--head",
+                "1",
+                "--tail",
+                "1",
+                "--selected-output-file",
+                selected_path,
+                "-",
+            ],
+            output_io = output_io,
+            error_io = error_io,
+            stdin_io = IOBuffer(
+                "(A1,B1); (A2,B2); (A3,B3); (A4,B4); (A5,B5); (A6,B6);",
+            ),
+        ) == 0
+        take!(output_io)
+        @test isempty(String(take!(error_io)))
+        selected_records = PhyloMakie.readphylogenies(
+            PhyloMakie.NewickFormat(),
+            selected_path,
+        )
+        @test tip_labels.(selected_records) == [["A2", "B2"], ["A6", "B6"]]
+
         output = joinpath(directory, "tree.svg")
         @test PhyloMakieCLI.run(
             ["render", "--output", output, "-"],
@@ -48,8 +78,9 @@
         @test isfile(output) && filesize(output) > 0
 
         labels = joinpath(directory, "labels.tsv")
-        write(labels, "number\tlabel\n1\tFirst tip\n2\tSecond tip\n")
+        write(labels, "name\tdisplay\nA\tFirst tip\nRoot\tAncestor\n")
         labeled_output = joinpath(directory, "labeled.svg")
+        original_output = joinpath(directory, "original.nwk")
         @test PhyloMakieCLI.run(
             [
                 "render",
@@ -57,16 +88,30 @@
                 labeled_output,
                 "--node-labels",
                 labels,
-                "-p",
-                "showtiplabel=false",
+                "--selected-output-file",
+                original_output,
                 "-",
             ],
             output_io = output_io,
             error_io = error_io,
-            stdin_io = IOBuffer("(A:1,(B:2,C:3):4);"),
+            stdin_io = IOBuffer("(A:1,(B:2,C:3):4)Root;"),
         ) == 0
         @test String(take!(output_io)) == "$(labeled_output)\n"
         @test isempty(String(take!(error_io)))
         @test isfile(labeled_output) && filesize(labeled_output) > 0
+        original_names = PhyloMakie.node_label.(
+            PhyloMakie.nodes(
+                only(
+                    PhyloMakie.readphylogenies(
+                        PhyloMakie.NewickFormat(),
+                        original_output,
+                    ),
+                ),
+            ),
+        )
+        @test "A" in original_names
+        @test "Root" in original_names
+        @test !("First tip" in original_names)
+        @test !("Ancestor" in original_names)
     end
 end
