@@ -411,6 +411,10 @@ function _empty_text_channel(align, font = nothing)::TextChannel
     )
 end
 
+function _maybe_text_channel(build::Function, show::Bool, align, font)::TextChannel
+    return show ? build() : _empty_text_channel(align, font)
+end
+
 function compute_text_channels(
         config::PhyloPlotConfig,
         layout::LayoutComputation,
@@ -431,7 +435,8 @@ function compute_text_channels(
     edge_table = layout.annotations.edge_data
     leaf_rows = findall(node_table.lea)
     internal_rows = findall(.!node_table.lea)
-    tip_labels = config.showtiplabel ? compute_text_channel(
+    tip_labels = _maybe_text_channel(config.showtiplabel, (:left, :center), :italic) do
+        compute_text_channel(
             node_table,
             leaf_rows,
             :name,
@@ -440,9 +445,11 @@ function compute_text_channels(
             (:left, :center),
             :italic,
             config.tipoffset,
-        ) : _empty_text_channel((:left, :center), :italic)
+        )
+    end
 
-    internal_node_names = config.shownodelabel ? compute_text_channel(
+    internal_node_names = _maybe_text_channel(config.shownodelabel, (0.5, 0.0), :italic) do
+        compute_text_channel(
             node_table,
             internal_rows,
             :name,
@@ -450,10 +457,12 @@ function compute_text_channels(
             compute_text_sizes(config.tipcex, length(internal_rows)),
             (0.5, 0.0),
             :italic,
-        ) : _empty_text_channel((0.5, 0.0), :italic)
+        )
+    end
 
     node_number_align = compute_xy_alignment(1)
-    node_numbers = config.shownodenumber ? compute_text_channel(
+    node_numbers = _maybe_text_channel(config.shownodenumber, node_number_align, nothing) do
+        compute_text_channel(
             node_table,
             axes(node_table, 1),
             :num,
@@ -461,10 +470,12 @@ function compute_text_channels(
             _default_text_sizes(size(node_table, 1)),
             node_number_align,
             nothing,
-        ) : _empty_text_channel(node_number_align)
+        )
+    end
 
     nodelabeladj = compute_xy_alignment(config.nodelabeladj)
-    node_labels = layout.annotations.labelnodes ? compute_text_channel(
+    node_labels = _maybe_text_channel(layout.annotations.labelnodes, nodelabeladj, nothing) do
+        compute_text_channel(
             node_table,
             axes(node_table, 1),
             :lab,
@@ -472,10 +483,12 @@ function compute_text_channels(
             compute_text_sizes(config.nodecex, size(node_table, 1)),
             nodelabeladj,
             nothing,
-        ) : _empty_text_channel(nodelabeladj)
+        )
+    end
 
     edgelabeladj = compute_xy_alignment(config.edgelabeladj)
-    edge_labels = layout.annotations.labeledges ? compute_text_channel(
+    edge_labels = _maybe_text_channel(layout.annotations.labeledges, edgelabeladj, nothing) do
+        compute_text_channel(
             edge_table,
             axes(edge_table, 1),
             :lab,
@@ -483,9 +496,11 @@ function compute_text_channels(
             compute_text_sizes(config.edgecex, size(edge_table, 1)),
             edgelabeladj,
             nothing,
-        ) : _empty_text_channel(edgelabeladj)
+        )
+    end
 
-    edge_lengths = config.showedgelength ? compute_text_channel(
+    edge_lengths = _maybe_text_channel(config.showedgelength, (0.5, 1.0), nothing) do
+        compute_text_channel(
             edge_table,
             axes(edge_table, 1),
             :len,
@@ -493,11 +508,13 @@ function compute_text_channels(
             _default_text_sizes(size(edge_table, 1)),
             (0.5, 1.0),
             nothing,
-        ) : _empty_text_channel((0.5, 1.0))
+        )
+    end
 
     minor_gamma_rows = findall(edge_table.hyb .& edge_table.min)
     major_gamma_rows = findall(edge_table.hyb .& .!edge_table.min)
-    minor_gamma_labels = config.showgamma ? compute_text_channel(
+    minor_gamma_labels = _maybe_text_channel(config.showgamma, (0.5, 1.0), nothing) do
+        compute_text_channel(
             edge_table,
             minor_gamma_rows,
             :gam,
@@ -505,8 +522,10 @@ function compute_text_channels(
             _default_text_sizes(length(minor_gamma_rows)),
             (0.5, 1.0),
             nothing,
-        ) : _empty_text_channel((0.5, 1.0))
-    major_gamma_labels = config.showgamma ? compute_text_channel(
+        )
+    end
+    major_gamma_labels = _maybe_text_channel(config.showgamma, (0.5, 1.0), nothing) do
+        compute_text_channel(
             edge_table,
             major_gamma_rows,
             :gam,
@@ -514,8 +533,10 @@ function compute_text_channels(
             _default_text_sizes(length(major_gamma_rows)),
             (0.5, 1.0),
             nothing,
-        ) : _empty_text_channel((0.5, 1.0))
-    edge_numbers = config.showedgenumber ? compute_text_channel(
+        )
+    end
+    edge_numbers = _maybe_text_channel(config.showedgenumber, (0.5, 0.0), nothing) do
+        compute_text_channel(
             edge_table,
             axes(edge_table, 1),
             :num,
@@ -523,7 +544,8 @@ function compute_text_channels(
             _default_text_sizes(size(edge_table, 1)),
             (0.5, 0.0),
             nothing,
-        ) : _empty_text_channel((0.5, 0.0))
+        )
+    end
 
     return (
         tip_labels = tip_labels,

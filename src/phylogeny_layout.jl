@@ -93,6 +93,80 @@ function _resolve_edge_lengths(
     return calculate_edge_lengths, edge_lengths
 end
 
+function _assign_node_y_bounds_majortree!(
+        node_y::Vector{Float64},
+        node_y_lo::Vector{Float64},
+        node_y_hi::Vector{Float64},
+        phylogeny::AbstractPhylogeny,
+        current_node,
+        ymin::Float64,
+        ymax::Float64,
+    )::Nothing
+    current_node_index = node_index(phylogeny, current_node)
+    node_y_lo[current_node_index] = ymax
+    node_y_hi[current_node_index] = ymin
+    minor_y_lo = ymax
+    minor_y_hi = ymin
+    no_major_child = true
+    for current_edge in outgoing_edges(phylogeny, current_node)
+        if is_major(current_edge)
+            child_index = node_index(phylogeny, child_node(phylogeny, current_edge))
+            child_y = node_y[child_index]
+            no_major_child = false
+            node_y_lo[current_node_index] = min(node_y_lo[current_node_index], child_y)
+            node_y_hi[current_node_index] = max(node_y_hi[current_node_index], child_y)
+        elseif no_major_child
+            child_index = node_index(phylogeny, child_node(phylogeny, current_edge))
+            child_y = node_y[child_index]
+            minor_y_lo = min(minor_y_lo, child_y)
+            minor_y_hi = max(minor_y_hi, child_y)
+        end
+    end
+    if no_major_child
+        if minor_y_lo == minor_y_hi
+            minor_y_lo += minor_y_lo < (ymax + ymin) / 2 ? 0.1 : -0.1
+            minor_y_hi = minor_y_lo
+        end
+        node_y_lo[current_node_index] = minor_y_lo
+        node_y_hi[current_node_index] = minor_y_hi
+    end
+    node_y[current_node_index] =
+        (node_y_lo[current_node_index] + node_y_hi[current_node_index]) / 2
+    if no_major_child
+        node_y_lo[current_node_index] = node_y[current_node_index]
+        node_y_hi[current_node_index] = node_y[current_node_index]
+    end
+    return nothing
+end
+
+function _assign_node_y_bounds_fulltree!(
+        node_y::Vector{Float64},
+        node_y_lo::Vector{Float64},
+        node_y_hi::Vector{Float64},
+        edge_y_lo::Vector{Float64},
+        phylogeny::AbstractPhylogeny,
+        current_node,
+        ymin::Float64,
+        ymax::Float64,
+    )::Nothing
+    current_node_index = node_index(phylogeny, current_node)
+    node_y_lo[current_node_index] = ymax
+    node_y_hi[current_node_index] = ymin
+    for current_edge in outgoing_edges(phylogeny, current_node)
+        child_y = if is_major(current_edge)
+            child_index = node_index(phylogeny, child_node(phylogeny, current_edge))
+            node_y[child_index]
+        else
+            edge_y_lo[edge_index(phylogeny, current_edge)]
+        end
+        node_y_lo[current_node_index] = min(node_y_lo[current_node_index], child_y)
+        node_y_hi[current_node_index] = max(node_y_hi[current_node_index], child_y)
+    end
+    node_y[current_node_index] =
+        (node_y_lo[current_node_index] + node_y_hi[current_node_index]) / 2
+    return nothing
+end
+
 function compute_phylogeny_geometry(
         prepared_phylogeny::PreparedPhylogeny,
         config::PhyloPlotConfig,
@@ -136,59 +210,14 @@ function compute_phylogeny_geometry(
 
     for current_node in Iterators.reverse(prepared_phylogeny.preorder)
         is_leaf(phylogeny, current_node) && continue
-        current_node_index = node_index(phylogeny, current_node)
-        node_y_lo[current_node_index] = ymax
-        node_y_hi[current_node_index] = ymin
-        minor_y_lo = ymax
-        minor_y_hi = ymin
-        no_major_child = use_direct_hybrid_line
-        for current_edge in outgoing_edges(phylogeny, current_node)
-            if use_direct_hybrid_line
-                if is_major(current_edge)
-                    child_index = node_index(
-                        phylogeny,
-                        child_node(phylogeny, current_edge),
-                    )
-                    child_y = node_y[child_index]
-                    no_major_child = false
-                    node_y_lo[current_node_index] = min(node_y_lo[current_node_index], child_y)
-                    node_y_hi[current_node_index] = max(node_y_hi[current_node_index], child_y)
-                elseif no_major_child
-                    child_index = node_index(
-                        phylogeny,
-                        child_node(phylogeny, current_edge),
-                    )
-                    child_y = node_y[child_index]
-                    minor_y_lo = min(minor_y_lo, child_y)
-                    minor_y_hi = max(minor_y_hi, child_y)
-                end
-            else
-                child_y = if is_major(current_edge)
-                    child_index = node_index(
-                        phylogeny,
-                        child_node(phylogeny, current_edge),
-                    )
-                    node_y[child_index]
-                else
-                    edge_y_lo[edge_index(phylogeny, current_edge)]
-                end
-                node_y_lo[current_node_index] = min(node_y_lo[current_node_index], child_y)
-                node_y_hi[current_node_index] = max(node_y_hi[current_node_index], child_y)
-            end
-        end
-        if no_major_child
-            if minor_y_lo == minor_y_hi
-                minor_y_lo += minor_y_lo < (ymax + ymin) / 2 ? 0.1 : -0.1
-                minor_y_hi = minor_y_lo
-            end
-            node_y_lo[current_node_index] = minor_y_lo
-            node_y_hi[current_node_index] = minor_y_hi
-        end
-        node_y[current_node_index] =
-            (node_y_lo[current_node_index] + node_y_hi[current_node_index]) / 2
-        if no_major_child
-            node_y_lo[current_node_index] = node_y[current_node_index]
-            node_y_hi[current_node_index] = node_y[current_node_index]
+        if use_direct_hybrid_line
+            _assign_node_y_bounds_majortree!(
+                node_y, node_y_lo, node_y_hi, phylogeny, current_node, ymin, ymax,
+            )
+        else
+            _assign_node_y_bounds_fulltree!(
+                node_y, node_y_lo, node_y_hi, edge_y_lo, phylogeny, current_node, ymin, ymax,
+            )
         end
     end
 
