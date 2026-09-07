@@ -51,10 +51,14 @@ Makie.@recipe PhyloPlot (phylogeny,) begin
     nodeimages = nothing
     "Map edge endpoints or objects to images."
     edgeimages = nothing
-    "Scale node label text."
-    nodecex = 1
-    "Scale edge label text."
-    edgecex = 1
+    # "Scale node label text."
+    # nodecex = 1
+    "Set the node label font size, following Makie's fontsize convention."
+    nodefontsize = @inherit fontsize 16.0f0
+    # "Scale edge label text."
+    # edgecex = 1
+    "Set the edge label font size, following Makie's fontsize convention."
+    edgefontsize = @inherit fontsize 16.0f0
     "Set node label color."
     nodelabelcolor = "black"
     "Set edge label color."
@@ -67,8 +71,10 @@ Makie.@recipe PhyloPlot (phylogeny,) begin
     edgelabeladj = [0.5, 0]
     "Move tip labels away from tip positions."
     tipoffset = 0
-    "Scale tip label text."
-    tipcex = 1
+    # "Scale tip label text."
+    # tipcex = 1
+    "Set the tip and internal-node label font size, following Makie's fontsize convention."
+    tipfontsize = @inherit fontsize 16.0f0
     "Set x data limits."
     xlim = nothing
     "Set y data limits."

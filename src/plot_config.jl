@@ -20,15 +20,18 @@ const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :edgelabel,
     :nodeimages,
     :edgeimages,
-    :nodecex,
-    :edgecex,
+    # :nodecex,
+    # :edgecex,
+    :nodefontsize,
+    :edgefontsize,
     :nodelabelcolor,
     :edgelabelcolor,
     :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
     :tipoffset,
-    :tipcex,
+    # :tipcex,
+    :tipfontsize,
     :xlim,
     :ylim,
     :style,
@@ -38,9 +41,12 @@ struct PhyloPlotConfig{
         TXLimits,
         TYLimits,
         TTipOffset,
-        TTipScale,
-        TNodeScale,
-        TEdgeScale,
+        # TTipScale,
+        # TNodeScale,
+        # TEdgeScale,
+        TTipFontSize,
+        TNodeFontSize,
+        TEdgeFontSize,
         TNodeColor,
         TEdgeColor,
         TEdgeNumberColor,
@@ -70,15 +76,18 @@ struct PhyloPlotConfig{
     arrowlen::TArrowLength
     nodelabel::DataFrame
     edgelabel::DataFrame
-    nodecex::TNodeScale
-    edgecex::TEdgeScale
+    # nodecex::TNodeScale
+    # edgecex::TEdgeScale
+    nodefontsize::TNodeFontSize
+    edgefontsize::TEdgeFontSize
     nodelabelcolor::TNodeColor
     edgelabelcolor::TEdgeColor
     edgenumbercolor::TEdgeNumberColor
     nodelabeladj::TNodeAlign
     edgelabeladj::TEdgeAlign
     tipoffset::TTipOffset
-    tipcex::TTipScale
+    # tipcex::TTipScale
+    tipfontsize::TTipFontSize
     xlim::TXLimits
     ylim::TYLimits
     style::Symbol
@@ -135,15 +144,18 @@ function resolve_plot_config(;
         arrowlen = nothing,
         nodelabel::AbstractDataFrame = DataFrame(),
         edgelabel::AbstractDataFrame = DataFrame(),
-        nodecex = 1,
-        edgecex = 1,
+        # nodecex = 1,
+        # edgecex = 1,
+        nodefontsize = 16.0f0,
+        edgefontsize = 16.0f0,
         nodelabelcolor = "black",
         edgelabelcolor = "black",
         edgenumbercolor = "grey",
         nodelabeladj = 1,
         edgelabeladj = [0.5, 0],
         tipoffset = 0,
-        tipcex = 1,
+        # tipcex = 1,
+        tipfontsize = 16.0f0,
         xlim = nothing,
         ylim = nothing,
         style::Symbol = :fulltree,
@@ -172,15 +184,18 @@ function resolve_plot_config(;
         resolved_arrowlen,
         _normalize_dataframe(nodelabel),
         _normalize_dataframe(edgelabel),
-        nodecex,
-        edgecex,
+        # nodecex,
+        # edgecex,
+        nodefontsize,
+        edgefontsize,
         nodelabelcolor,
         edgelabelcolor,
         edgenumbercolor,
         nodelabeladj,
         edgelabeladj,
         tipoffset,
-        tipcex,
+        # tipcex,
+        tipfontsize,
         xlim,
         ylim,
         resolved_style,
@@ -212,15 +227,18 @@ function with_plot_config_limits(config::PhyloPlotConfig, xlim, ylim)::PhyloPlot
         config.arrowlen,
         config.nodelabel,
         config.edgelabel,
-        config.nodecex,
-        config.edgecex,
+        # config.nodecex,
+        # config.edgecex,
+        config.nodefontsize,
+        config.edgefontsize,
         config.nodelabelcolor,
         config.edgelabelcolor,
         config.edgenumbercolor,
         config.nodelabeladj,
         config.edgelabeladj,
         config.tipoffset,
-        config.tipcex,
+        # config.tipcex,
+        config.tipfontsize,
         xlim,
         ylim,
         config.style,

@@ -331,19 +331,34 @@ function compute_xy_alignment(adj::Tuple)
     return (convert(Float32, adj[1]), convert(Float32, adj[2]))
 end
 
-function compute_text_sizes(text_cex, count::Integer)::Vector{Float32}
+    # function compute_text_sizes(text_cex, count::Integer)::Vector{Float32}
+    #     count == 0 && return Float32[]
+    #
+    #     if text_cex isa Union{AbstractVector, Tuple}
+    #         length(text_cex) > 0 ||
+    #             throw(ArgumentError("text size vectors must contain at least 1 value"))
+    #         return [
+    #             DEFAULT_TEXT_SIZE * Float32(text_cex[mod1(index, length(text_cex))]) for
+    #                 index in 1:count
+    #         ]
+    #     end
+    #
+    #     return fill(DEFAULT_TEXT_SIZE * Float32(text_cex), count)
+    # end
+
+function compute_text_sizes(fontsize, count::Integer)::Vector{Float32}
     count == 0 && return Float32[]
 
-    if text_cex isa Union{AbstractVector, Tuple}
-        length(text_cex) > 0 ||
-            throw(ArgumentError("text size vectors must contain at least 1 value"))
+    if fontsize isa Union{AbstractVector, Tuple}
+        length(fontsize) > 0 ||
+            throw(ArgumentError("fontsize vectors must contain at least 1 value"))
         return [
-            DEFAULT_TEXT_SIZE * Float32(text_cex[mod1(index, length(text_cex))]) for
+            Float32(fontsize[mod1(index, length(fontsize))]) for
                 index in 1:count
         ]
     end
 
-    return fill(DEFAULT_TEXT_SIZE * Float32(text_cex), count)
+    return fill(Float32(fontsize), count)
 end
 
 function _default_text_sizes(count::Integer)::Vector{Float32}
@@ -441,7 +456,8 @@ function compute_text_channels(
             leaf_rows,
             :name,
             _resolve_color("black"),
-            compute_text_sizes(config.tipcex, length(leaf_rows)),
+            # compute_text_sizes(config.tipcex, length(leaf_rows)),
+            compute_text_sizes(config.tipfontsize, length(leaf_rows)),
             (:left, :center),
             :italic,
             config.tipoffset,
@@ -454,7 +470,8 @@ function compute_text_channels(
             internal_rows,
             :name,
             _resolve_color("black"),
-            compute_text_sizes(config.tipcex, length(internal_rows)),
+            # compute_text_sizes(config.tipcex, length(internal_rows)),
+            compute_text_sizes(config.tipfontsize, length(internal_rows)),
             (0.5, 0.0),
             :italic,
         )
@@ -480,7 +497,8 @@ function compute_text_channels(
             axes(node_table, 1),
             :lab,
             _resolve_color(config.nodelabelcolor),
-            compute_text_sizes(config.nodecex, size(node_table, 1)),
+            # compute_text_sizes(config.nodecex, size(node_table, 1)),
+            compute_text_sizes(config.nodefontsize, size(node_table, 1)),
             nodelabeladj,
             nothing,
         )
@@ -493,7 +511,8 @@ function compute_text_channels(
             axes(edge_table, 1),
             :lab,
             _resolve_color(config.edgelabelcolor),
-            compute_text_sizes(config.edgecex, size(edge_table, 1)),
+            # compute_text_sizes(config.edgecex, size(edge_table, 1)),
+            compute_text_sizes(config.edgefontsize, size(edge_table, 1)),
             edgelabeladj,
             nothing,
         )

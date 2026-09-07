@@ -32,15 +32,18 @@
         @test config.arrowlen == 0.1
         @test isempty(config.nodelabel)
         @test isempty(config.edgelabel)
-        @test config.nodecex == 1
-        @test config.edgecex == 1
+        # @test config.nodecex == 1
+        # @test config.edgecex == 1
+        @test config.nodefontsize == 16.0f0
+        @test config.edgefontsize == 16.0f0
         @test config.nodelabelcolor == "black"
         @test config.edgelabelcolor == "black"
         @test config.edgenumbercolor == "grey"
         @test config.nodelabeladj == 1
         @test config.edgelabeladj == [0.5, 0]
         @test config.tipoffset == 0
-        @test config.tipcex == 1
+        # @test config.tipcex == 1
+        @test config.tipfontsize == 16.0f0
         @test config.xlim === nothing
         @test config.ylim === nothing
         @test config.style == :fulltree

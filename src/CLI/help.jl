@@ -68,7 +68,7 @@ Plot options (repeat -p/--plot NAME=VALUE):
                                              Map input parent/child names to images.
   -p 'edgenumbercolor="gray"'              Set edge-ID text color ("grey").
   -p 'tipoffset=0.1'                       Offset tip names from their nodes (0).
-  -p 'tipcex=1.2'                          Scale tip and internal names (1).
+  -p 'tipfontsize=20'                      Set tip and internal-node label size (16).
   -p 'xlim=(-1,10)'                        Set x-axis data limits (nothing).
   -p 'ylim=(0,20)'                         Set y-axis data limits (nothing).
   -p 'style=:majortree'                    Use :fulltree or :majortree (:fulltree).

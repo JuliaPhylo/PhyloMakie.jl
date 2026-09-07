@@ -62,7 +62,8 @@ plot(
         label = ["edge number 1", "edge # 2"],
     ),
     edgelabelcolor = "orangered",
-    edgecex = [0.9, 1.1],
+    # edgecex = [0.9, 1.1],
+    edgefontsize = [14.4, 17.6],
     edgelabeladj = [0.5, -0.3],
 )
 ```

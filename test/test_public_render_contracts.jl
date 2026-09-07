@@ -44,13 +44,21 @@ function _repeat_each(values::AbstractVector{T})::Vector{T} where {T}
     return repeated
 end
 
-function _expected_contract_fontsizes(scale::Real, count::Integer)
-    return fill(getfield(PhyloMakie, :DEFAULT_TEXT_SIZE) * Float32(scale), count)
+# function _expected_contract_fontsizes(scale::Real, count::Integer)
+#     return fill(getfield(PhyloMakie, :DEFAULT_TEXT_SIZE) * Float32(scale), count)
+# end
+#
+# function _expected_contract_fontsizes(scales::AbstractVector, count::Integer)
+#     text_size = getfield(PhyloMakie, :DEFAULT_TEXT_SIZE)
+#     return Float32[text_size * Float32(scales[mod1(index, length(scales))]) for index in 1:count]
+# end
+
+function _expected_contract_fontsizes(fontsize::Real, count::Integer)
+    return fill(Float32(fontsize), count)
 end
 
-function _expected_contract_fontsizes(scales::AbstractVector, count::Integer)
-    text_size = getfield(PhyloMakie, :DEFAULT_TEXT_SIZE)
-    return Float32[text_size * Float32(scales[mod1(index, length(scales))]) for index in 1:count]
+function _expected_contract_fontsizes(fontsizes::AbstractVector, count::Integer)
+    return Float32[Float32(fontsizes[mod1(index, length(fontsizes))]) for index in 1:count]
 end
 
 function _expected_default_contract_fontsizes(count::Integer)
@@ -229,9 +237,12 @@ end
             edgelabel = edge_labels,
             xlim = render_case.xlim,
             ylim = render_case.ylim,
-            tipcex = 4.0,
-            nodecex = 3.0,
-            edgecex = 2.0,
+            # tipcex = 4.0,
+            # nodecex = 3.0,
+            # edgecex = 2.0,
+            tipfontsize = 24.0,
+            nodefontsize = 20.0,
+            edgefontsize = 28.0,
         )
 
         node_data = scalar_case.layout.annotations.node_data
@@ -246,10 +257,10 @@ end
         @test Makie.data_limits(scalar_case.plot) == scalar_case.channels.data_limits
 
         @test scalar_case.channels.tip_labels.fontsizes ==
-            _expected_contract_fontsizes(4.0, length(scalar_case.channels.tip_labels.strings))
+            _expected_contract_fontsizes(24.0, length(scalar_case.channels.tip_labels.strings))
         @test scalar_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
-            4.0,
+            24.0,
             length(scalar_case.channels.internal_node_names.strings),
         )
         @test scalar_case.channels.node_numbers.fontsizes ==
@@ -257,9 +268,9 @@ end
             length(scalar_case.channels.node_numbers.strings),
         )
         @test scalar_case.channels.node_labels.fontsizes ==
-            _expected_contract_fontsizes(3.0, length(scalar_case.channels.node_labels.strings))
+            _expected_contract_fontsizes(20.0, length(scalar_case.channels.node_labels.strings))
         @test scalar_case.channels.edge_labels.fontsizes ==
-            _expected_contract_fontsizes(2.0, length(scalar_case.channels.edge_labels.strings))
+            _expected_contract_fontsizes(28.0, length(scalar_case.channels.edge_labels.strings))
         @test scalar_case.channels.edge_lengths.fontsizes ==
             _expected_default_contract_fontsizes(
             length(scalar_case.channels.edge_lengths.strings),
@@ -316,34 +327,46 @@ end
             render_case.newick;
             render_case.attribute_kwargs...,
             nodelabel = node_labels,
-            tipcex = [0.5, 1.0, 1.5],
-            nodecex = [0.75, 1.25],
+            # tipcex = [0.5, 1.0, 1.5],
+            # nodecex = [0.75, 1.25],
+            tipfontsize = [8.0, 16.0, 24.0],
+            nodefontsize = [12.0, 20.0],
         )
         @test vector_case.channels.tip_labels.fontsizes ==
             _expected_contract_fontsizes(
-            [0.5, 1.0, 1.5],
+            [8.0, 16.0, 24.0],
             length(vector_case.channels.tip_labels.strings),
         )
         @test vector_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
-            [0.5, 1.0, 1.5],
+            [8.0, 16.0, 24.0],
             length(vector_case.channels.internal_node_names.strings),
         )
         @test vector_case.channels.node_labels.fontsizes ==
             _expected_contract_fontsizes(
-            [0.75, 1.25],
+            [12.0, 20.0],
             length(vector_case.channels.node_labels.strings),
         )
 
-        documented_edgecex_case = _public_render_case(
+        # documented_edgecex_case = _public_render_case(
+        #     "(A,((B,#H1),(C,(D)#H1)));";
+        #     edgelabel = DataFrame(edge = [1, 2], label = ["edge number 1", "edge # 2"]),
+        #     edgecex = [0.9, 1.1],
+        # )
+        # @test documented_edgecex_case.channels.edge_labels.fontsizes ==
+        #     _expected_contract_fontsizes(
+        #     [0.9, 1.1],
+        #     length(documented_edgecex_case.channels.edge_labels.strings),
+        # )
+        documented_edgefontsize_case = _public_render_case(
             "(A,((B,#H1),(C,(D)#H1)));";
             edgelabel = DataFrame(edge = [1, 2], label = ["edge number 1", "edge # 2"]),
-            edgecex = [0.9, 1.1],
+            edgefontsize = [14.4, 17.6],
         )
-        @test documented_edgecex_case.channels.edge_labels.fontsizes ==
+        @test documented_edgefontsize_case.channels.edge_labels.fontsizes ==
             _expected_contract_fontsizes(
-            [0.9, 1.1],
-            length(documented_edgecex_case.channels.edge_labels.strings),
+            [14.4, 17.6],
+            length(documented_edgefontsize_case.channels.edge_labels.strings),
         )
     end
 

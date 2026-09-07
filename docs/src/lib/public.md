@@ -128,15 +128,18 @@ PhyloMakie.@nexustreeblock_str
 | `edgelabel` | Supply an edge label table. |
 | `nodeimages` | Map node labels, regular expressions, or objects to images. |
 | `edgeimages` | Map edge endpoint selectors or objects to images. |
-| `nodecex` | Scale node label text. |
-| `edgecex` | Scale edge label text. |
+| `nodefontsize` | Set the node label font size. |
+| `edgefontsize` | Set the edge label font size. |
+<!-- | `nodecex` | Scale node label text. | -->
+<!-- | `edgecex` | Scale edge label text. | -->
 | `nodelabelcolor` | Set node label color. |
 | `edgelabelcolor` | Set edge label color. |
 | `edgenumbercolor` | Set edge number color. |
 | `nodelabeladj` | Set node label alignment. |
 | `edgelabeladj` | Set edge label alignment. |
 | `tipoffset` | Move tip labels away from tip positions. |
-| `tipcex` | Scale tip label text. |
+| `tipfontsize` | Set the tip and internal-node label font size. |
+<!-- | `tipcex` | Scale tip label text. | -->
 | `xlim` | Set x data limits. |
 | `ylim` | Set y data limits. |
 | `style` | Choose `:fulltree` or `:majortree`. |
