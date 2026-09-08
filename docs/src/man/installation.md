@@ -3,12 +3,11 @@
 PhyloMakie is a Julia package. Install Julia first, then install PhyloMakie in
 the Julia package manager.
 
-PhyloMakie is not currently registered in the Julia General registry. Install
-it directly from GitHub:
+Install PhyloMakie from the Julia General registry:
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
+Pkg.add("PhyloMakie")
 ```
 
 Julia 1.12 can install PhyloMakie's command-line app into the first Julia
@@ -16,7 +15,7 @@ depot:
 
 ```julia
 using Pkg
-Pkg.Apps.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
+Pkg.Apps.add("PhyloMakie")
 ```
 
 The app executable is named `phylomakie`. Add the first Julia depot's `bin`

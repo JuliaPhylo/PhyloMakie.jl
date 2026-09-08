@@ -37,19 +37,18 @@ that interface.
 
 ## Installation
 
-PhyloMakie is not yet registered in the Julia General registry. Install
-directly from GitHub:
+Install PhyloMakie from the Julia General registry:
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
+Pkg.add("PhyloMakie")
 ```
 
 Julia 1.12 can install the command-line app separately:
 
 ```julia
 using Pkg
-Pkg.Apps.add(url = "https://github.com/JuliaPhylo/PhyloMakie.jl")
+Pkg.Apps.add("PhyloMakie")
 ```
 
 Ensure that the first Julia depot's `bin` directory, normally `~/.julia/bin`,
