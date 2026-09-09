@@ -5,35 +5,53 @@
 [![Build Status](https://github.com/JuliaPhylo/PhyloMakie.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaPhylo/PhyloMakie.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-PhyloMakie is a Makie-native plotting package for phylogenetic trees and
-networks. Its independent `LineageNetwork` model implements the
-`AbstractPhylogeny` interface without carrying parser or inference caches, and
-the standard Makie `plot` / `plot!` interface accepts any implementation of
-that interface.
+PhyloMakie.jl 
+is a 
+[Julia programming language](https://julialang.org/) package 
+providing a [Makie](https://docs.makie.org/stable/)-based
+visualization of phylogenetic trees and networks. 
 
 ## Features
 
+### Library
+
 - `plot(phylogeny)` and `plot!(axis, phylogeny)` follow standard Makie conventions
 - `phyloplot` and `phyloplot!` as convenience aliases
-- `newick"..."` and `nexustreeblock"..."` literals for exactly one network
 - Full-tree and major-tree layout styles
 - Edge-length scaling, gamma display, tip labels, colors, and widths
 - Native node and edge images from matrices, local files, or HTTP(S) URLs
 - Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
-- An installable `phylomakie` app for interactive viewing, metadata inspection,
-  and static rendering
+- Library provides both analysis-friendly as well as developer-friendly approaches for data parsing:
+    - String literals for REPL-based or instructional context: 
+        - `plot(newick"(A, (B,C))")`.
+        - `plot(nexustreeblock"...")`.
+    - Standard string and filepath sources:
+        - `phylos = parsephylogenies(NewickFormat(), "...")` 
+        - `phylos = parsephylogenies(NexusTreeFormat(), "...")` 
+        - `phylos = readphylogenies(NewickFormat(), "/path/to/datafile.newick")` 
+        - `phylos = readphylogenies(NexusTreeFormat(), "/path/to/datafile.nexus")` 
+    - Native interoperability with:
+        - `PhyloNetworks.HybridNetwork`.
 
-## API
 
-| Function | Returns | Notes |
-| --- | --- | --- |
-| `plot(phylogeny)` | `Makie.FigureAxisPlot` | Creates a new figure |
-| `plot!(axis, phylogeny)` | `PhyloPlot` | Draws into an existing axis |
-| `phyloplot(phylogeny)` | `Makie.FigureAxisPlot` | Alias for `plot(phylogeny)` |
-| `phyloplot!(axis, phylogeny)` | `PhyloPlot` | Alias for `plot!(axis, phylogeny)` |
-| `node_positions(plot)` | `DataFrame` | Independent node-coordinate snapshot |
-| `node_positions_observable(plot)` | `Observable{DataFrame}` | Live identity-plus-position table |
+### Application
+
+PhyloMakie.jl also provides an installable `phylomakie` app for interactive viewing, metadata inspection
+  and static rendering.
+After installation, open a shell and run:
+
+```bash
+phylomakie view /path/to/treefile.newick
+```
+
+to open the interactive viewer or
+
+```bash
+phylomake --help
+```
+
+for other options.
 
 ## Installation
 
@@ -59,7 +77,7 @@ modes.
 ## Quickstart
 
 ```julia
-using CairoMakie
+using GLMakie
 using PhyloMakie
 
 phylogeny = newick"(((A:.2,(B:.1)#H1:.1::0.9):.1,(C:.11,#H1:.01::0.1):.19):.1,D:.4);"
@@ -72,10 +90,6 @@ plot(
     style = :fulltree,
 )
 ```
-
-Newick and NEXUS parsing currently delegates to PhyloNetworks and immediately
-converts the result to `LineageNetwork`. Use `from_hybridnetwork`,
-`to_hybridnetwork`, or `convert` when explicitly crossing that adapter boundary.
 
 ## Documentation
 
