@@ -14,7 +14,7 @@ hidespines!(length_axis)
 hidespines!(level_axis)
 plot!(length_axis, phylogeny; useedgelength = true, ylim = (-1.0, 5.5), nodelabel = df)
 plot!(level_axis, phylogeny; useedgelength = false, ylim = (-1.0, 5.5), nodelabel = df)
-figure</code></pre><img src="0e5e7616.png" alt="Example block output"/><div class="admonition is-info" id="Note-6efff30ed7b03a5d"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-6efff30ed7b03a5d" title="Permalink"></a></header><div class="admonition-body"><p>I used a DataFrame to add the label &quot;N&quot; to the plot. For more on this, see the <a href="../adding_data/#Adding-labels">Adding labels</a> section.</p></div></div><p>If edge lengths represent time, D could represent a fossil, or a virus strain sequenced a year before the others. Seeing this visually is the advantage of <code>useedgelength = true</code>.</p><p>This network happens to be time consistent, because the distance along the time (x) axis from node <code>N</code> to the hybrid node <code>H1</code> is the same both ways.</p><div class="admonition is-info" id="Time-consistency-77d4ad93aab5ea5b"><header class="admonition-header">Time consistency<a class="admonition-anchor" href="#Time-consistency-77d4ad93aab5ea5b" title="Permalink"></a></header><div class="admonition-body"><p>A network is time-consistent if all the paths between 2 given nodes all have the same length. Time inconsistency can occur when edge lengths are not measured in calendar time, such as if edge lengths are in substitutions per site (some paths might evolve with more substitutions than others), or in number of generations (some lineages might have 1 generation per year, others more or fewer generations per year), or in coalescent units (number of generations / effective population size).</p><p>A time-consistent network may be ultrametric (the distance between the root and the tips is the same across all tips), or not like the network above.</p></div></div><p>Time-inconsistent networks like these ones below might cause confusion:</p><pre><code class="language-julia hljs">phylogeny1 = parsephylogeny(NewickFormat(),
+figure</code></pre><img src="0e5e7616.png" alt="Example block output"/><div class="admonition is-info" id="Note-2d41926324493cfe"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-2d41926324493cfe" title="Permalink"></a></header><div class="admonition-body"><p>I used a DataFrame to add the label &quot;N&quot; to the plot. For more on this, see the <a href="../adding_data/#Adding-labels">Adding labels</a> section.</p></div></div><p>If edge lengths represent time, D could represent a fossil, or a virus strain sequenced a year before the others. Seeing this visually is the advantage of <code>useedgelength = true</code>.</p><p>This network happens to be time consistent, because the distance along the time (x) axis from node <code>N</code> to the hybrid node <code>H1</code> is the same both ways.</p><div class="admonition is-info" id="Time-consistency-2c44d411eb8f36e"><header class="admonition-header">Time consistency<a class="admonition-anchor" href="#Time-consistency-2c44d411eb8f36e" title="Permalink"></a></header><div class="admonition-body"><p>A network is time-consistent if all the paths between 2 given nodes all have the same length. Time inconsistency can occur when edge lengths are not measured in calendar time, such as if edge lengths are in substitutions per site (some paths might evolve with more substitutions than others), or in number of generations (some lineages might have 1 generation per year, others more or fewer generations per year), or in coalescent units (number of generations / effective population size).</p><p>A time-consistent network may be ultrametric (the distance between the root and the leaves is the same across all leaves), or not like the network above.</p></div></div><p>Time-inconsistent networks like these ones below might cause confusion:</p><pre><code class="language-julia hljs">phylogeny1 = parsephylogeny(NewickFormat(),
     &quot;(A:3.3,((B:1.5,#H1:1.2):1.5,((C:1.8)#H1:1,D:1.1):0.2):0.3);&quot;,
 )
 phylogeny2 = parsephylogeny(NewickFormat(),
@@ -54,15 +54,15 @@ plot!(
     arrowlen = 0.1,
 )
 figure</code></pre><img src="eb6f674e.png" alt="Example block output"/><p>I also used the <code>arrowlen = 0.1</code> option to show the arrow tips to show the direction of minor edges, which are hidden by default when using the <code>style = :majortree</code> option.</p><h2 id="Varying-edge-widths"><a class="docs-heading-anchor" href="#Varying-edge-widths">Varying edge widths</a><a id="Varying-edge-widths-1"></a><a class="docs-heading-anchor-permalink" href="#Varying-edge-widths" title="Permalink"></a></h2><p>We can vary edge widths to show population sizes for example. First we need to map each edge number to the desired width for that edge. We do this with a dictionary.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; log_populationsize = Dict(edge_id(current_edge) =&gt; log10(1_000) for current_edge in edges(phylogeny1));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; log_populationsize[9] = log10(100_000); # larger populations on edge 9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; log_populationsize[1] = log10(100_000); #                and on edge 1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; log_populationsize</code><code class="nohighlight hljs ansi" style="display:block;">Dict{Int64, Float64} with 9 entries:
-  5 =&gt; 3.0
-  4 =&gt; 3.0
-  6 =&gt; 3.0
-  7 =&gt; 3.0
-  2 =&gt; 3.0
-  9 =&gt; 5.0
-  8 =&gt; 3.0
   3 =&gt; 3.0
-  1 =&gt; 5.0</code></pre><pre><code class="language-julia hljs">figure = Figure(size = (760, 320))
+  2 =&gt; 3.0
+  1 =&gt; 5.0
+  4 =&gt; 3.0
+  5 =&gt; 3.0
+  6 =&gt; 3.0
+  8 =&gt; 3.0
+  7 =&gt; 3.0
+  9 =&gt; 5.0</code></pre><pre><code class="language-julia hljs">figure = Figure(size = (760, 320))
 number_axis = Axis(figure[1, 1], title = &quot;Edge numbers&quot;)
 width_axis = Axis(figure[1, 2], title = &quot;Edge widths&quot;)
 hidedecorations!(number_axis)
@@ -71,18 +71,18 @@ hidespines!(number_axis)
 hidespines!(width_axis)
 plot!(number_axis, phylogeny1; showedgenumber = true)
 plot!(width_axis, phylogeny1; edgewidth = log_populationsize)
-figure</code></pre><img src="5e5cc8b6.png" alt="Example block output"/><h2 id="Customization"><a class="docs-heading-anchor" href="#Customization">Customization</a><a id="Customization-1"></a><a class="docs-heading-anchor-permalink" href="#Customization" title="Permalink"></a></h2><p>Check out the list of <code>PhyloPlot</code> attributes in the <a href="../../lib/public/#Public-API">Public API</a>.</p><p>In the example below, we first highlight in orange the edges on the 2 paths from the root to C. Then we change the type of the minor edge (to hide it).</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ecols = Dict(i =&gt; &quot;black&quot; for i in 1:9); # make all black</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; for i in [9, 8, 6, 5, 4, 3] # except for edges ancestral to C
+figure</code></pre><img src="5e5cc8b6.png" alt="Example block output"/><h2 id="Customization"><a class="docs-heading-anchor" href="#Customization">Customization</a><a id="Customization-1"></a><a class="docs-heading-anchor-permalink" href="#Customization" title="Permalink"></a></h2><p>Check out the list of <code>PhylogenyPlot</code> attributes in the <a href="../../lib/public/#Public-API">Public API</a>.</p><p>In the example below, we first highlight in orange the edges on the 2 paths from the root to C. Then we change the type of the minor edge (to hide it).</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ecols = Dict(i =&gt; &quot;black&quot; for i in 1:9); # make all black</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; for i in [9, 8, 6, 5, 4, 3] # except for edges ancestral to C
            ecols[i] = &quot;orangered&quot;
        end</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ecols</code><code class="nohighlight hljs ansi" style="display:block;">Dict{Int64, String} with 9 entries:
-  5 =&gt; &quot;orangered&quot;
-  4 =&gt; &quot;orangered&quot;
-  6 =&gt; &quot;orangered&quot;
-  7 =&gt; &quot;black&quot;
-  2 =&gt; &quot;black&quot;
-  9 =&gt; &quot;orangered&quot;
-  8 =&gt; &quot;orangered&quot;
   3 =&gt; &quot;orangered&quot;
-  1 =&gt; &quot;black&quot;</code></pre><pre><code class="language-julia hljs">figure = Figure(size = (760, 320))
+  2 =&gt; &quot;black&quot;
+  1 =&gt; &quot;black&quot;
+  4 =&gt; &quot;orangered&quot;
+  5 =&gt; &quot;orangered&quot;
+  6 =&gt; &quot;orangered&quot;
+  8 =&gt; &quot;orangered&quot;
+  7 =&gt; &quot;black&quot;
+  9 =&gt; &quot;orangered&quot;</code></pre><pre><code class="language-julia hljs">figure = Figure(size = (760, 320))
 color_axis = Axis(figure[1, 1])
 hidden_axis = Axis(figure[1, 2], title = &quot;Minor hybrid edge hidden&quot;)
 hidedecorations!(color_axis)
@@ -103,4 +103,4 @@ plot!(
     majorhybridedgecolor = &quot;red&quot;,
     minorlinetype = &quot;blank&quot;,
 )
-figure</code></pre><img src="e6f7bae7.png" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../untangling_edges/">« Untangling edges</a><a class="docs-footer-nextpage" href="../adding_data/">Adding data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Wednesday 9 September 2026 03:11">Wednesday 9 September 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+figure</code></pre><img src="e6f7bae7.png" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../untangling_edges/">« Untangling edges</a><a class="docs-footer-nextpage" href="../adding_data/">Adding data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Tuesday 15 September 2026 22:00">Tuesday 15 September 2026</span>. Using Julia version 1.13.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
