@@ -19,23 +19,23 @@ using Makie
 
         # The historical gap: the display-facing annotation table under this
         # config (no shownodenumber/shownodelabel/nodelabel) only ever covers
-        # tips, so it must not be the source for a coordinate query.
+        # leaves, so it must not be the source for a coordinate query.
         @test nrow(case.layout.annotations.node_data) == taxon_count(case.phylogeny)
         @test taxon_count(case.phylogeny) < node_count(case.phylogeny)
     end
 
-    @testset "Tip rows match rendered tip label positions" begin
+    @testset "Leaf rows match rendered leaf label positions" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.style_fulltree
         case = _public_render_case(
             render_case.newick;
             render_case.attribute_kwargs...,
         )
 
-        tip_rows = filter(:isleaf => identity, node_positions(case.plot))
+        leaf_rows = filter(:isleaf => identity, node_positions(case.plot))
         actual_positions = Makie.Point2f[
-            Makie.Point2f(Float32(row.x), Float32(row.y)) for row in eachrow(tip_rows)
+            Makie.Point2f(Float32(row.x), Float32(row.y)) for row in eachrow(leaf_rows)
         ]
-        @test actual_positions == case.channels.tip_labels.positions
+        @test actual_positions == case.channels.leaf_labels.positions
     end
 
     @testset "Minor hybrid edge anchors at arrowhead midpoint under style=:majortree" begin
@@ -144,14 +144,14 @@ using Makie
             return nothing
         end
 
-        tip_points = map(
+        leaf_points = map(
             table -> Makie.Point2f[
                 Makie.Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf
             ],
             plot,
             live_positions,
         )
-        overlay = Makie.scatter!(surface.axis, tip_points; marker = :circle)
+        overlay = Makie.scatter!(surface.axis, leaf_points; marker = :circle)
         overlay_identity = objectid(overlay)
         first_overlay_points = copy(overlay[1][])
 

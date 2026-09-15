@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replace phylogenetic tip and branch terminology with leaf and edge
+  terminology throughout the API, documentation, tests, examples, and app;
+  rename `PhyloPlot` and its convenience functions to `PhylogenyPlot`,
+  `phylogenyplot`, and `phylogenyplot!` without compatibility aliases.
 - Fix GLMakie display failures for plots without node or edge image
   annotations.
 - Add the installable `phylomakie` app with `view`, `inspect`, and `render`

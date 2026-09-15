@@ -20,7 +20,7 @@ function _contract_children(plot)::NamedTuple
         minor_arrowheads = plot.plots[4],
         edge_images = plot.plots[5],
         node_images = plot.plots[6],
-        tip_labels = plot.plots[7],
+        leaf_labels = plot.plots[7],
         internal_node_names = plot.plots[8],
         node_numbers = plot.plots[9],
         node_labels = plot.plots[10],
@@ -67,16 +67,16 @@ end
 
 function _assert_public_surface_rendered(surface)
     @test surface isa Makie.FigureAxisPlot
-    @test isa(surface.plot, getfield(PhyloMakie, :PhyloPlot))
+    @test isa(surface.plot, getfield(PhyloMakie, :PhylogenyPlot))
     @test !isempty(_render_colorbuffer(surface.figure))
     return nothing
 end
 
 @testset "Public render contracts" begin
     CairoMakie.activate!()
-    PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
+    PhylogenyPlot = getfield(PhyloMakie, :PhylogenyPlot)
 
-    @testset "Public surface matrix returns live PhyloPlot handles" begin
+    @testset "Public surface matrix returns live PhylogenyPlot handles" begin
         render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
         render_kwargs = (
             useedgelength = true,
@@ -88,7 +88,7 @@ end
         )
 
         plot_surface = Makie.plot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
-        convenience_surface = phyloplot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
+        convenience_surface = phylogenyplot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
         _assert_public_surface_rendered(plot_surface)
         _assert_public_surface_rendered(convenience_surface)
         @test _render_colorbuffer(plot_surface.figure) ==
@@ -105,10 +105,10 @@ end
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
         convenience_handle =
-            phyloplot!(convenience_axis, parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
+            phylogenyplot!(convenience_axis, parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
 
-        @test plot_handle isa PhyloPlot
-        @test convenience_handle isa PhyloPlot
+        @test plot_handle isa PhylogenyPlot
+        @test convenience_handle isa PhylogenyPlot
         @test !isempty(_render_colorbuffer(plot_figure))
         @test _render_colorbuffer(plot_figure) == _render_colorbuffer(convenience_figure)
     end
@@ -237,10 +237,10 @@ end
             edgelabel = edge_labels,
             xlim = render_case.xlim,
             ylim = render_case.ylim,
-            # tipcex = 4.0,
+            # leafcex = 4.0,
             # nodecex = 3.0,
             # edgecex = 2.0,
-            tipfontsize = 24.0,
+            leaffontsize = 24.0,
             nodefontsize = 20.0,
             edgefontsize = 28.0,
         )
@@ -256,8 +256,8 @@ end
         @test _render_limits_tuple(Makie.data_limits(scalar_case.plot))[2] == render_case.ylim
         @test Makie.data_limits(scalar_case.plot) == scalar_case.channels.data_limits
 
-        @test scalar_case.channels.tip_labels.fontsizes ==
-            _expected_contract_fontsizes(24.0, length(scalar_case.channels.tip_labels.strings))
+        @test scalar_case.channels.leaf_labels.fontsizes ==
+            _expected_contract_fontsizes(24.0, length(scalar_case.channels.leaf_labels.strings))
         @test scalar_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
             24.0,
@@ -288,12 +288,12 @@ end
             length(scalar_case.channels.edge_numbers.strings),
         )
 
-        @test scalar_case.channels.tip_labels.strings == String.(node_data[leaf_rows, :name])
-        @test scalar_case.channels.tip_labels.positions ==
+        @test scalar_case.channels.leaf_labels.strings == String.(node_data[leaf_rows, :name])
+        @test scalar_case.channels.leaf_labels.positions ==
             _node_channel_positions(
             scalar_case.layout,
             leaf_rows;
-            x_offset = scalar_case.config.tipoffset,
+            x_offset = scalar_case.config.leafoffset,
         )
         @test scalar_case.channels.internal_node_names.strings ==
             String.(node_data[internal_rows, :name])
@@ -327,15 +327,15 @@ end
             render_case.newick;
             render_case.attribute_kwargs...,
             nodelabel = node_labels,
-            # tipcex = [0.5, 1.0, 1.5],
+            # leafcex = [0.5, 1.0, 1.5],
             # nodecex = [0.75, 1.25],
-            tipfontsize = [8.0, 16.0, 24.0],
+            leaffontsize = [8.0, 16.0, 24.0],
             nodefontsize = [12.0, 20.0],
         )
-        @test vector_case.channels.tip_labels.fontsizes ==
+        @test vector_case.channels.leaf_labels.fontsizes ==
             _expected_contract_fontsizes(
             [8.0, 16.0, 24.0],
-            length(vector_case.channels.tip_labels.strings),
+            length(vector_case.channels.leaf_labels.strings),
         )
         @test vector_case.channels.internal_node_names.fontsizes ==
             _expected_contract_fontsizes(
@@ -436,9 +436,9 @@ end
         @test isequal(_contract_phylogeny_snapshot(new_phylogeny), before_phylogeny)
         @test plot[:prepared_phylogeny][].phylogeny === new_phylogeny
 
-        Makie.update!(plot; showtiplabel = false, minorlinetype = "blank")
+        Makie.update!(plot; showleaflabel = false, minorlinetype = "blank")
         @test _contract_child_ids(plot) == original_child_ids
-        @test children.tip_labels[1][] == Makie.Point2f[]
+        @test children.leaf_labels[1][] == Makie.Point2f[]
         @test children.minor_edge_shafts[1][] == Makie.Point2f[]
         @test children.minor_arrowheads[1][] == getfield(PhyloMakie, :ArrowheadPixelPolygon)[]
     end

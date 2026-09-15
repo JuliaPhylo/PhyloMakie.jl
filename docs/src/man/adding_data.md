@@ -77,7 +77,7 @@ returns an image source, an [`ImageAnnotation`](@ref
 PhyloMakie.ImageAnnotation), or `nothing`. An image source may be a decoded
 pixel matrix, a local file path, or an HTTP(S) URL.
 
-This mapping targets tips by name and never depends on node numbers:
+This mapping targets leaves by name and never depends on node numbers:
 
 ```julia
 circle_paths = Dict(
@@ -85,13 +85,13 @@ circle_paths = Dict(
     "B" => "/path/to/blue.png",
 )
 
-function tip_image(node)
+function leaf_image(node)
     source = get(circle_paths, node_label(node), nothing)
     isnothing(source) && return nothing
     return ImageAnnotation(source; position = :right, offset = (6, 0))
 end
 
-plot(phylogeny; nodeimages = tip_image)
+plot(phylogeny; nodeimages = leaf_image)
 ```
 
 Sparse node dictionaries may use node labels, regular expressions, or node
@@ -111,7 +111,7 @@ properties. Numeric node and edge selectors are not accepted because those
 identifiers are assigned by the phylogeny implementation and are not a
 predictable user-facing key.
 
-The default image has a full height of `0.8` y-axis data units. Tip rows are
+The default image has a full height of `0.8` y-axis data units. Leaf rows are
 normally 1 unit apart, so this leaves a 20 percent gutter and scales with zoom.
 Use `scale = 1.25` for a full 1-row image, set `height` directly for another
 data-space size, or select `size_space = :pixel` for a screen-fixed size. The
@@ -138,7 +138,7 @@ PhyloPic thumbnail URLs with PhyloPicMakie and passes those URLs to
 tree anchor and rendering lifecycle.
 
 For a short REPL-style recipe focused only on placement, see
-`examples/src/08_phylopic_image_placement_recipe.jl`. It maps the named tips
+`examples/src/08_phylopic_image_placement_recipe.jl`. It maps the named leaves
 `cat`, `dog`, `bear`, `horse`, and `mouse` directly to URL-backed images and
 shows the `:left`, `:above`, `:center`, `:below`, and `:right` positions side by
 side.
@@ -160,7 +160,7 @@ figaxisplot.plot
 Use `.figure` to display the figure, `.axis` to add more Makie annotations, and
 `.plot` with [`node_positions`](@ref PhyloMakie.node_positions) or
 [`edge_positions`](@ref PhyloMakie.edge_positions) to query the coordinates used
-by the live `PhyloPlot`.
+by the live `PhylogenyPlot`.
 
 These query functions return independent snapshots. Use
 [`node_positions_observable`](@ref PhyloMakie.node_positions_observable) when
@@ -170,14 +170,14 @@ an annotation must move after a layout update:
 reactive_tree = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
 reactive_result = plot(reactive_tree; useedgelength = false)
 live_positions = node_positions_observable(reactive_result.plot)
-tip_points = map(reactive_result.plot, live_positions) do table
+leaf_points = map(reactive_result.plot, live_positions) do table
     Point2f[
         Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf
     ]
 end
-tip_overlay = scatter!(
+leaf_overlay = scatter!(
     reactive_result.axis,
-    tip_points;
+    leaf_points;
     color = :orangered,
     markersize = 14,
 )
@@ -186,10 +186,10 @@ reactive_result.figure
 ```
 
 Passing `reactive_result.plot` to `map` ties the callback to that plot's
-lifecycle. The `tip_overlay` handle remains the same while its positions
+lifecycle. The `leaf_overlay` handle remains the same while its positions
 change.
 
-The optional `examples/src/06_phylopic_composition.jl` example passes tree-tip
+The optional `examples/src/06_phylopic_composition.jl` example passes leaf
 coordinates and scientific names to the discovery-aware
 `PhyloPicMakie.augment_phylopic!` function. PhyloPicMakie resolves and renders
 the silhouettes as an independently owned overlay. The newer

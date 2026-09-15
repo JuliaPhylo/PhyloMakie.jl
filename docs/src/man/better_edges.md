@@ -65,7 +65,7 @@ This network happens to be time consistent, because the distance along the time
     (number of generations / effective population size).
 
     A time-consistent network may be ultrametric (the distance
-    between the root and the tips is the same across all tips),
+    between the root and the leaves is the same across all leaves),
     or not like the network above.
 
 Time-inconsistent networks like these ones below might cause confusion:
@@ -154,7 +154,7 @@ figure
 
 ## Customization
 
-Check out the list of `PhyloPlot` attributes in the [Public API](@ref).
+Check out the list of `PhylogenyPlot` attributes in the [Public API](@ref).
 
 In the example below, we first highlight in orange the edges on the 2 paths from
 the root to C. Then we change the type of the minor edge (to hide it).

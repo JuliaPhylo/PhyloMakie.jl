@@ -62,7 +62,7 @@ phylogeny_data(phylogeny::LineageNetwork) = phylogeny.data
 is_hybrid(current_node::LineageNode)::Bool = current_node.hybrid
 is_hybrid(current_edge::LineageEdge)::Bool = current_edge.hybrid
 is_major(current_edge::LineageEdge)::Bool = current_edge.major
-branch_length(current_edge::LineageEdge)::OptionalPhylogenyFloat = current_edge.length
+edge_length(current_edge::LineageEdge)::OptionalPhylogenyFloat = current_edge.length
 inheritance_probability(current_edge::LineageEdge)::OptionalPhylogenyFloat = current_edge.gamma
 
 is_leaf(phylogeny::AbstractPhylogeny, current_node)::Bool =
@@ -108,7 +108,7 @@ function major_parent_edge(phylogeny::AbstractPhylogeny, current_node)
     throw(ArgumentError("node $(node_id(current_node)) has no major parent edge"))
 end
 
-function tip_labels(phylogeny::AbstractPhylogeny)::Vector{String}
+function leaf_labels(phylogeny::AbstractPhylogeny)::Vector{String}
     return String[
         node_label(current_node) for current_node in nodes(phylogeny)
             if is_leaf(phylogeny, current_node)

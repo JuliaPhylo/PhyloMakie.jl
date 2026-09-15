@@ -14,7 +14,7 @@ plot!(
     before_axis,
     phylogeny1;
     useedgelength = true,
-    showtiplabel = true,
+    showleaflabel = true,
     showgamma = true,
     minorlinetype = :dash,
 )
@@ -23,25 +23,25 @@ after_plot = plot!(
     after_axis,
     phylogeny1;
     useedgelength = true,
-    showtiplabel = true,
+    showleaflabel = true,
     showgamma = true,
     minorlinetype = :dash,
 )
 
-majortree_plot = phyloplot!(
+majortree_plot = phylogenyplot!(
     majortree_axis,
     phylogeny1;
     useedgelength = true,
-    showtiplabel = true,
+    showleaflabel = true,
     showgamma = true,
     minorlinetype = :dash,
 )
 
-hidden_plot = phyloplot!(
+hidden_plot = phylogenyplot!(
     hidden_axis,
     phylogeny1;
     useedgelength = true,
-    showtiplabel = true,
+    showleaflabel = true,
     showgamma = true,
     minorlinetype = :dash,
 )
@@ -68,7 +68,7 @@ update!(
 
 update!(
     hidden_plot;
-    showtiplabel = false,
+    showleaflabel = false,
     showgamma = false,
     minorlinetype = "blank",
     edgecolor = "gray25",

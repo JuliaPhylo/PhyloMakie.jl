@@ -140,7 +140,7 @@ end
         "style",
         "phylogeny",
         "arg1",
-        "showtiplabel",
+        "showleaflabel",
         "shownodelabel",
         "showgamma",
         "xlim",

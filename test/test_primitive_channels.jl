@@ -38,15 +38,15 @@ end
 
         @test channels isa PrimitiveChannels
         @test channels.edge_segments isa SegmentChannel
-        @test channels.tip_labels isa TextChannel
+        @test channels.leaf_labels isa TextChannel
         @test channels.minor_arrowheads isa ArrowheadSpecChannel
         @test eltype(channels.edge_segments.points) == Makie.Point2f
         @test eltype(channels.edge_segments.colors) == Makie.RGBAf
         @test eltype(channels.edge_segments.linewidths) == Float32
-        @test eltype(channels.tip_labels.positions) == Makie.Point2f
-        @test eltype(channels.tip_labels.strings) == String
-        @test eltype(channels.tip_labels.colors) == Makie.RGBAf
-        @test eltype(channels.tip_labels.fontsizes) == Float32
+        @test eltype(channels.leaf_labels.positions) == Makie.Point2f
+        @test eltype(channels.leaf_labels.strings) == String
+        @test eltype(channels.leaf_labels.colors) == Makie.RGBAf
+        @test eltype(channels.leaf_labels.fontsizes) == Float32
         @test _plot_data_limits_value(channels.data_limits)[1] == render_case.xlim
         @test _plot_data_limits_value(channels.data_limits)[2] == render_case.ylim
     end
@@ -56,7 +56,7 @@ end
         channels = primitive_channels_for(
             render_case.newick;
             render_case.attribute_kwargs...,
-            showtiplabel = false,
+            showleaflabel = false,
             minorlinetype = "blank",
         )
 
@@ -69,10 +69,10 @@ end
         @test channels.minor_arrowheads.tipwidths == Float32[]
         @test channels.minor_arrowheads.colors == Makie.RGBAf[]
         @test channels.minor_arrowheads.source_indices == Int[]
-        @test channels.tip_labels.positions == Makie.Point2f[]
-        @test channels.tip_labels.strings == String[]
-        @test channels.tip_labels.colors == Makie.RGBAf[]
-        @test channels.tip_labels.fontsizes == Float32[]
+        @test channels.leaf_labels.positions == Makie.Point2f[]
+        @test channels.leaf_labels.strings == String[]
+        @test channels.leaf_labels.colors == Makie.RGBAf[]
+        @test channels.leaf_labels.fontsizes == Float32[]
     end
 
     @testset "Hybrid arrowheads are computed as pixel-metric specs" begin

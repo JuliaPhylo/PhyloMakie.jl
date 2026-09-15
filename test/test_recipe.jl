@@ -17,10 +17,10 @@ function _plot_colorbuffer(figure)
     return copy(Makie.colorbuffer(figure; backend = CairoMakie))
 end
 
-@testset "PhyloPlot recipe" begin
+@testset "PhylogenyPlot recipe" begin
     CairoMakie.activate!()
 
-    PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
+    PhylogenyPlot = getfield(PhyloMakie, :PhylogenyPlot)
 
     render_case = FIXTURE_CORPUS.render_regression_cases.gamma_and_edgecolor
     render_kwargs = (
@@ -32,23 +32,23 @@ end
         style = :fulltree,
     )
 
-    @testset "plot() and phyloplot() dispatch to PhyloPlot and produce identical output" begin
+    @testset "plot() and phylogenyplot() dispatch to PhylogenyPlot and produce identical output" begin
         plot_surface = Makie.plot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
-        convenience_surface = phyloplot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
+        convenience_surface = phylogenyplot(parsephylogeny(NewickFormat(), render_case.newick); render_kwargs...)
 
-        @test plot_surface.plot isa PhyloPlot
-        @test convenience_surface.plot isa PhyloPlot
+        @test plot_surface.plot isa PhylogenyPlot
+        @test convenience_surface.plot isa PhylogenyPlot
         @test _plot_colorbuffer(plot_surface.figure) ==
             _plot_colorbuffer(convenience_surface.figure)
     end
 
-    @testset "phyloplot accepts a Newick string literal" begin
-        surface = phyloplot(newick"(A, (B, C));")
+    @testset "phylogenyplot accepts a Newick string literal" begin
+        surface = phylogenyplot(newick"(A, (B, C));")
         @test surface isa Makie.FigureAxisPlot
-        @test surface.plot isa PhyloPlot
+        @test surface.plot isa PhylogenyPlot
     end
 
-    @testset "plot!() and phyloplot!() dispatch to PhyloPlot and produce identical output" begin
+    @testset "plot!() and phylogenyplot!() dispatch to PhylogenyPlot and produce identical output" begin
         plot_figure = Figure(size = (640, 400))
         plot_axis = Axis(plot_figure[1, 1])
         hidedecorations!(plot_axis)
@@ -59,21 +59,21 @@ end
         convenience_axis = Axis(convenience_figure[1, 1])
         hidedecorations!(convenience_axis)
         hidespines!(convenience_axis)
-        convenience_surface = phyloplot!(
+        convenience_surface = phylogenyplot!(
             convenience_axis,
             parsephylogeny(NewickFormat(), render_case.newick);
             render_kwargs...,
         )
 
-        @test plot_surface isa PhyloPlot
-        @test convenience_surface isa PhyloPlot
+        @test plot_surface isa PhylogenyPlot
+        @test convenience_surface isa PhylogenyPlot
         @test _plot_colorbuffer(plot_figure) == _plot_colorbuffer(convenience_figure)
     end
 
     @testset "Input phylogeny is not mutated by any plotting call" begin
         surfaces = (
             phylogeny -> Makie.plot(phylogeny; useedgelength = true, style = :fulltree),
-            phylogeny -> phyloplot(phylogeny; useedgelength = true, style = :fulltree),
+            phylogeny -> phylogenyplot(phylogeny; useedgelength = true, style = :fulltree),
             phylogeny -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
@@ -82,7 +82,7 @@ end
             phylogeny -> begin
                 figure = Figure()
                 axis = Axis(figure[1, 1])
-                phyloplot!(axis, phylogeny; useedgelength = true, style = :fulltree)
+                phylogenyplot!(axis, phylogeny; useedgelength = true, style = :fulltree)
             end,
         )
 
@@ -131,7 +131,7 @@ end
         @test !occursin("ResolveException", sprint(showerror, x_limit_error))
 
         y_limit_error = try
-            phyloplot(parsephylogeny(NewickFormat(), annotation_case.newick); ylim = (1.0,))
+            phylogenyplot(parsephylogeny(NewickFormat(), annotation_case.newick); ylim = (1.0,))
             nothing
         catch err
             err
@@ -148,7 +148,7 @@ end
             surface = Makie.plot(parsephylogeny(NewickFormat(), scenario.newick); style = :fulltree)
 
             @test surface isa Makie.FigureAxisPlot
-            @test surface.plot isa PhyloPlot
+            @test surface.plot isa PhylogenyPlot
             @test !isempty(_plot_colorbuffer(surface.figure))
         end
 
@@ -224,7 +224,7 @@ end
         after_replacement = _plot_colorbuffer(surface.figure)
         @test before_replacement != after_replacement
 
-        @test plot_handle isa PhyloPlot
+        @test plot_handle isa PhylogenyPlot
     end
 
     @testset "Two phylogenies can be plotted on separate axes in the same figure" begin
@@ -245,7 +245,7 @@ end
             showgamma = true,
             style = :fulltree,
         )
-        right_plot = phyloplot!(
+        right_plot = phylogenyplot!(
             right_axis,
             parsephylogeny(NewickFormat(), scenario.newicks[2]);
             useedgelength = true,

@@ -1,4 +1,4 @@
-function Makie.plot!(plot::PhyloPlot)
+function Makie.plot!(plot::PhylogenyPlot)
     validate_public_plot_limits(plot)
     outputs = register_phylo_graph!(plot)
     create_phylo_primitives!(plot, outputs.primitive_outputs, outputs.text_outputs)

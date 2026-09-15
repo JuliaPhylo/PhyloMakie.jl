@@ -37,7 +37,7 @@ Display-name remapping:
       `name` is an existing node name in the Newick/NEXUS data; `display` is
       the replacement text used by view/render. Numeric node positions are not
       accepted. Input data and --selected-output-file retain the original names.
-      Tip names are shown by default. Use -p 'shownodelabel=true' to show mapped
+      Leaf names are shown by default. Use -p 'shownodelabel=true' to show mapped
       internal names. Image selectors still use the original input names.
       --node-labels is accepted as an alias.
 
@@ -48,10 +48,10 @@ Display-name remapping:
 
 Plot options (repeat -p/--plot NAME=VALUE):
   -p 'useedgelength=true'                  Use edge lengths on the x axis (false).
-  -p 'showtiplabel=false'                  Show tip names (true).
+  -p 'showleaflabel=false'                  Show leaf names (true).
   -p 'shownodelabel=true'                  Show named internal nodes (false).
   -p 'shownodenumber=true'                 Show stable node IDs (false).
-  -p 'showedgelength=true'                 Show branch lengths (false).
+  -p 'showedgelength=true'                 Show edge lengths (false).
   -p 'showedgenumber=true'                 Show stable edge IDs (false).
   -p 'showgamma=true'                      Show inheritance probabilities (false).
   -p 'edgecolor="navy"'                    Set one edge color ("black").
@@ -67,8 +67,8 @@ Plot options (repeat -p/--plot NAME=VALUE):
   -p 'edgeimages=Dict(("R","A")=>"a.png")'
                                              Map input parent/child names to images.
   -p 'edgenumbercolor="gray"'              Set edge-ID text color ("grey").
-  -p 'tipoffset=0.1'                       Offset tip names from their nodes (0).
-  -p 'tipfontsize=20'                      Set tip and internal-node label size (16).
+  -p 'leafoffset=0.1'                       Offset leaf names from their nodes (0).
+  -p 'leaffontsize=20'                      Set leaf and internal-node label size (16).
   -p 'xlim=(-1,10)'                        Set x-axis data limits (nothing).
   -p 'ylim=(0,20)'                         Set y-axis data limits (nothing).
   -p 'style=:majortree'                    Use :fulltree or :majortree (:fulltree).

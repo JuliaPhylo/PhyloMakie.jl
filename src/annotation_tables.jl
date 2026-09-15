@@ -150,7 +150,7 @@ function _prepare_edge_annotation_data(
     end
 
     for (current_edge_index, current_edge) in enumerate(edges(phylogeny))
-        edge_data[current_edge_index, :len] = _format_sig3(branch_length(current_edge))
+        edge_data[current_edge_index, :len] = _format_sig3(edge_length(current_edge))
         edge_data[current_edge_index, :gam] =
             _format_sig3(inheritance_probability(current_edge))
         edge_data[current_edge_index, :num] = string(edge_id(current_edge))
@@ -188,7 +188,7 @@ function compute_edge_annotation_positions(
 end
 
 function _resolve_plot_extent(
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         geometry::PhylogenyGeometry,
         labelnodes::Bool,
     )::PlotExtent
@@ -196,7 +196,7 @@ function _resolve_plot_extent(
     xmax = geometry.xmax
     ymin = geometry.ymin
     ymax = geometry.ymax
-    if config.showtiplabel ||
+    if config.showleaflabel ||
             config.shownodenumber ||
             config.shownodelabel ||
             labelnodes
@@ -207,7 +207,7 @@ function _resolve_plot_extent(
         ymin -= y_expansion
         ymax += y_expansion
     end
-    xmax += config.tipoffset
+    xmax += config.leafoffset
     xlim_error_message =
         "xlim needs to contain 2 values: lower and upper limits. defaults: [$xmin,$xmax]"
     ylim_error_message =
@@ -217,7 +217,7 @@ end
 
 function compute_layout(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         geometry::PhylogenyGeometry,
     )::LayoutComputation
     phylogeny = prepared_phylogeny.phylogeny

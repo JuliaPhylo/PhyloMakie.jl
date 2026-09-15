@@ -17,7 +17,7 @@ implementing the accessor and validation methods used by `preorder`, layout,
 and rendering.
 
 The model exposes node, edge, root, endpoint, adjacency, identifier, label,
-payload, branch-length, inheritance-probability, and classification accessors.
+payload, edge-length, inheritance-probability, and classification accessors.
 Its mutators support construction, deletion, labeling, edge metadata, major
 hybrid-parent selection, and transactional rerooting.
 
@@ -49,10 +49,10 @@ phylogeny for direct use with the plotting entry points.
 
 | Function | Return value | Description |
 | --- | --- | --- |
-| `plot(phylogeny)` | `Makie.FigureAxisPlot` | Create a new figure, axis, and `PhyloPlot`. |
-| `plot!(axis, phylogeny)` | `PhyloPlot` | Draw a network into an existing Makie axis. |
-| `phyloplot(phylogeny)` | `Makie.FigureAxisPlot` | Alias for `plot(phylogeny)`. |
-| `phyloplot!(axis, phylogeny)` | `PhyloPlot` | Alias for `plot!(axis, phylogeny)`. |
+| `plot(phylogeny)` | `Makie.FigureAxisPlot` | Create a new figure, axis, and `PhylogenyPlot`. |
+| `plot!(axis, phylogeny)` | `PhylogenyPlot` | Draw a network into an existing Makie axis. |
+| `phylogenyplot(phylogeny)` | `Makie.FigureAxisPlot` | Alias for `plot(phylogeny)`. |
+| `phylogenyplot!(axis, phylogeny)` | `PhylogenyPlot` | Alias for `plot!(axis, phylogeny)`. |
 
 ## Reading phylogenies
 
@@ -79,20 +79,20 @@ phylogenies. Keep multiple phylogenies explicit and plot them individually:
 
 ```julia
 phylogenies = parsephylogenies(NewickFormat(), "(A,B); (C,D);")
-plots = phyloplot.(phylogenies)
+plots = phylogenyplot.(phylogenies)
 ```
 
 For a single literal phylogeny, pass the parsed value directly:
 
 ```julia
-phyloplot(newick"(A, (B, C));")
+phylogenyplot(newick"(A, (B, C));")
 ```
 
 ```@docs
-PhyloMakie.PhyloPlot
+PhyloMakie.PhylogenyPlot
 PhyloMakie.ImageAnnotation
-PhyloMakie.phyloplot
-PhyloMakie.phyloplot!
+PhyloMakie.phylogenyplot
+PhyloMakie.phylogenyplot!
 PhyloMakie.AbstractPhylogenyFormat
 PhyloMakie.NewickFormat
 PhyloMakie.NexusFormat
@@ -106,12 +106,12 @@ PhyloMakie.@nexustreeblock_str
 
 ## Plot attributes
 
-`PhyloPlot` accepts the following public attributes:
+`PhylogenyPlot` accepts the following public attributes:
 
 | Attribute | Purpose |
 | --- | --- |
 | `useedgelength` | Use edge lengths on the x axis. |
-| `showtiplabel` | Show tip labels. |
+| `showleaflabel` | Show leaf labels. |
 | `shownodelabel` | Show internal node names. |
 | `shownodenumber` | Show node numbers. |
 | `showedgelength` | Show edge lengths. |
@@ -137,9 +137,9 @@ PhyloMakie.@nexustreeblock_str
 | `edgenumbercolor` | Set edge number color. |
 | `nodelabeladj` | Set node label alignment. |
 | `edgelabeladj` | Set edge label alignment. |
-| `tipoffset` | Move tip labels away from tip positions. |
-| `tipfontsize` | Set the tip and internal-node label font size. |
-<!-- | `tipcex` | Scale tip label text. | -->
+| `leafoffset` | Move leaf labels away from leaf positions. |
+| `leaffontsize` | Set the leaf and internal-node label font size. |
+<!-- | `leafcex` | Scale leaf label text. | -->
 | `xlim` | Set x data limits. |
 | `ylim` | Set y data limits. |
 | `style` | Choose `:fulltree` or `:majortree`. |

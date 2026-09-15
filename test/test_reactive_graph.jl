@@ -162,7 +162,7 @@ function _assert_all_outputs_match_channels(plot, outputs)::Nothing
     )
     @test plot[primitive_outputs.data_limits][] == channels.data_limits
 
-    _assert_text_outputs_match_channel(plot, text_outputs.tip_labels, channels.tip_labels)
+    _assert_text_outputs_match_channel(plot, text_outputs.leaf_labels, channels.leaf_labels)
     _assert_text_outputs_match_channel(
         plot,
         text_outputs.internal_node_names,
@@ -211,14 +211,14 @@ end
     register_phylo_graph! = getfield(PhyloMakie, :register_phylo_graph!)
     _register_phylo_intermediate_nodes! =
         getfield(PhyloMakie, :_register_phylo_intermediate_nodes!)
-    PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
+    PhylogenyPlot = getfield(PhyloMakie, :PhylogenyPlot)
 
     @testset "output-node inventory and channel field mapping" begin
         plot, outputs = _registered_reactive_plot()
         repeated_outputs = register_phylo_graph!(plot)
 
-        @test hasmethod(register_phylo_graph!, Tuple{PhyloPlot})
-        @test hasmethod(_register_phylo_intermediate_nodes!, Tuple{PhyloPlot})
+        @test hasmethod(register_phylo_graph!, Tuple{PhylogenyPlot})
+        @test hasmethod(_register_phylo_intermediate_nodes!, Tuple{PhylogenyPlot})
         @test !hasmethod(register_phylo_graph!, Tuple{Makie.Plot})
         @test !hasmethod(_register_phylo_intermediate_nodes!, Tuple{Makie.Plot})
         @test outputs == repeated_outputs
@@ -228,7 +228,7 @@ end
         @test outputs.primitive_outputs.edge_images isa ImageGraphOutputs
         @test outputs.primitive_outputs.node_images isa ImageGraphOutputs
         @test outputs.text_outputs isa PhyloTextGraphOutputs
-        @test outputs.text_outputs.tip_labels isa TextGraphOutputs
+        @test outputs.text_outputs.leaf_labels isa TextGraphOutputs
 
         required_symbols = phylo_graph_output_symbols()
         @test length(required_symbols) == 85
@@ -278,7 +278,7 @@ end
 
     @testset "hidden layers keep typed empty final nodes" begin
         plot, outputs = _registered_reactive_plot(
-            showtiplabel = false,
+            showleaflabel = false,
             shownodelabel = false,
             minorlinetype = "blank",
         )
@@ -293,7 +293,7 @@ end
         @test plot[outputs.primitive_outputs.minor_arrowheads.meshes][] ==
             getfield(PhyloMakie, :ArrowheadPixelPolygon)[]
         @test plot[outputs.primitive_outputs.minor_arrowheads.colors][] == Makie.RGBAf[]
-        _assert_text_outputs_empty(plot, outputs.text_outputs.tip_labels)
+        _assert_text_outputs_empty(plot, outputs.text_outputs.leaf_labels)
         _assert_text_outputs_empty(plot, outputs.text_outputs.internal_node_names)
     end
 
@@ -372,9 +372,9 @@ end
 
         single_group_cases = (
             (
-                label = "tip labels",
-                update = (showtiplabel = false,),
-                select = text_outputs -> text_outputs.tip_labels,
+                label = "leaf labels",
+                update = (showleaflabel = false,),
+                select = text_outputs -> text_outputs.leaf_labels,
             ),
             (
                 label = "internal node names",
@@ -463,11 +463,11 @@ end
         @test after_limits != before_limits
         @test _reactive_limits_tuple(after_limits) == ((0.0, 5.0), (-1.0, 4.0))
 
-        Makie.update!(plot; showtiplabel = false)
-        @test plot[outputs.text_outputs.tip_labels.positions][] == Makie.Point2f[]
-        @test plot[outputs.text_outputs.tip_labels.strings][] == String[]
-        @test plot[outputs.text_outputs.tip_labels.colors][] == Makie.RGBAf[]
-        @test plot[outputs.text_outputs.tip_labels.fontsizes][] == Float32[]
+        Makie.update!(plot; showleaflabel = false)
+        @test plot[outputs.text_outputs.leaf_labels.positions][] == Makie.Point2f[]
+        @test plot[outputs.text_outputs.leaf_labels.strings][] == String[]
+        @test plot[outputs.text_outputs.leaf_labels.colors][] == Makie.RGBAf[]
+        @test plot[outputs.text_outputs.leaf_labels.fontsizes][] == Float32[]
     end
 
     @testset "Makie.update! preserves caller-owned phylogenies" begin

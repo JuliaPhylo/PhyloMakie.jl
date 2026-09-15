@@ -30,7 +30,7 @@ exact_node_images = Dict(
 exact_node_result = plot(
     exact_node_tree;
     nodeimages = exact_node_images,
-    tipoffset = 0.8,
+    leafoffset = 0.8,
     xlim = (0.5, 4.0),
 )
 
@@ -38,7 +38,7 @@ exact_node_result.figure
 
 # Repeated node labels
 #
-# An exact label selects every node with that label. Both `mouse` tips receive
+# An exact label selects every node with that label. Both `mouse` leaves receive
 # the same green image. Repeated labels are not an error.
 
 repeated_node_tree = newick"((mouse,mouse),cat);"
@@ -50,7 +50,7 @@ repeated_node_images = Dict(
 repeated_node_result = plot(
     repeated_node_tree;
     nodeimages = repeated_node_images,
-    tipoffset = 0.8,
+    leafoffset = 0.8,
     xlim = (0.5, 4.5),
 )
 
@@ -70,7 +70,7 @@ regexp_node_images = Dict(
 regexp_node_result = plot(
     regexp_node_tree;
     nodeimages = regexp_node_images,
-    tipoffset = 0.8,
+    leafoffset = 0.8,
     xlim = (0.5, 4.0),
     ylim = (0.25, 4.75),
 )
@@ -94,7 +94,7 @@ exact_edge_result = plot(
     exact_edge_tree;
     edgeimages = exact_edge_images,
     shownodelabel = true,
-    tipoffset = 0.5,
+    leafoffset = 0.5,
     xlim = (0.5, 4.0),
 )
 
@@ -117,7 +117,7 @@ regexp_edge_result = plot(
     regexp_edge_tree;
     edgeimages = regexp_edge_images,
     shownodelabel = true,
-    tipoffset = 0.5,
+    leafoffset = 0.5,
     xlim = (0.5, 4.0),
 )
 

@@ -276,7 +276,7 @@ end
             phylogeny;
             nodeimages = node_mapping,
             edgeimages = edge_mapping,
-            showtiplabel = false,
+            showleaflabel = false,
         )
         plot_handle = surface.plot
         child_ids = objectid.(plot_handle.plots)
@@ -300,7 +300,7 @@ end
             repeated_phylogeny;
             nodeimages = Dict(r"^A$" => red_path),
             edgeimages = Dict(("group" => "A") => blue_path),
-            showtiplabel = false,
+            showleaflabel = false,
         )
         @test length(repeated_surface.plot[:node_image_markers][]) == 2
         @test length(repeated_surface.plot[:edge_image_markers][]) == 2

@@ -3,10 +3,10 @@ using PhyloMakie
 
 CairoMakie.activate!()
 
-# 1. Make a tree whose tip names will identify the images.
+# 1. Make a tree whose leaf names will identify the images.
 tree = newick"(cat,dog,bear,horse,mouse);"
 
-# 2. Supply one image URL for each named tip.
+# 2. Supply one image URL for each named leaf.
 urls = Dict(
     "cat" => "https://images.phylopic.org/images/e9f41f59-d708-47aa-a705-ba9b8826ebc6/thumbnail/192x192.png",
     "dog" => "https://images.phylopic.org/images/4d83a0cd-cf06-4a32-9a5a-0a6b644158c1/thumbnail/192x192.png",
@@ -15,8 +15,8 @@ urls = Dict(
     "mouse" => "https://images.phylopic.org/images/6b2b98f6-f879-445f-9ac2-2c2563157025/thumbnail/192x192.png",
 )
 
-# 3. Choose where each image sits relative to its tip node.
-# Tip rows are 1 data unit apart, so 0.55 leaves space between images.
+# 3. Choose where each image sits relative to its leaf node.
+# Leaf rows are 1 data unit apart, so 0.55 leaves space between images.
 image_height = 0.55
 nodeimages = Dict(
     "cat" => ImageAnnotation(urls["cat"]; position = :left, height = image_height),
@@ -26,11 +26,11 @@ nodeimages = Dict(
     "mouse" => ImageAnnotation(urls["mouse"]; position = :right, height = image_height),
 )
 
-# 4. Plot. Extra x space keeps the right image and tip labels visible.
+# 4. Plot. Extra x space keeps the right image and leaf labels visible.
 result = plot(
     tree;
     nodeimages,
-    tipoffset = 0.8,
+    leafoffset = 0.8,
     xlim = (0.5, 4.0),
     ylim = (0.25, 5.75),
 )

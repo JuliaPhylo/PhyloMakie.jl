@@ -47,10 +47,10 @@ function _resolve_edge_lengths(
         all_edge_lengths_missing = true
         no_edge_lengths_missing = true
         for current_edge in edges(phylogeny)
-            if no_edge_lengths_missing && ismissing(branch_length(current_edge))
+            if no_edge_lengths_missing && ismissing(edge_length(current_edge))
                 no_edge_lengths_missing = false
             end
-            if all_edge_lengths_missing && !ismissing(branch_length(current_edge))
+            if all_edge_lengths_missing && !ismissing(edge_length(current_edge))
                 all_edge_lengths_missing = false
             end
         end
@@ -86,7 +86,7 @@ function _resolve_edge_lengths(
         end
     else
         for current_edge in edges(phylogeny)
-            length_value = branch_length(current_edge)
+            length_value = edge_length(current_edge)
             push!(edge_lengths, ismissing(length_value) ? 1.0 : length_value)
         end
     end
@@ -169,7 +169,7 @@ end
 
 function compute_phylogeny_geometry(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
     )::PhylogenyGeometry
     phylogeny = prepared_phylogeny.phylogeny
     use_direct_hybrid_line = config.style == :majortree

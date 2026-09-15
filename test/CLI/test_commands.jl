@@ -64,7 +64,7 @@
             PhyloMakie.NewickFormat(),
             selected_path,
         )
-        @test tip_labels.(selected_records) == [["A2", "B2"], ["A6", "B6"]]
+        @test leaf_labels.(selected_records) == [["A2", "B2"], ["A6", "B6"]]
 
         output = joinpath(directory, "tree.svg")
         @test PhyloMakieCLI.run(
@@ -78,7 +78,7 @@
         @test isfile(output) && filesize(output) > 0
 
         labels = joinpath(directory, "labels.tsv")
-        write(labels, "name\tdisplay\nA\tFirst tip\nRoot\tAncestor\n")
+        write(labels, "name\tdisplay\nA\tFirst leaf\nRoot\tAncestor\n")
         labeled_output = joinpath(directory, "labeled.svg")
         original_output = joinpath(directory, "original.nwk")
         @test PhyloMakieCLI.run(
@@ -111,7 +111,7 @@
         )
         @test "A" in original_names
         @test "Root" in original_names
-        @test !("First tip" in original_names)
+        @test !("First leaf" in original_names)
         @test !("Ancestor" in original_names)
     end
 end

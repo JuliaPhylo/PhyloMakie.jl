@@ -16,9 +16,9 @@ visualization of phylogenetic trees and networks.
 ### Library
 
 - `plot(phylogeny)` and `plot!(axis, phylogeny)` follow standard Makie conventions
-- `phyloplot` and `phyloplot!` as convenience aliases
+- `phylogenyplot` and `phylogenyplot!` as convenience aliases
 - Full-tree and major-tree layout styles
-- Edge-length scaling, gamma display, tip labels, colors, and widths
+- Edge-length scaling, gamma display, leaf labels, colors, and widths
 - Native node and edge images from matrices, local files, or HTTP(S) URLs
 - Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
@@ -86,7 +86,7 @@ plot(
     phylogeny;
     useedgelength = true,
     showgamma = true,
-    showtiplabel = true,
+    showleaflabel = true,
     style = :fulltree,
 )
 ```

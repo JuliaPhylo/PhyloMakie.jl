@@ -11,9 +11,9 @@ for current_node in nodes(phylogeny)
     rename_node!(current_node, replace(node_label(current_node), "_" => " "))
 end
 
-tip_names = tip_labels(phylogeny)
+leaf_names = leaf_labels(phylogeny)
 thumbnail_urls = Dict{String, String}()
-for name in tip_names
+for name in leaf_names
     resolution = PhyloPicDB.resolve_taxon(name)
     image_record = PhyloPicDB.primary_image(resolution)
     isnothing(image_record) && error("No primary PhyloPic image for $name")
@@ -21,7 +21,7 @@ for name in tip_names
     thumbnail_urls[name] = image_record.thumbnail_url
 end
 
-function phylopic_tip_image(node)
+function phylopic_leaf_image(node)
     url = get(thumbnail_urls, node_label(node), nothing)
     isnothing(url) && return nothing
     return ImageAnnotation(url; height = 0.75, position = :right, offset = (6, 0))
@@ -41,8 +41,8 @@ plot!(
     axis,
     phylogeny;
     useedgelength = true,
-    nodeimages = phylopic_tip_image,
-    showtiplabel = false,
+    nodeimages = phylopic_leaf_image,
+    showleaflabel = false,
 )
 
 figure

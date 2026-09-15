@@ -25,7 +25,7 @@ Configure an image rendered at a node or edge annotation anchor.
 `source` may be a color or real-valued matrix, a local raster-image path, or an
 HTTP(S) URL. `height` is the full rendered height and `scale` multiplies it.
 `size_space = :data` interprets the height in plot y units and defaults to
-`0.8`, leaving a gutter between adjacent 1-unit tip rows. `size_space = :pixel`
+`0.8`, leaving a gutter between adjacent 1-unit leaf rows. `size_space = :pixel`
 defaults to 32 pixels.
 
 `position` places the image relative to its anchor. Supported values are
@@ -41,7 +41,7 @@ from 0 to 1 are also accepted. `offset` adds a `(x, y)` displacement in pixels.
 # Examples
 
 ```julia
-ImageAnnotation("tip.png"; position = :right, offset = (6, 0))
+ImageAnnotation("leaf.png"; position = :right, offset = (6, 0))
 ImageAnnotation("https://example.org/image.png"; scale = 1.25)
 ImageAnnotation(image_matrix; size_space = :pixel, height = 48)
 ```

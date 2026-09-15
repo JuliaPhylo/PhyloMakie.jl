@@ -91,7 +91,7 @@ function build_render_figure(
         column = mod1(index, column_count)
         title = show_titles ? _record_title(record) : ""
         axis = Makie.Axis(figure[row, column]; title)
-        PhyloMakie.phyloplot!(axis, record.phylogeny; plot_options...)
+        PhyloMakie.phylogenyplot!(axis, record.phylogeny; plot_options...)
     end
     return figure
 end

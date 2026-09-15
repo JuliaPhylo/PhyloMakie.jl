@@ -51,7 +51,7 @@
         stdin_io = IOBuffer(nexus),
     )
     @test length(automatic_result.records) == 1
-    @test Set(tip_labels(only(automatic_result.records).phylogeny)) == Set(["A", "B", "C"])
+    @test Set(leaf_labels(only(automatic_result.records).phylogeny)) == Set(["A", "B", "C"])
 
     @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.load_records(
         PhyloMakieCLI.InputOptions(String[], :newick, record_options),

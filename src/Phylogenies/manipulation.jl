@@ -56,7 +56,7 @@ function add_edge!(
         Int(id),
         parent_index,
         child_index,
-        _optional_float(length, "branch length"),
+        _optional_float(length, "edge length"),
         _optional_float(gamma, "inheritance probability"),
         hybrid,
         major,
@@ -79,8 +79,8 @@ function rename_node!(current_node::LineageNode, label::AbstractString)
     return current_node
 end
 
-function set_branch_length!(current_edge::LineageEdge, value)
-    current_edge.length = _optional_float(value, "branch length")
+function set_edge_length!(current_edge::LineageEdge, value)
+    current_edge.length = _optional_float(value, "edge length")
     return current_edge
 end
 

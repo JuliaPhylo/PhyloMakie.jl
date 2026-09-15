@@ -13,15 +13,15 @@
     ]
     statistics = PhyloMakieCLI.collection_statistics(records)
     @test statistics.taxa == ["A", "B", "C", "D", "E"]
-    @test statistics.records[1].branch_length_coverage === :complete
-    @test statistics.records[1].branch_length_sum == 10.0
-    @test statistics.records[2].branch_length_coverage === :none
+    @test statistics.records[1].edge_length_coverage === :complete
+    @test statistics.records[1].edge_length_sum == 10.0
+    @test statistics.records[2].edge_length_coverage === :none
 
     summary_io = IOBuffer()
     PhyloMakieCLI.write_inspection(summary_io, statistics)
     summary = String(take!(summary_io))
     @test occursin("Phylogenies: 2", summary)
-    @test occursin("Tips per phylogeny: min 2, mean 2.5, max 3", summary)
+    @test occursin("Leaves per phylogeny: min 2, mean 2.5, max 3", summary)
     @test occursin("Complete tree length: min 10, mean 10, max 10", summary)
 
     detail_io = IOBuffer()

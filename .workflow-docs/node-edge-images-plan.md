@@ -24,7 +24,7 @@ same native `nodeimages` mechanism.
   the type provides per-image `height`, `scale`, `size_space`, `position`,
   `align`, `aspect`, and pixel `offset` controls.
 - Define data-sized height as full image height along the plot's y axis. The
-  default is `0.8` data units, leaving a gutter between adjacent 1-unit tip
+  default is `0.8` data units, leaving a gutter between adjacent 1-unit leaf
   rows. Preserve source aspect ratio in screen space. Explicit pixel sizing
   defaults to 32 pixels.
 - Support color and real-valued image matrices and raster formats decoded by
@@ -95,8 +95,8 @@ decode for unrelated restyling, and pixel checks on CairoMakie output.
 ### Examples and documentation
 
 Create static colored-circle PNG files and a deliberately repetitive REPL
-walkthrough of node and edge selector forms. Keep a compact 6-tip example that
-reuses the red asset through semantic tip names. Add another example that
+walkthrough of node and edge selector forms. Keep a compact 6-leaf example that
+reuses the red asset through semantic leaf names. Add another example that
 resolves PhyloPic records with PhyloPicMakie and gives their thumbnail URLs to
 `nodeimages`. Document sources, mappings, sizing, placement, alignment,
 reactivity, URL behavior, limits, and package separation.
@@ -109,8 +109,8 @@ documentation.
 
 - The full test suite, Aqua checks, and JET checks pass.
 - The documentation builds without warnings or doctest failures.
-- The offline example renders all 6 tip images plus an edge image from checked-in
-  assets, with the 2 red tips sharing one source file.
+- The offline example renders all 6 leaf images plus an edge image from checked-in
+  assets, with the 2 red leaves sharing one source file.
 - A visual or pixel-level artifact confirms row-relative sizing, preserved
   circles, placement on both node and edge anchors, and intended draw order.
 - The PhyloPic example uses only public PhyloPicDB records plus native

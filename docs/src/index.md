@@ -12,7 +12,7 @@ plot(phylogeny)
 plot!(axis, phylogeny)
 ```
 
-The package also exports `phyloplot` and `phyloplot!` as package-specific
+The package also exports `phylogenyplot` and `phylogenyplot!` as package-specific
 aliases for the same plotting behavior.
 
 ![PhyloMakie logo](assets/logo.png)

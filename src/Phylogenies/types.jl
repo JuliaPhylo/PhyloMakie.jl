@@ -10,7 +10,7 @@ An implementation supplies `nodes`, `edges`, `root_index`, `is_rooted`,
 container and element types, plus `phylogeny_data` when graph-level payloads
 are supported. Its node type supplies `node_id`, `node_label`, `node_data`, and
 `is_hybrid`; its edge type supplies `edge_id`, `edge_data`,
-`branch_length`, `inheritance_probability`, `is_hybrid`, and `is_major`.
+`edge_length`, `inheritance_probability`, `is_hybrid`, and `is_major`.
 Generic traversal, classification, conversion, layout, and rendering build on
 those operations. Extend the functions in this module rather than defining
 same-named functions in a client module.
@@ -100,7 +100,7 @@ function LineageEdge(
         Int(id),
         Int(parent_index),
         Int(child_index),
-        _optional_float(length, "branch length"),
+        _optional_float(length, "edge length"),
         _optional_float(gamma, "inheritance probability"),
         hybrid,
         major,
@@ -240,7 +240,7 @@ function Base.show(io::IO, phylogeny::LineageNetwork)::Nothing
     print(
         io,
         "LineageNetwork($(node_count(phylogeny)) nodes, ",
-        "$(edge_count(phylogeny)) edges, $(taxon_count(phylogeny)) tips, ",
+        "$(edge_count(phylogeny)) edges, $(taxon_count(phylogeny)) leaves, ",
         "$(count(current_node -> current_node.hybrid, phylogeny.nodes)) hybrid nodes, ",
         rooted_description,
         ")",

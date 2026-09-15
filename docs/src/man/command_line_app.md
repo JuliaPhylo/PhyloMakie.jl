@@ -4,7 +4,7 @@ The `phylomakie` app reads collections of phylogenetic trees or networks,
 selects records, and sends the selected records to 1 of 3 commands:
 
 - `view` opens an interactive GLMakie viewer.
-- `inspect` reports source, topology, taxon, and branch-length metadata.
+- `inspect` reports source, topology, taxon, and edge-length metadata.
 - `render` writes static PNG, SVG, or PDF files with CairoMakie.
 
 Run `phylomakie --help` or `phylomakie COMMAND --help` to see the current
@@ -138,7 +138,7 @@ phylomakie render \
 ```
 
 The mapping changes display copies only. Input records and files written by
-`--selected-output-file` keep their original names. Tip names are visible by
+`--selected-output-file` keep their original names. Leaf names are visible by
 default; use `-p 'shownodelabel=true'` to show mapped internal names. Node and
 edge image dictionaries continue to use the original input names even when a
 display-name file is active.
@@ -152,8 +152,8 @@ phylomakie inspect trees.nwk
 ```
 
 The report includes tree and network counts, rooted and unrooted counts,
-unique taxon count, minimum/mean/maximum tip count, complete/partial/absent
-branch-length coverage, complete tree-length statistics, and observed edge-
+unique taxon count, minimum/mean/maximum leaf count, complete/partial/absent
+edge-length coverage, complete tree-length statistics, and observed edge-
 length statistics.
 
 Add `-v` for 1 line per record. Add `-vv` for record lines and complete taxon

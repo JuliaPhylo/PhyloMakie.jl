@@ -109,9 +109,9 @@ Incorrect:
 
 Correct:
 
-> The function `resolve_phylo_plot_attributes` may remain during this tranche
+> The function `resolve_phylogeny_plot_attributes` may remain during this tranche
 > only if it calls `resolve_plot_config` and adapts the returned
-> `PhyloPlotConfig` into the old return shape. It must not keep independent
+> `PhylogenyPlotConfig` into the old return shape. It must not keep independent
 > keyword defaulting, style validation, edge-color resolution, or limit
 > validation logic.
 

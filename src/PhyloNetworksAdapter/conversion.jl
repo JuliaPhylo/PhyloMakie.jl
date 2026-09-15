@@ -85,7 +85,7 @@ function to_hybridnetwork(
                 edge_id(current_edge),
                 hybrid_nodes[node_index(phylogeny, parent_node(phylogeny, current_edge))],
                 hybrid_nodes[node_index(phylogeny, child_node(phylogeny, current_edge))],
-                branch_length(current_edge),
+                edge_length(current_edge),
                 inheritance_probability(current_edge),
                 is_hybrid(current_edge),
                 is_major(current_edge),

@@ -1,23 +1,23 @@
 @testset "Plot config computation" begin
-    PhyloPlot = getfield(PhyloMakie, :PhyloPlot)
-    PhyloPlotConfig = getfield(PhyloMakie, :PhyloPlotConfig)
+    PhylogenyPlot = getfield(PhyloMakie, :PhylogenyPlot)
+    PhylogenyPlotConfig = getfield(PhyloMakie, :PhylogenyPlotConfig)
     resolve_plot_config = getfield(PhyloMakie, :resolve_plot_config)
     with_plot_config_limits = getfield(PhyloMakie, :with_plot_config_limits)
     validate_limit_pair = getfield(PhyloMakie, :validate_limit_pair)
     resolve_defaultedgecolor = getfield(PhyloMakie, :_resolve_defaultedgecolor)
     resolve_edgewidth_mode = getfield(PhyloMakie, :_resolve_edgewidth_mode)
-    supported_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOPLOT_ATTRIBUTES)
+    supported_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES)
 
-    @test supported_attributes == EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES
-    @test sort(collect(Makie.attribute_names(PhyloPlot))) ==
-        sort(collect(EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES))
+    @test supported_attributes == EXPECTED_SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES
+    @test sort(collect(Makie.attribute_names(PhylogenyPlot))) ==
+        sort(collect(EXPECTED_SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES))
 
     @testset "Defaults and stored payload" begin
         config = resolve_plot_config()
 
-        @test config isa PhyloPlotConfig
+        @test config isa PhylogenyPlotConfig
         @test config.useedgelength === false
-        @test config.showtiplabel === true
+        @test config.showleaflabel === true
         @test config.shownodelabel === false
         @test config.shownodenumber === false
         @test config.showedgelength === false
@@ -41,15 +41,15 @@
         @test config.edgenumbercolor == "grey"
         @test config.nodelabeladj == 1
         @test config.edgelabeladj == [0.5, 0]
-        @test config.tipoffset == 0
-        # @test config.tipcex == 1
-        @test config.tipfontsize == 16.0f0
+        @test config.leafoffset == 0
+        # @test config.leafcex == 1
+        @test config.leaffontsize == 16.0f0
         @test config.xlim === nothing
         @test config.ylim === nothing
         @test config.style == :fulltree
 
         resolved_config = with_plot_config_limits(config, (0.0, 5.0), (1.0, 4.0))
-        @test resolved_config isa PhyloPlotConfig
+        @test resolved_config isa PhylogenyPlotConfig
         @test resolved_config !== config
         @test resolved_config.xlim == (0.0, 5.0)
         @test resolved_config.ylim == (1.0, 4.0)

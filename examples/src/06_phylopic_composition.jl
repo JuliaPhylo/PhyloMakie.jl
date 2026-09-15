@@ -21,21 +21,21 @@ tree_plot = plot!(
     axis,
     phylogeny;
     useedgelength = true,
-    showtiplabel = true,
-    tipoffset = 0.1,
+    showleaflabel = true,
+    leafoffset = 0.1,
 )
 
-tip_rows = [
+leaf_rows = [
     row for row in eachrow(node_positions(tree_plot)) if row.isleaf
 ]
-tip_positions = Point2f[Point2f(row.x, row.y) for row in tip_rows]
-tip_taxa = String[row.name for row in tip_rows]
+leaf_positions = Point2f[Point2f(row.x, row.y) for row in leaf_rows]
+leaf_taxa = String[row.name for row in leaf_rows]
 
 glyph_plot = augment_phylopic!(
     axis,
-    first.(tip_positions),
-    last.(tip_positions);
-    taxon = tip_taxa,
+    first.(leaf_positions),
+    last.(leaf_positions);
+    taxon = leaf_taxa,
     image_rendering = :thumbnail,
     glyph_size = 0.24,
     placement = :left,

@@ -2,7 +2,7 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
 
 @testset "PhyloMakie module" begin
     @test !isdefined(PhyloMakie, :VERIFICATION_FOUNDATION)
-    @test isdefined(PhyloMakie, :PhyloPlotConfig)
+    @test isdefined(PhyloMakie, :PhylogenyPlotConfig)
     @test isdefined(PhyloMakie, :resolve_plot_config)
     @test isdefined(PhyloMakie, :PreparedPhylogeny)
     @test isdefined(PhyloMakie, :prepare_for_layout)
@@ -34,12 +34,25 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test isdefined(PhyloMakie, :create_arrowhead_primitive!)
     @test isdefined(PhyloMakie, :create_text_primitive!)
     @test isdefined(PhyloMakie, :create_phylo_primitives!)
-    @test isdefined(PhyloMakie, :phyloplot)
-    @test isdefined(PhyloMakie, Symbol("phyloplot!"))
-    @test isdefined(PhyloMakie, :PhyloPlot)
+    @test isdefined(PhyloMakie, :phylogenyplot)
+    @test isdefined(PhyloMakie, Symbol("phylogenyplot!"))
+    @test isdefined(PhyloMakie, :PhylogenyPlot)
     @test isdefined(PhyloMakie, :node_positions)
     @test isdefined(PhyloMakie, :node_positions_observable)
     @test isdefined(PhyloMakie, :edge_positions)
+    retired_terminology_names = (
+        _module_symbol("Phylo", "Plot"),
+        _module_symbol("Phylo", "Plot", "Config"),
+        _module_symbol("phylo", "plot"),
+        _module_symbol("phylo", "plot", "!"),
+        _module_symbol("tip", "_", "labels"),
+        _module_symbol("branch", "_", "length"),
+        _module_symbol("set", "_", "branch", "_", "length", "!"),
+        _module_symbol("SUPPORTED", "_", "PHYLO", "PLOT", "_", "ATTRIBUTES"),
+    )
+    for name in retired_terminology_names
+        @test !isdefined(PhyloMakie, name)
+    end
     @test :Phylogenies in names(PhyloMakie)
     @test :AbstractPhylogeny in names(PhyloMakie)
     @test :AbstractPhylogeneticTree in names(PhyloMakie)
@@ -61,7 +74,10 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test !(Symbol("@nexus_str") in names(PhyloMakie))
     @test !isdefined(PhyloMakie, :PlotKeywordSpec)
     @test !isdefined(PhyloMakie, :normalize_plot_keywords)
-    @test !isdefined(PhyloMakie, :bridge_phylo_plot_attributes)
+    @test !isdefined(
+        PhyloMakie,
+        _module_symbol("bridge", "_", "phylo", "_", "plot", "_", "attributes"),
+    )
     retired_internal_names = (
         _module_symbol("render", "_", "plot", "!"),
         _module_symbol("Phylo", "Plot", "Attributes"),
@@ -86,5 +102,5 @@ _module_symbol(parts::AbstractString...) = Symbol(join(parts))
     @test which(Makie.plottype, (LineageNetwork,)) != which(Makie.plottype, (Any,))
     @test which(Makie.plottype, (PhyloNetworks.HybridNetwork,)) ==
         which(Makie.plottype, (Any,))
-    @test Makie.plottype(phylogeny) == getfield(PhyloMakie, :PhyloPlot)
+    @test Makie.plottype(phylogeny) == getfield(PhyloMakie, :PhylogenyPlot)
 end

@@ -18,7 +18,7 @@ For literal content containing exactly one phylogeny, use the corresponding
 format-specific string literal:
 
 ```@example getting_started
-literal_plot = phyloplot(newick"(A, (B, C));")
+literal_plot = phylogenyplot(newick"(A, (B, C));")
 literal_plot
 ```
 
@@ -34,7 +34,7 @@ figaxisplot.figure
 ```
 
 The returned value is a `Makie.FigureAxisPlot`. Its `plot` field is the live
-`PhyloPlot` object. Use that object when you want to update attributes or query
+`PhylogenyPlot` object. Use that object when you want to update attributes or query
 the rendered coordinates.
 
 ```@example getting_started
@@ -42,25 +42,25 @@ plot_handle = figaxisplot.plot
 typeof(plot_handle)
 ```
 
-PhyloMakie also provides `phyloplot` as a package-specific alias for `plot`:
+PhyloMakie also provides `phylogenyplot` as a package-specific alias for `plot`:
 
 ```@example getting_started
-alias_figaxisplot = phyloplot(
+alias_figaxisplot = phylogenyplot(
     phylogeny;
     showgamma = true,
-    showtiplabel = true,
+    showleaflabel = true,
 )
 alias_figaxisplot.figure
 ```
 
-To draw into an existing Makie axis, use `plot!` or `phyloplot!`:
+To draw into an existing Makie axis, use `plot!` or `phylogenyplot!`:
 
 ```@example getting_started
 figure = Figure(size = (700, 320))
 axis = Axis(figure[1, 1])
 hidedecorations!(axis)
 hidespines!(axis)
-phyloplot!(
+phylogenyplot!(
     axis,
     phylogeny;
     showgamma = true,

@@ -44,7 +44,7 @@ struct TextGraphOutputs
 end
 
 struct PhyloTextGraphOutputs
-    tip_labels::TextGraphOutputs
+    leaf_labels::TextGraphOutputs
     internal_node_names::TextGraphOutputs
     node_numbers::TextGraphOutputs
     node_labels::TextGraphOutputs
@@ -57,7 +57,7 @@ end
 
 const PLOT_CONFIG_INPUT_SYMBOLS = (
     :useedgelength,
-    :showtiplabel,
+    :showleaflabel,
     :shownodelabel,
     :shownodenumber,
     :showedgelength,
@@ -81,9 +81,9 @@ const PLOT_CONFIG_INPUT_SYMBOLS = (
     :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
-    :tipoffset,
-    # :tipcex,
-    :tipfontsize,
+    :leafoffset,
+    # :leafcex,
+    :leaffontsize,
     :xlim,
     :ylim,
     :style,
@@ -167,7 +167,7 @@ const NON_TEXT_PHYLO_GRAPH_OUTPUT_SYMBOLS = (
 )
 
 const TEXT_GRAPH_OUTPUT_PREFIXES = (
-    :tip_label,
+    :leaf_label,
     :internal_node_name,
     :node_number,
     :node_label,
@@ -278,18 +278,18 @@ function _edge_input_symbols(edge)::Vector{Symbol}
     return Symbol[getfield(input, :name) for input in getfield(edge, :inputs)]
 end
 
-function _input_conflict_symbols(plot::PhyloPlot, outputs::Tuple{Vararg{Symbol}})::Vector{Symbol}
+function _input_conflict_symbols(plot::PhylogenyPlot, outputs::Tuple{Vararg{Symbol}})::Vector{Symbol}
     attr = plot.attributes
     return Symbol[output for output in outputs if haskey(attr.inputs, output)]
 end
 
-function _ensure_plot_space_node!(plot::PhyloPlot)::Nothing
+function _ensure_plot_space_node!(plot::PhylogenyPlot)::Nothing
     haskey(plot.attributes, :space) && return nothing
     Makie.ComputePipeline.add_constant!(plot.attributes, :space, :data)
     return nothing
 end
 
-function _release_initial_data_limits_output!(plot::PhyloPlot)::Nothing
+function _release_initial_data_limits_output!(plot::PhylogenyPlot)::Nothing
     attr = plot.attributes
     if !haskey(attr.inputs, :data_limits) || !haskey(attr.outputs, :data_limits)
         return nothing
@@ -308,7 +308,7 @@ end
 
 function _register_outputs_once!(
         callback::Function,
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         inputs::Tuple{Vararg{Symbol}},
         outputs::Tuple{Vararg{Symbol}},
     )::Nothing
@@ -345,7 +345,7 @@ end
 
 function _compute_plot_config(
         useedgelength,
-        showtiplabel,
+        showleaflabel,
         shownodelabel,
         shownodenumber,
         showedgelength,
@@ -369,16 +369,16 @@ function _compute_plot_config(
         edgenumbercolor,
         nodelabeladj,
         edgelabeladj,
-        tipoffset,
-        # tipcex,
-        tipfontsize,
+        leafoffset,
+        # leafcex,
+        leaffontsize,
         xlim,
         ylim,
         style,
     )::Tuple{Base.RefValue{Any}}
     config = resolve_plot_config(;
         useedgelength,
-        showtiplabel,
+        showleaflabel,
         shownodelabel,
         shownodenumber,
         showedgelength,
@@ -402,9 +402,9 @@ function _compute_plot_config(
         edgenumbercolor,
         nodelabeladj,
         edgelabeladj,
-        tipoffset,
-        # tipcex,
-        tipfontsize,
+        leafoffset,
+        # leafcex,
+        leaffontsize,
         xlim,
         ylim,
         style,
@@ -420,7 +420,7 @@ end
 
 function _compute_phylogeny_geometry(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
     )::Tuple{Base.RefValue{Any}}
     return (_ref_any(compute_phylogeny_geometry(prepared_phylogeny, config)),)
 end
@@ -445,7 +445,7 @@ end
 
 function _compute_layout(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         geometry::PhylogenyGeometry,
     )::Tuple{Base.RefValue{Any}}
     return (_ref_any(compute_layout(prepared_phylogeny, config, geometry)),)
@@ -453,7 +453,7 @@ end
 
 function _compute_primitive_channels(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         layout::LayoutComputation,
     )::Tuple{Base.RefValue{Any}}
     return (_ref_any(compute_primitive_channels(prepared_phylogeny, config, layout)),)
@@ -530,16 +530,16 @@ function _compute_data_limits(channels::PrimitiveChannels)::Tuple{Base.RefValue{
     return (_ref_any(channels.data_limits),)
 end
 
-function _plot_output_value(plot::PhyloPlot, symbol::Symbol)
+function _plot_output_value(plot::PhylogenyPlot, symbol::Symbol)
     return plot.attributes.outputs[symbol][]
 end
 
-function current_plot_config(plot::PhyloPlot)::PhyloPlotConfig
+function current_plot_config(plot::PhylogenyPlot)::PhylogenyPlotConfig
     input_values = map(symbol -> _plot_output_value(plot, symbol), PLOT_CONFIG_INPUT_SYMBOLS)
     return resolve_plot_config(; NamedTuple{PLOT_CONFIG_INPUT_SYMBOLS}(input_values)...)
 end
 
-function validate_public_plot_limits(plot::PhyloPlot)::Nothing
+function validate_public_plot_limits(plot::PhylogenyPlot)::Nothing
     xlim = _plot_output_value(plot, :xlim)
     ylim = _plot_output_value(plot, :ylim)
     if isnothing(xlim) && isnothing(ylim)
@@ -554,7 +554,7 @@ function validate_public_plot_limits(plot::PhyloPlot)::Nothing
     return nothing
 end
 
-function Makie.boundingbox(plot::PhyloPlot, space::Symbol = :data)::Makie.Rect3d
+function Makie.boundingbox(plot::PhylogenyPlot, space::Symbol = :data)::Makie.Rect3d
     return Makie.data_limits(plot)
 end
 
@@ -621,8 +621,8 @@ function _text_channel_outputs(channel::TextChannel)::NTuple{6, Base.RefValue{An
     )
 end
 
-function _tip_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
-    return _text_channel_outputs(channels.tip_labels)
+function _leaf_label_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
+    return _text_channel_outputs(channels.leaf_labels)
 end
 
 function _internal_node_name_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefValue{Any}}
@@ -657,17 +657,17 @@ function _edge_number_outputs(channels::PrimitiveChannels)::NTuple{6, Base.RefVa
     return _text_channel_outputs(channels.edge_numbers)
 end
 
-function register_plot_config_node!(plot::PhyloPlot)::Symbol
+function register_plot_config_node!(plot::PhylogenyPlot)::Symbol
     _register_outputs_once!(_compute_plot_config, plot, PLOT_CONFIG_INPUT_SYMBOLS, (:plot_config,))
     return :plot_config
 end
 
-function register_prepared_phylogeny_node!(plot::PhyloPlot)::Symbol
+function register_prepared_phylogeny_node!(plot::PhylogenyPlot)::Symbol
     _register_outputs_once!(_compute_prepared_phylogeny, plot, (:phylogeny,), (:prepared_phylogeny,))
     return :prepared_phylogeny
 end
 
-function register_image_asset_cache_node!(plot::PhyloPlot)::Symbol
+function register_image_asset_cache_node!(plot::PhylogenyPlot)::Symbol
     cache_node = :image_asset_cache
     haskey(plot.attributes, cache_node) ||
         Makie.ComputePipeline.add_constant!(plot.attributes, cache_node, ImageAssetCache())
@@ -675,7 +675,7 @@ function register_image_asset_cache_node!(plot::PhyloPlot)::Symbol
 end
 
 function register_layout_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         config_node::Symbol,
         prepared_phylogeny_node::Symbol,
     )::NamedTuple{(:geometry, :layout), Tuple{Symbol, Symbol}}
@@ -695,7 +695,7 @@ function register_layout_nodes!(
 end
 
 function register_node_position_table_node!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         prepared_phylogeny_node::Symbol,
         geometry_node::Symbol,
     )::Symbol
@@ -709,7 +709,7 @@ function register_node_position_table_node!(
 end
 
 function register_primitive_channel_node!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         prepared_phylogeny_node::Symbol,
         config_node::Symbol,
         layout_node::Symbol,
@@ -724,7 +724,7 @@ function register_primitive_channel_node!(
 end
 
 function register_image_channel_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         prepared_phylogeny_node::Symbol,
         layout_node::Symbol,
     )::NamedTuple{(:edge_images, :node_images), Tuple{Symbol, Symbol}}
@@ -739,7 +739,7 @@ function register_image_channel_nodes!(
 end
 
 function register_data_limits_node!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         primitive_channels_node::Symbol,
     )::Symbol
     _register_outputs_once!(
@@ -752,7 +752,7 @@ function register_data_limits_node!(
 end
 
 function _register_phylo_intermediate_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
     )::NamedTuple{
         (
             :config,
@@ -801,7 +801,7 @@ function _register_phylo_intermediate_nodes!(
 end
 
 function register_segment_output_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         primitive_channels_node::Symbol,
     )::NamedTuple{
         (:edge_segments, :node_bars, :minor_edge_shafts),
@@ -833,7 +833,7 @@ function register_segment_output_nodes!(
 end
 
 function register_arrowhead_output_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         primitive_channels_node::Symbol,
     )::ArrowheadGraphOutputs
     _register_outputs_once!(
@@ -875,7 +875,7 @@ end
 
 
 function register_image_output_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         channel_node::Symbol,
         outputs::ImageGraphOutputs,
         prefix::Symbol,
@@ -922,7 +922,7 @@ function register_image_output_nodes!(
     return outputs
 end
 
-function register_primitive_graph_outputs!(plot::PhyloPlot)::PhyloGraphOutputs
+function register_primitive_graph_outputs!(plot::PhylogenyPlot)::PhyloGraphOutputs
     intermediate_nodes = _register_phylo_intermediate_nodes!(plot)
     segment_outputs = register_segment_output_nodes!(plot, intermediate_nodes.primitive_channels)
     arrowhead_outputs = register_arrowhead_output_nodes!(plot, intermediate_nodes.primitive_channels)
@@ -950,10 +950,10 @@ function register_primitive_graph_outputs!(plot::PhyloPlot)::PhyloGraphOutputs
 end
 
 function register_text_output_nodes!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         primitive_channels_node::Symbol,
     )::PhyloTextGraphOutputs
-    tip_labels = _text_graph_outputs(:tip_label)
+    leaf_labels = _text_graph_outputs(:leaf_label)
     internal_node_names = _text_graph_outputs(:internal_node_name)
     node_numbers = _text_graph_outputs(:node_number)
     node_labels = _text_graph_outputs(:node_label)
@@ -964,10 +964,10 @@ function register_text_output_nodes!(
     edge_numbers = _text_graph_outputs(:edge_number)
 
     _register_outputs_once!(
-        _tip_label_outputs,
+        _leaf_label_outputs,
         plot,
         (primitive_channels_node,),
-        _text_output_symbols(tip_labels),
+        _text_output_symbols(leaf_labels),
     )
     _register_outputs_once!(
         _internal_node_name_outputs,
@@ -1019,7 +1019,7 @@ function register_text_output_nodes!(
     )
 
     return PhyloTextGraphOutputs(
-        tip_labels,
+        leaf_labels,
         internal_node_names,
         node_numbers,
         node_labels,
@@ -1031,12 +1031,12 @@ function register_text_output_nodes!(
     )
 end
 
-function register_text_graph_outputs!(plot::PhyloPlot)::PhyloTextGraphOutputs
+function register_text_graph_outputs!(plot::PhylogenyPlot)::PhyloTextGraphOutputs
     intermediate_nodes = _register_phylo_intermediate_nodes!(plot)
     return register_text_output_nodes!(plot, intermediate_nodes.primitive_channels)
 end
 
-function register_phylo_graph!(plot::PhyloPlot)::NamedTuple{
+function register_phylo_graph!(plot::PhylogenyPlot)::NamedTuple{
         (:primitive_outputs, :text_outputs),
         Tuple{PhyloGraphOutputs, PhyloTextGraphOutputs},
     }

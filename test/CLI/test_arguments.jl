@@ -29,7 +29,7 @@
         @test occursin("Examples:", help)
     end
     cli_attributes = getfield(PhyloMakieCLI, :SUPPORTED_CLI_PLOT_ATTRIBUTES)
-    public_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOPLOT_ATTRIBUTES)
+    public_attributes = getfield(PhyloMakie, :SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES)
     @test setdiff(public_attributes, cli_attributes) == [
         :clip_planes,
         :nodelabel,
@@ -52,7 +52,7 @@
         @test occursin("--stride N", help)
         @test occursin("--selected-output-file PATH", help)
         @test occursin("--selected-output-format FMT", help)
-        for removed in ("--taxon", "--tree-type", "--rootedness", "--min-tips", "--max-tips")
+        for removed in ("--taxon", "--tree-type", "--rootedness", "--min-leaves", "--max-leaves")
             @test !occursin(removed, help)
         end
     end
@@ -165,7 +165,7 @@
             "-",
         ],
     )
-    for removed in ("--taxon", "--tree-type", "--rootedness", "--min-tips", "--max-tips")
+    for removed in ("--taxon", "--tree-type", "--rootedness", "--min-leaves", "--max-leaves")
         @test_throws PhyloMakieCLI.CLIUsageError PhyloMakieCLI.parse_command(
             ["inspect", removed, "value", "-"],
         )

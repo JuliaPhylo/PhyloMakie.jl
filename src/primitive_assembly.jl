@@ -5,7 +5,7 @@ struct PhyloPrimitiveHandles{
         TMinorArrowheads,
         TEdgeImages,
         TNodeImages,
-        TTipLabels,
+        TLeafLabels,
         TInternalNodeNames,
         TNodeNumbers,
         TNodeLabels,
@@ -21,7 +21,7 @@ struct PhyloPrimitiveHandles{
     minor_arrowheads::TMinorArrowheads
     edge_images::TEdgeImages
     node_images::TNodeImages
-    tip_labels::TTipLabels
+    leaf_labels::TLeafLabels
     internal_node_names::TInternalNodeNames
     node_numbers::TNodeNumbers
     node_labels::TNodeLabels
@@ -33,7 +33,7 @@ struct PhyloPrimitiveHandles{
 end
 
 function create_image_primitive!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         outputs::ImageGraphOutputs,
     )::Makie.Plot
     return Makie.scatter!(
@@ -48,7 +48,7 @@ function create_image_primitive!(
 end
 
 function create_segment_primitive!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         outputs::SegmentGraphOutputs,
     )::Makie.Plot
     return Makie.linesegments!(
@@ -61,7 +61,7 @@ function create_segment_primitive!(
 end
 
 function create_arrowhead_primitive!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         outputs::ArrowheadGraphOutputs,
     )::Makie.Plot
     return Makie.poly!(
@@ -78,7 +78,7 @@ function create_arrowhead_primitive!(
 end
 
 function create_text_primitive!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         outputs::TextGraphOutputs,
     )::Makie.Plot
     return Makie.text!(
@@ -92,7 +92,7 @@ function create_text_primitive!(
 end
 
 function create_fonted_text_primitive!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         outputs::TextGraphOutputs,
     )::Makie.Plot
     return Makie.text!(
@@ -107,7 +107,7 @@ function create_fonted_text_primitive!(
 end
 
 function create_phylo_primitives!(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
         primitive_outputs::PhyloGraphOutputs,
         text_outputs::PhyloTextGraphOutputs,
     )::PhyloPrimitiveHandles
@@ -118,7 +118,7 @@ function create_phylo_primitives!(
         create_arrowhead_primitive!(plot, primitive_outputs.minor_arrowheads),
         create_image_primitive!(plot, primitive_outputs.edge_images),
         create_image_primitive!(plot, primitive_outputs.node_images),
-        create_fonted_text_primitive!(plot, text_outputs.tip_labels),
+        create_fonted_text_primitive!(plot, text_outputs.leaf_labels),
         create_fonted_text_primitive!(plot, text_outputs.internal_node_names),
         create_text_primitive!(plot, text_outputs.node_numbers),
         create_text_primitive!(plot, text_outputs.node_labels),

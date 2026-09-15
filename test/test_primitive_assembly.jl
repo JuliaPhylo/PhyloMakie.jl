@@ -28,7 +28,7 @@ function _primitive_assembly_children(plot)::NamedTuple
         minor_arrowheads = plot.plots[4],
         edge_images = plot.plots[5],
         node_images = plot.plots[6],
-        tip_labels = plot.plots[7],
+        leaf_labels = plot.plots[7],
         internal_node_names = plot.plots[8],
         node_numbers = plot.plots[9],
         node_labels = plot.plots[10],
@@ -100,7 +100,7 @@ function _assert_children_match_outputs(plot, outputs)::Nothing
     _assert_image_child_matches_outputs(plot, children.edge_images, primitive_outputs.edge_images)
     _assert_image_child_matches_outputs(plot, children.node_images, primitive_outputs.node_images)
 
-    _assert_text_child_matches_outputs(plot, children.tip_labels, text_outputs.tip_labels)
+    _assert_text_child_matches_outputs(plot, children.leaf_labels, text_outputs.leaf_labels)
     _assert_text_child_matches_outputs(
         plot,
         children.internal_node_names,
@@ -156,7 +156,7 @@ end
         @test Makie.boundingbox(plot) == Makie.data_limits(plot)
 
         _assert_children_match_outputs(plot, outputs)
-        @test children.tip_labels.font[] == plot[outputs.text_outputs.tip_labels.font][]
+        @test children.leaf_labels.font[] == plot[outputs.text_outputs.leaf_labels.font][]
         @test children.internal_node_names.font[] ==
             plot[outputs.text_outputs.internal_node_names.font][]
         @test plot[outputs.text_outputs.node_numbers.font][] === nothing
@@ -206,7 +206,7 @@ end
 
     @testset "hidden layers remain stable empty primitives" begin
         plot = _primitive_assembly_plot(
-            showtiplabel = false,
+            showleaflabel = false,
             shownodelabel = false,
             minorlinetype = "blank",
         )
@@ -216,20 +216,20 @@ end
 
         @test isempty(children.minor_edge_shafts[1][])
         @test isempty(children.minor_arrowheads[1][])
-        @test isempty(children.tip_labels[1][])
+        @test isempty(children.leaf_labels[1][])
         @test isempty(children.internal_node_names[1][])
         @test isempty(children.edge_images[1][])
         @test isempty(children.node_images[1][])
-        @test plot[outputs.text_outputs.tip_labels.font][] == :italic
+        @test plot[outputs.text_outputs.leaf_labels.font][] == :italic
         @test plot[outputs.text_outputs.internal_node_names.font][] == :italic
-        @test children.tip_labels.font[] == :italic
+        @test children.leaf_labels.font[] == :italic
         @test children.internal_node_names.font[] == :italic
 
-        Makie.update!(plot; showtiplabel = true, shownodelabel = true, minorlinetype = :dash)
+        Makie.update!(plot; showleaflabel = true, shownodelabel = true, minorlinetype = :dash)
         @test _primitive_child_ids(plot) == original_child_ids
         @test !isempty(children.minor_edge_shafts[1][])
         @test !isempty(children.minor_arrowheads[1][])
-        @test !isempty(children.tip_labels[1][])
+        @test !isempty(children.leaf_labels[1][])
         @test !isempty(children.internal_node_names[1][])
         _assert_children_match_outputs(plot, outputs)
     end

@@ -15,7 +15,7 @@ function _native_phylogeny_snapshot(phylogeny::AbstractPhylogeny)
                     id = edge_id(current_edge),
                     parent = node_id(parent_node(phylogeny, current_edge)),
                     child = node_id(child_node(phylogeny, current_edge)),
-                    length = branch_length(current_edge),
+                    length = edge_length(current_edge),
                     gamma = inheritance_probability(current_edge),
                     hybrid = is_hybrid(current_edge),
                     major = is_major(current_edge),
@@ -71,7 +71,7 @@ PhyloMakie.Phylogenies.validate_phylogeny(tree::InterfaceTestTree) =
     @test node_count(phylogeny) == 9
     @test edge_count(phylogeny) == 9
     @test taxon_count(phylogeny) == 4
-    @test tip_labels(phylogeny) == ["A", "B", "C", "D"]
+    @test leaf_labels(phylogeny) == ["A", "B", "C", "D"]
     @test is_valid(phylogeny)
     @test !is_tree(phylogeny)
     @test root_index(phylogeny) == node_index(phylogeny, root(phylogeny))
@@ -93,7 +93,7 @@ PhyloMakie.Phylogenies.validate_phylogeny(tree::InterfaceTestTree) =
     tree = parsephylogeny(NewickFormat(), "(A:1,(B:2,C:3):4);")
     @test is_tree(tree)
     @test all(!is_hybrid(current_edge) for current_edge in edges(tree))
-    @test branch_length.(edges(tree)) == [1.0, 2.0, 3.0, 4.0]
+    @test edge_length.(edges(tree)) == [1.0, 2.0, 3.0, 4.0]
 
     branching_node = first(
         current_node for current_node in nodes(tree)
@@ -108,13 +108,13 @@ PhyloMakie.Phylogenies.validate_phylogeny(tree::InterfaceTestTree) =
     interface_tree = InterfaceTestTree(tree)
     @test interface_tree isa AbstractPhylogeny
     @test is_tree(interface_tree)
-    @test tip_labels(interface_tree) == tip_labels(tree)
+    @test leaf_labels(interface_tree) == leaf_labels(tree)
     @test node_id.(preorder(interface_tree)) == node_id.(preorder(tree))
-    @test Makie.plottype(interface_tree) === PhyloPlot
+    @test Makie.plottype(interface_tree) === PhylogenyPlot
 
     payload_nodes = [
         LineageNode(101, "ancestor"; data = :ancestral),
-        LineageNode(102, "tip"; data = :sampled),
+        LineageNode(102, "leaf"; data = :sampled),
     ]
     payload_edges = [
         LineageEdge(201, 1, 2; length = 0.5, data = :observed),
@@ -148,13 +148,13 @@ PhyloMakie.Phylogenies.validate_phylogeny(tree::InterfaceTestTree) =
     @test root(empty_phylogeny) === ancestor
     @test child_node(empty_phylogeny, lineage_edge) === descendant
     @test parent_node(empty_phylogeny, lineage_edge) === ancestor
-    @test tip_labels(empty_phylogeny) == ["descendant"]
+    @test leaf_labels(empty_phylogeny) == ["descendant"]
 
-    rename_node!(descendant, "tip")
-    set_branch_length!(lineage_edge, missing)
+    rename_node!(descendant, "leaf")
+    set_edge_length!(lineage_edge, missing)
     set_inheritance_probability!(lineage_edge, 1)
-    @test node_label(descendant) == "tip"
-    @test ismissing(branch_length(lineage_edge))
+    @test node_label(descendant) == "leaf"
+    @test ismissing(edge_length(lineage_edge))
     @test inheritance_probability(lineage_edge) == 1.0
     @test_throws ArgumentError set_inheritance_probability!(lineage_edge, 1.1)
 

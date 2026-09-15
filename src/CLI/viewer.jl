@@ -1,6 +1,6 @@
 const VIEWER_BOOLEAN_CONTROLS = (
     ("Edge lengths", :useedgelength),
-    ("Tip labels", :showtiplabel),
+    ("Leaf labels", :showleaflabel),
     ("Node labels", :shownodelabel),
     ("Node numbers", :shownodenumber),
     ("Length labels", :showedgelength),
@@ -72,7 +72,7 @@ end
 function viewer_attributes(state::ViewerState)::NamedTuple
     return (
         useedgelength = state.useedgelength,
-        showtiplabel = state.showtiplabel,
+        showleaflabel = state.showleaflabel,
         shownodelabel = state.shownodelabel,
         shownodenumber = state.shownodenumber,
         showedgelength = state.showedgelength,
@@ -91,7 +91,7 @@ function viewer_attributes(state::ViewerState)::NamedTuple
 end
 
 function apply_viewer_state!(
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
     )::Nothing
@@ -107,7 +107,7 @@ end
 
 function _try_viewer_update!(
         update::Function,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -127,7 +127,7 @@ end
 function _add_boolean_controls!(
         controls::Makie.GridLayout,
         first_row::Int,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -150,7 +150,7 @@ end
 function _add_menu_controls!(
         controls::Makie.GridLayout,
         first_row::Int,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -206,7 +206,7 @@ function _add_slider_control!(
         label_text::AbstractString,
         field::Symbol,
         values,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -236,7 +236,7 @@ end
 function _add_arrow_controls!(
         controls::Makie.GridLayout,
         row::Int,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -283,7 +283,7 @@ end
 function _add_color_controls!(
         controls::Makie.GridLayout,
         first_row::Int,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -315,7 +315,7 @@ end
 
 function _add_viewer_controls!(
         controls::Makie.GridLayout,
-        plot::PhyloMakie.PhyloPlot,
+        plot::PhyloMakie.PhylogenyPlot,
         axis::Makie.Axis,
         state::ViewerState,
         status_label::Makie.Label,
@@ -395,7 +395,7 @@ function build_viewer(
         fontsize = 12,
     )
 
-    plot = PhyloMakie.phyloplot!(
+    plot = PhyloMakie.phylogenyplot!(
         axis,
         records[state.current_index].phylogeny;
         initial_options...,

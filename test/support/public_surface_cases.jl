@@ -1,7 +1,7 @@
-const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
+const EXPECTED_SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES = (
     :clip_planes,
     :useedgelength,
-    :showtiplabel,
+    :showleaflabel,
     :shownodelabel,
     :shownodenumber,
     :showedgelength,
@@ -27,9 +27,9 @@ const EXPECTED_SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
-    :tipoffset,
-    # :tipcex,
-    :tipfontsize,
+    :leafoffset,
+    # :leafcex,
+    :leaffontsize,
     :xlim,
     :ylim,
     :style,

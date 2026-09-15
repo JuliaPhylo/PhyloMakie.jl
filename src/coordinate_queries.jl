@@ -1,7 +1,7 @@
 import DataFrames
 
 """
-    node_positions(plot::PhyloPlot)::DataFrames.DataFrame
+    node_positions(plot::PhylogenyPlot)::DataFrames.DataFrame
 
 Return one row per node in the phylogeny currently rendered by `plot`, with
 columns `number::Int`, `name::String`, `isleaf::Bool`, `x::Float64`,
@@ -10,7 +10,7 @@ columns `number::Int`, `name::String`, `isleaf::Bool`, `x::Float64`,
 The table always covers every node in the phylogeny, regardless of
 `shownodenumber`, `shownodelabel`, or `nodelabel` — those attributes control
 which nodes receive on-plot text, not which nodes this query reports.  Filter
-to tips with `filter(:isleaf => identity, node_positions(plot))`, or to
+to leaves with `filter(:isleaf => identity, node_positions(plot))`, or to
 internal/ancestral nodes with `filter(:isleaf => !, node_positions(plot))`.
 
 Coordinates are read from the plot's live node-position output rather than
@@ -24,13 +24,13 @@ figaxisplot = plot(phylogeny; useedgelength = true)
 node_positions(figaxisplot.plot)
 ```
 """
-function node_positions(plot::PhyloPlot)::DataFrames.DataFrame
+function node_positions(plot::PhylogenyPlot)::DataFrames.DataFrame
     table = _plot_output_value(plot, NODE_POSITION_TABLE_OUTPUT)::DataFrames.DataFrame
     return copy(table)
 end
 
 """
-    node_positions_observable(plot::PhyloPlot)::Makie.Observable{DataFrames.DataFrame}
+    node_positions_observable(plot::PhylogenyPlot)::Makie.Observable{DataFrames.DataFrame}
 
 Return a live node-position table for the phylogeny rendered by `plot`.
 
@@ -50,15 +50,15 @@ and remains the same object for the lifetime of `plot`.
 ```julia
 figaxisplot = plot(phylogeny; useedgelength = false)
 live_positions = node_positions_observable(figaxisplot.plot)
-tip_points = map(live_positions) do table
+leaf_points = map(live_positions) do table
     Point2f[Point2f(row.x, row.y) for row in eachrow(table) if row.isleaf]
 end
-scatter!(figaxisplot.axis, tip_points)
+scatter!(figaxisplot.axis, leaf_points)
 Makie.update!(figaxisplot.plot; useedgelength = true)
 ```
 """
 function node_positions_observable(
-        plot::PhyloPlot,
+        plot::PhylogenyPlot,
     )::Makie.Observable{DataFrames.DataFrame}
     return Makie.ComputePipeline.get_observable!(
         plot.attributes,
@@ -67,7 +67,7 @@ function node_positions_observable(
 end
 
 """
-    edge_positions(plot::PhyloPlot)::DataFrames.DataFrame
+    edge_positions(plot::PhylogenyPlot)::DataFrames.DataFrame
 
 Return one row per edge in the phylogeny currently rendered by `plot`, with
 columns `number::Int`, `ishybrid::Bool`, `ismajor::Bool`,
@@ -85,7 +85,7 @@ figaxisplot = plot(phylogeny; useedgelength = true, style = :majortree)
 edge_positions(figaxisplot.plot)
 ```
 """
-function edge_positions(plot::PhyloPlot)::DataFrames.DataFrame
+function edge_positions(plot::PhylogenyPlot)::DataFrames.DataFrame
     prepared_phylogeny = _plot_output_value(plot, :prepared_phylogeny)::PreparedPhylogeny
     layout = _plot_output_value(plot, :layout_computation)::LayoutComputation
     phylogeny = prepared_phylogeny.phylogeny

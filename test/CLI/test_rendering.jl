@@ -3,7 +3,7 @@
     records = cli_fixture_records()
     figure = PhyloMakieCLI.build_render_figure(
         records,
-        Dict{Symbol, Any}(:showtiplabel => true);
+        Dict{Symbol, Any}(:showleaflabel => true);
         columns = 2,
         panel_size = (300, 220),
     )

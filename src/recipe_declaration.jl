@@ -1,24 +1,24 @@
 """
-    phyloplot(phylogeny; kwargs...) -> Makie.FigureAxisPlot
-    phyloplot!(axis, phylogeny; kwargs...) -> PhyloPlot
+    phylogenyplot(phylogeny; kwargs...) -> Makie.FigureAxisPlot
+    phylogenyplot!(axis, phylogeny; kwargs...) -> PhylogenyPlot
 
 Plot any [`AbstractPhylogeny`](@ref) implementing the `Phylogenies` accessor
 interface with the PhyloMakie Makie recipe.
 
 Use `plot(phylogeny; kwargs...)` and `plot!(axis, phylogeny; kwargs...)` for the standard
-Makie API. `phyloplot` and `phyloplot!` are package-specific aliases generated
-by the recipe. Supported attributes control layout style, edge lengths, tip
+Makie API. `phylogenyplot` and `phylogenyplot!` are package-specific aliases generated
+by the recipe. Supported attributes control layout style, edge lengths, leaf
 labels, node labels, edge labels, colors, widths, hybrid-edge arrows, and data
 limits. Use `nodeimages` and `edgeimages` to attach image annotations without
 depending on implementation-assigned node or edge indices.
 """
-Makie.@recipe PhyloPlot (phylogeny,) begin
+Makie.@recipe PhylogenyPlot (phylogeny,) begin
     "Inherited Makie clip planes for the rendered primitives."
     clip_planes = @inherit clip_planes Makie.automatic
     "Use phylogeny edge lengths on the x axis."
     useedgelength = false
-    "Show tip labels."
-    showtiplabel = true
+    "Show leaf labels."
+    showleaflabel = true
     "Show internal node names."
     shownodelabel = false
     "Show node numbers."
@@ -69,12 +69,12 @@ Makie.@recipe PhyloPlot (phylogeny,) begin
     nodelabeladj = 1
     "Set edge label alignment."
     edgelabeladj = [0.5, 0]
-    "Move tip labels away from tip positions."
-    tipoffset = 0
-    # "Scale tip label text."
-    # tipcex = 1
-    "Set the tip and internal-node label font size, following Makie's fontsize convention."
-    tipfontsize = @inherit fontsize 16.0f0
+    "Move leaf labels away from leaf positions."
+    leafoffset = 0
+    # "Scale leaf label text."
+    # leafcex = 1
+    "Set the leaf and internal-node label font size, following Makie's fontsize convention."
+    leaffontsize = @inherit fontsize 16.0f0
     "Set x data limits."
     xlim = nothing
     "Set y data limits."
@@ -83,4 +83,4 @@ Makie.@recipe PhyloPlot (phylogeny,) begin
     style = :fulltree
 end
 
-Makie.plottype(::AbstractPhylogeny) = PhyloPlot
+Makie.plottype(::AbstractPhylogeny) = PhylogenyPlot

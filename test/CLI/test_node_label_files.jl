@@ -19,12 +19,12 @@
         )
 
         tsv_path = joinpath(directory, "labels.tsv")
-        write(tsv_path, "name\tdisplay\nB\tTip B\nC\tTip C\n")
+        write(tsv_path, "name\tdisplay\nB\tLeaf B\nC\tLeaf C\n")
         tsv_labels = PhyloMakieCLI.load_node_labels(tsv_path)
-        @test tsv_labels == Dict("B" => "Tip B", "C" => "Tip C")
+        @test tsv_labels == Dict("B" => "Leaf B", "C" => "Leaf C")
 
         original_options = Dict{Symbol, Any}(
-            :showtiplabel => true,
+            :showleaflabel => true,
             :nodeimages => Dict("A" => "a.png"),
             :edgeimages => Dict(("Root", "Inner") => "inner.png"),
         )
@@ -35,7 +35,7 @@
         )
         @test original_names == ["A", "B", "C", "Inner", "Root"]
         @test display_names == ["Canis lupus", "B", "C", "Focal clade", "Ancestor"]
-        @test loaded.plot_options[:showtiplabel] === true
+        @test loaded.plot_options[:showleaflabel] === true
         @test loaded.plot_options[:nodeimages] == Dict("Canis lupus" => "a.png")
         @test loaded.plot_options[:edgeimages] ==
             Dict(("Ancestor", "Focal clade") => "inner.png")

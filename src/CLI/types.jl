@@ -84,14 +84,14 @@ struct RecordStatistics
     rooted::Bool
     node_count::Int
     edge_count::Int
-    tip_labels::Vector{String}
+    leaf_labels::Vector{String}
     hybrid_node_count::Int
-    branch_length_coverage::Symbol
-    branch_length_count::Int
-    branch_length_sum::Union{Nothing, Float64}
-    branch_length_minimum::Union{Nothing, Float64}
-    branch_length_mean::Union{Nothing, Float64}
-    branch_length_maximum::Union{Nothing, Float64}
+    edge_length_coverage::Symbol
+    edge_length_count::Int
+    edge_length_sum::Union{Nothing, Float64}
+    edge_length_minimum::Union{Nothing, Float64}
+    edge_length_mean::Union{Nothing, Float64}
+    edge_length_maximum::Union{Nothing, Float64}
 end
 
 struct CollectionStatistics
@@ -104,7 +104,7 @@ end
 mutable struct ViewerState
     current_index::Int
     useedgelength::Bool
-    showtiplabel::Bool
+    showleaflabel::Bool
     shownodelabel::Bool
     shownodenumber::Bool
     showedgelength::Bool

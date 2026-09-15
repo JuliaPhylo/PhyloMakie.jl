@@ -1,6 +1,6 @@
 ---
 date-created: 2026-05-09T03:07:47
-date-updated: 2026-05-10T16:48:24-07:00
+date-updated: 2026-09-15
 ---
 
 # Controlled vocabulary
@@ -29,7 +29,7 @@ Examples:
 
 - Write "major hybrid edge" in prose; write `majorhybridedgecolor` only for
   the exact keyword name.
-- Write "tip label" in prose; write `showtiplabel` only for the exact keyword
+- Write "leaf label" in prose; write `showleaflabel` only for the exact keyword
   name.
 - Write "full-tree style" in prose; write `:fulltree` only for the exact style
   symbol.
@@ -43,14 +43,19 @@ This includes built-in edge annotations such as length, gamma, and edge
 number, plus user-supplied annotations from the public edge-annotation
 surface.
 
-Use "edge label" as the default project term.
-Do not use "branch label" as the default term in project-owned code or docs
-for this production run.
+Use "edge" for a graph connection and for the corresponding phylogenetic
+concept in project-owned code, API names, documentation, tests, and output.
+This rule includes edge labels and edge lengths. Use identifiers such as
+`edge_length` and `set_edge_length!`.
+
+Do not use "branch" as a synonym for an edge. The term remains valid when it
+has another meaning, such as a Git branch or a control-flow branch, and in the
+exact names of foreign APIs or quoted historical material.
 
 ### Image annotation
 
 An image annotation is a raster image attached to a node or edge annotation
-anchor and owned by the `PhyloPlot` recipe. Use "node image" and "edge image"
+anchor and owned by the `PhylogenyPlot` recipe. Use "node image" and "edge image"
 when the target kind matters. Use `ImageAnnotation` for the public value that
 configures an image source's size, placement, alignment, aspect, and offset.
 
@@ -145,7 +150,7 @@ It is not the canonical PhyloMakie public contract for this production run.
 The Makie-native public plot owner is the single recipe or plot type that owns
 public plotting semantics for `AbstractPhylogeny` in PhyloMakie.
 
-`plot(phylogeny)`, `plot!(axis, phylogeny)`, and any optional `phyloplot` convenience
+`plot(phylogeny)`, `plot!(axis, phylogeny)`, and any optional `phylogenyplot` convenience
 surfaces must route through this same owner.
 Do not let a wrapper, compatibility shell, or legacy keyword adapter become a
 second semantic center.
@@ -168,19 +173,19 @@ Use these exact terms in code, docs, tests, and workflow documents.
 Do not replace them with vague substitutes such as "primary edge",
 "secondary edge", or "overlay edge".
 
-### PhyloPlot
+### PhylogenyPlot
 
-`PhyloPlot` is the Makie recipe type name produced by
-`@recipe(PhyloPlot, phylogeny)`.
+`PhylogenyPlot` is the Makie recipe type name produced by
+`@recipe(PhylogenyPlot, phylogeny)`.
 
-Treat `PhyloPlot` as an implementation-detail type.
-User-facing prose should prefer `plot` and `plot!`, or `phyloplot` and
-`phyloplot!` only when discussing the optional convenience surfaces
+Treat `PhylogenyPlot` as an implementation-detail type.
+User-facing prose should prefer `plot` and `plot!`, or `phylogenyplot` and
+`phylogenyplot!` only when discussing the optional convenience surfaces
 specifically.
 
-### Phyloplot
+### Phylogenyplot
 
-`phyloplot(phylogeny; kwargs...)` is an optional package-specific non-mutating
+`phylogenyplot(phylogeny; kwargs...)` is an optional package-specific non-mutating
 convenience plotting function in PhyloMakie when it is present.
 
 It must remain a thin wrapper over the same Makie-native public plot owner used
@@ -188,9 +193,9 @@ by `plot(phylogeny; kwargs...)`.
 Do not define package semantics here independently from the host-framework
 plotting surface.
 
-### Phyloplot!
+### Phylogenyplot!
 
-`phyloplot!(axis, phylogeny; kwargs...)` is an optional package-specific mutating
+`phylogenyplot!(axis, phylogeny; kwargs...)` is an optional package-specific mutating
 convenience plotting function for plotting into an existing Makie axis-like
 owner when it is present.
 
@@ -205,13 +210,14 @@ and layout-engine outputs into Makie primitives, text, and recipe composition.
 Keep render concerns separate from layout calculation and keyword
 or public attribute resolution.
 
-### Tip and leaf
+### Leaf and leaves
 
-`tip` is the canonical public plotting term for user-facing attribute names
-such as `showtiplabel`, `tipoffset`, and related tip-label controls.
-`leaf` is the graph-structural term used when discussing `PhyloNetworks` node
-properties or general tree and network structure.
+Use "leaf" and "leaves" for terminal nodes in project-owned code, API names,
+documentation, tests, and output. This rule applies to structural accessors,
+plotting attributes, labels, offsets, font sizes, variables, and collection
+fields. Use identifiers such as `leaf_labels`, `showleaflabel`, `leafoffset`,
+and `leaffontsize`.
 
-Do not rename existing public plotting attributes from `tip` to `leaf` in this
-production run.
-Use `leaf` in internal design prose only when structural precision matters.
+Do not use "tip" as a synonym for a phylogenetic leaf. The term remains valid
+when it denotes a different concept, such as an arrow tip or the tip of a Git
+branch, and in the exact names of foreign APIs or quoted historical material.

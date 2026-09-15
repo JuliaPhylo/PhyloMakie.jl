@@ -37,7 +37,7 @@ struct PrimitiveChannels{
         TNodeBars,
         TMinorShafts,
         TArrowheads,
-        TTipLabels,
+        TLeafLabels,
         TInternalNames,
         TNodeNumbers,
         TNodeLabels,
@@ -51,7 +51,7 @@ struct PrimitiveChannels{
     node_bars::TNodeBars
     minor_edge_shafts::TMinorShafts
     minor_arrowheads::TArrowheads
-    tip_labels::TTipLabels
+    leaf_labels::TLeafLabels
     internal_node_names::TInternalNames
     node_numbers::TNodeNumbers
     node_labels::TNodeLabels
@@ -73,7 +73,7 @@ end
 
 function compute_edge_colors(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
     )::NamedTuple{(:edgecolors, :minor_edgecolors, :defaultedgecolor)}
     phylogeny = prepared_phylogeny.phylogeny
     edgecolor_mode = config.edgecolor isa AbstractDict ? :by_edge : :uniform
@@ -122,7 +122,7 @@ end
 
 function compute_edge_widths(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
     )::NamedTuple{(:edgewidths, :minor_edgewidths)}
     phylogeny = prepared_phylogeny.phylogeny
     edgewidths = Float32[]
@@ -202,7 +202,7 @@ end
 
 function compute_segment_channels(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         layout::LayoutComputation,
     )::NamedTuple{(:edge_segments, :node_bars, :minor_edge_shafts)}
     geometry = layout.geometry
@@ -431,11 +431,11 @@ function _maybe_text_channel(build::Function, show::Bool, align, font)::TextChan
 end
 
 function compute_text_channels(
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         layout::LayoutComputation,
     )::NamedTuple{
         (
-            :tip_labels,
+            :leaf_labels,
             :internal_node_names,
             :node_numbers,
             :node_labels,
@@ -450,17 +450,17 @@ function compute_text_channels(
     edge_table = layout.annotations.edge_data
     leaf_rows = findall(node_table.lea)
     internal_rows = findall(.!node_table.lea)
-    tip_labels = _maybe_text_channel(config.showtiplabel, (:left, :center), :italic) do
+    leaf_labels = _maybe_text_channel(config.showleaflabel, (:left, :center), :italic) do
         compute_text_channel(
             node_table,
             leaf_rows,
             :name,
             _resolve_color("black"),
-            # compute_text_sizes(config.tipcex, length(leaf_rows)),
-            compute_text_sizes(config.tipfontsize, length(leaf_rows)),
+            # compute_text_sizes(config.leafcex, length(leaf_rows)),
+            compute_text_sizes(config.leaffontsize, length(leaf_rows)),
             (:left, :center),
             :italic,
-            config.tipoffset,
+            config.leafoffset,
         )
     end
 
@@ -470,8 +470,8 @@ function compute_text_channels(
             internal_rows,
             :name,
             _resolve_color("black"),
-            # compute_text_sizes(config.tipcex, length(internal_rows)),
-            compute_text_sizes(config.tipfontsize, length(internal_rows)),
+            # compute_text_sizes(config.leafcex, length(internal_rows)),
+            compute_text_sizes(config.leaffontsize, length(internal_rows)),
             (0.5, 0.0),
             :italic,
         )
@@ -567,7 +567,7 @@ function compute_text_channels(
     end
 
     return (
-        tip_labels = tip_labels,
+        leaf_labels = leaf_labels,
         internal_node_names = internal_node_names,
         node_numbers = node_numbers,
         node_labels = node_labels,
@@ -580,7 +580,7 @@ function compute_text_channels(
 end
 
 function compute_data_limits(
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         extent::PlotExtent,
     )::Makie.Rect3d
     if isnothing(config.xlim)
@@ -603,7 +603,7 @@ end
 
 function compute_primitive_channels(
         prepared_phylogeny::PreparedPhylogeny,
-        config::PhyloPlotConfig,
+        config::PhylogenyPlotConfig,
         layout::LayoutComputation,
     )::PrimitiveChannels
     segment_channels = compute_segment_channels(prepared_phylogeny, config, layout)
@@ -624,7 +624,7 @@ function compute_primitive_channels(
         segment_channels.node_bars,
         segment_channels.minor_edge_shafts,
         arrowheads,
-        text_channels.tip_labels,
+        text_channels.leaf_labels,
         text_channels.internal_node_names,
         text_channels.node_numbers,
         text_channels.node_labels,

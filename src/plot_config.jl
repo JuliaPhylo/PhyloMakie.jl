@@ -1,9 +1,9 @@
 const SUPPORTED_STYLE_SYMBOLS = (:fulltree, :majortree)
 
-const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
+const SUPPORTED_PHYLOGENY_PLOT_ATTRIBUTES = (
     :clip_planes,
     :useedgelength,
-    :showtiplabel,
+    :showleaflabel,
     :shownodelabel,
     :shownodenumber,
     :showedgelength,
@@ -29,22 +29,22 @@ const SUPPORTED_PHYLOPLOT_ATTRIBUTES = (
     :edgenumbercolor,
     :nodelabeladj,
     :edgelabeladj,
-    :tipoffset,
-    # :tipcex,
-    :tipfontsize,
+    :leafoffset,
+    # :leafcex,
+    :leaffontsize,
     :xlim,
     :ylim,
     :style,
 )
 
-struct PhyloPlotConfig{
+struct PhylogenyPlotConfig{
         TXLimits,
         TYLimits,
-        TTipOffset,
-        # TTipScale,
+        TLeafOffset,
+        # TLeafScale,
         # TNodeScale,
         # TEdgeScale,
-        TTipFontSize,
+        TLeafFontSize,
         TNodeFontSize,
         TEdgeFontSize,
         TNodeColor,
@@ -61,7 +61,7 @@ struct PhyloPlotConfig{
         TEdgeWidthInput,
     }
     useedgelength::Bool
-    showtiplabel::Bool
+    showleaflabel::Bool
     shownodelabel::Bool
     shownodenumber::Bool
     showedgelength::Bool
@@ -85,9 +85,9 @@ struct PhyloPlotConfig{
     edgenumbercolor::TEdgeNumberColor
     nodelabeladj::TNodeAlign
     edgelabeladj::TEdgeAlign
-    tipoffset::TTipOffset
-    # tipcex::TTipScale
-    tipfontsize::TTipFontSize
+    leafoffset::TLeafOffset
+    # leafcex::TLeafScale
+    leaffontsize::TLeafFontSize
     xlim::TXLimits
     ylim::TYLimits
     style::Symbol
@@ -129,7 +129,7 @@ end
 
 function resolve_plot_config(;
         useedgelength::Bool = false,
-        showtiplabel::Bool = true,
+        showleaflabel::Bool = true,
         shownodelabel::Bool = false,
         shownodenumber::Bool = false,
         showedgelength::Bool = false,
@@ -153,13 +153,13 @@ function resolve_plot_config(;
         edgenumbercolor = "grey",
         nodelabeladj = 1,
         edgelabeladj = [0.5, 0],
-        tipoffset = 0,
-        # tipcex = 1,
-        tipfontsize = 16.0f0,
+        leafoffset = 0,
+        # leafcex = 1,
+        leaffontsize = 16.0f0,
         xlim = nothing,
         ylim = nothing,
         style::Symbol = :fulltree,
-    )::PhyloPlotConfig
+    )::PhylogenyPlotConfig
     _resolve_edgewidth_mode(edgewidth)
     resolved_style = _normalize_style(style)
     resolved_arrowlen =
@@ -167,9 +167,9 @@ function resolve_plot_config(;
     resolved_minorlinetype =
         isnothing(minorlinetype) ? (style == :majortree ? "solid" : "longdash") : minorlinetype
 
-    return PhyloPlotConfig(
+    return PhylogenyPlotConfig(
         useedgelength,
-        showtiplabel,
+        showleaflabel,
         shownodelabel,
         shownodenumber,
         showedgelength,
@@ -193,9 +193,9 @@ function resolve_plot_config(;
         edgenumbercolor,
         nodelabeladj,
         edgelabeladj,
-        tipoffset,
-        # tipcex,
-        tipfontsize,
+        leafoffset,
+        # leafcex,
+        leaffontsize,
         xlim,
         ylim,
         resolved_style,
@@ -209,10 +209,10 @@ function validate_limit_pair(limit, helper_message::AbstractString)
     return limit
 end
 
-function with_plot_config_limits(config::PhyloPlotConfig, xlim, ylim)::PhyloPlotConfig
-    return PhyloPlotConfig(
+function with_plot_config_limits(config::PhylogenyPlotConfig, xlim, ylim)::PhylogenyPlotConfig
+    return PhylogenyPlotConfig(
         config.useedgelength,
-        config.showtiplabel,
+        config.showleaflabel,
         config.shownodelabel,
         config.shownodenumber,
         config.showedgelength,
@@ -236,9 +236,9 @@ function with_plot_config_limits(config::PhyloPlotConfig, xlim, ylim)::PhyloPlot
         config.edgenumbercolor,
         config.nodelabeladj,
         config.edgelabeladj,
-        config.tipoffset,
-        # config.tipcex,
-        config.tipfontsize,
+        config.leafoffset,
+        # config.leafcex,
+        config.leaffontsize,
         xlim,
         ylim,
         config.style,

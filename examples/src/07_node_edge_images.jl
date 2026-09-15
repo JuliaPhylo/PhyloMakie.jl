@@ -13,7 +13,7 @@ circle_paths = Dict(
     "red_2" => joinpath(circle_directory, "red.png"),
 )
 
-function tip_circle(node)
+function leaf_circle(node)
     source = get(circle_paths, node_label(node), nothing)
     isnothing(source) && return nothing
     return ImageAnnotation(source; height = 0.8)
@@ -43,9 +43,9 @@ hidespines!(axis)
 plot!(
     axis,
     phylogeny;
-    nodeimages = tip_circle,
+    nodeimages = leaf_circle,
     edgeimages = selected_edge_circle,
-    tipoffset = 0.3,
+    leafoffset = 0.3,
 )
 
 figure

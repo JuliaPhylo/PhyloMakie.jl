@@ -91,7 +91,7 @@ end
         layout_case = layout_cases.mixed_missing_lengths_warning
         phylogeny = parsephylogeny(NewickFormat(), layout_case.newick)
         for edge_number in layout_case.missing_edge_numbers
-            set_branch_length!(edge(phylogeny, edge_number, Val(:id)), missing)
+            set_edge_length!(edge(phylogeny, edge_number, Val(:id)), missing)
         end
         config = resolve_plot_config(; layout_case.attribute_kwargs...)
         geometry = @test_logs (:warn, layout_case.expected_warning) compute_phylogeny_geometry(
@@ -101,7 +101,7 @@ end
 
         comparison_phylogeny = parsephylogeny(NewickFormat(), layout_case.newick)
         for edge_number in layout_case.missing_edge_numbers
-            set_branch_length!(edge(comparison_phylogeny, edge_number, Val(:id)), 1.0)
+            set_edge_length!(edge(comparison_phylogeny, edge_number, Val(:id)), 1.0)
         end
         comparison_geometry = compute_phylogeny_geometry(
             prepare_for_layout(comparison_phylogeny),

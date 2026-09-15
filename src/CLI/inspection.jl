@@ -1,6 +1,6 @@
 function record_statistics(record::SourceRecord)::RecordStatistics
     phylogeny = record.phylogeny
-    lengths = collect(skipmissing(PhyloMakie.branch_length.(PhyloMakie.edges(phylogeny))))
+    lengths = collect(skipmissing(PhyloMakie.edge_length.(PhyloMakie.edges(phylogeny))))
     edge_total = PhyloMakie.edge_count(phylogeny)
     coverage = if isempty(lengths)
         :none
@@ -20,7 +20,7 @@ function record_statistics(record::SourceRecord)::RecordStatistics
         PhyloMakie.is_rooted(phylogeny),
         PhyloMakie.node_count(phylogeny),
         edge_total,
-        sort!(PhyloMakie.tip_labels(phylogeny)),
+        sort!(PhyloMakie.leaf_labels(phylogeny)),
         count(PhyloMakie.is_hybrid, PhyloMakie.nodes(phylogeny)),
         coverage,
         length(lengths),
@@ -34,7 +34,7 @@ end
 function collection_statistics(records::AbstractVector{SourceRecord})::CollectionStatistics
     statistics = record_statistics.(records)
     sources = unique(record.source for record in records)
-    taxa = sort!(unique(Iterators.flatten(statistic.tip_labels for statistic in statistics)))
+    taxa = sort!(unique(Iterators.flatten(statistic.leaf_labels for statistic in statistics)))
     return CollectionStatistics(collect(sources), statistics, collect(taxa))
 end
 
@@ -56,17 +56,17 @@ end
 
 function _write_summary(io::IO, statistics::CollectionStatistics)::Nothing
     records = statistics.records
-    tip_counts = Int[length(record.tip_labels) for record in records]
+    leaf_counts = Int[length(record.leaf_labels) for record in records]
     tree_count = count(record -> record.tree, records)
     rooted_count = count(record -> record.rooted, records)
-    complete_count = count(record -> record.branch_length_coverage === :complete, records)
-    partial_count = count(record -> record.branch_length_coverage === :partial, records)
-    none_count = count(record -> record.branch_length_coverage === :none, records)
+    complete_count = count(record -> record.edge_length_coverage === :complete, records)
+    partial_count = count(record -> record.edge_length_coverage === :partial, records)
+    none_count = count(record -> record.edge_length_coverage === :none, records)
     complete_lengths = Float64[
-        record.branch_length_sum for record in records
-            if record.branch_length_coverage === :complete && !isnothing(record.branch_length_sum)
+        record.edge_length_sum for record in records
+            if record.edge_length_coverage === :complete && !isnothing(record.edge_length_sum)
     ]
-    observed_edge_count = sum(record.branch_length_count for record in records)
+    observed_edge_count = sum(record.edge_length_count for record in records)
 
     println(io, "Sources: $(length(statistics.sources))")
     println(io, "Phylogenies: $(length(records))")
@@ -75,23 +75,23 @@ function _write_summary(io::IO, statistics::CollectionStatistics)::Nothing
     println(io, "Rooted: $(rooted_count)")
     println(io, "Unrooted: $(length(records) - rooted_count)")
     println(io, "Unique taxa: $(length(statistics.taxa))")
-    println(io, "Tips per phylogeny: $(_range_summary(tip_counts))")
+    println(io, "Leaves per phylogeny: $(_range_summary(leaf_counts))")
     println(
         io,
-        "Branch-length coverage: $(complete_count) complete, $(partial_count) partial, $(none_count) absent",
+        "Edge-length coverage: $(complete_count) complete, $(partial_count) partial, $(none_count) absent",
     )
     println(io, "Complete tree length: $(_range_summary(complete_lengths))")
     if observed_edge_count > 0
         edge_minima = Float64[
-            record.branch_length_minimum for record in records
-                if !isnothing(record.branch_length_minimum)
+            record.edge_length_minimum for record in records
+                if !isnothing(record.edge_length_minimum)
         ]
         edge_maxima = Float64[
-            record.branch_length_maximum for record in records
-                if !isnothing(record.branch_length_maximum)
+            record.edge_length_maximum for record in records
+                if !isnothing(record.edge_length_maximum)
         ]
         observed_length_sum = sum(
-            record.branch_length_sum for record in records if !isnothing(record.branch_length_sum)
+            record.edge_length_sum for record in records if !isnothing(record.edge_length_sum)
         )
         println(
             io,
@@ -118,20 +118,20 @@ function _write_record_details(
         println(
             io,
             "  $(index). $(source) [record $(record.record_index)]: $(topology), $(rootedness), " *
-                "$(length(record.tip_labels)) tips, $(record.node_count) nodes, $(record.edge_count) edges, " *
-                "$(record.hybrid_node_count) hybrid nodes, branch lengths $(record.branch_length_coverage)",
+                "$(length(record.leaf_labels)) leaves, $(record.node_count) nodes, $(record.edge_count) edges, " *
+                "$(record.hybrid_node_count) hybrid nodes, edge lengths $(record.edge_length_coverage)",
         )
-        println(io, "     Branch-length sum: $(_format_optional_number(record.branch_length_sum))")
-        if record.branch_length_count > 0
+        println(io, "     Edge-length sum: $(_format_optional_number(record.edge_length_sum))")
+        if record.edge_length_count > 0
             println(
                 io,
-                "     Observed edge lengths: min $(_format_optional_number(record.branch_length_minimum)), " *
-                    "mean $(_format_optional_number(record.branch_length_mean)), " *
-                    "max $(_format_optional_number(record.branch_length_maximum))",
+                "     Observed edge lengths: min $(_format_optional_number(record.edge_length_minimum)), " *
+                    "mean $(_format_optional_number(record.edge_length_mean)), " *
+                    "max $(_format_optional_number(record.edge_length_maximum))",
             )
         end
         if list_taxa
-            println(io, "     Taxa: $(join(record.tip_labels, ", "))")
+            println(io, "     Taxa: $(join(record.leaf_labels, ", "))")
         end
     end
     return nothing

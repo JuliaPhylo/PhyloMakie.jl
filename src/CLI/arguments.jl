@@ -4,7 +4,7 @@ const SUPPORTED_SELECTED_OUTPUT_FORMATS = (:newick, :nexus)
 const SUPPORTED_MULTIPLE_MODES = (:grid, :files)
 const SUPPORTED_CLI_PLOT_ATTRIBUTES = (
     :useedgelength,
-    :showtiplabel,
+    :showleaflabel,
     :shownodelabel,
     :shownodenumber,
     :showedgelength,
@@ -20,9 +20,9 @@ const SUPPORTED_CLI_PLOT_ATTRIBUTES = (
     :nodeimages,
     :edgeimages,
     :edgenumbercolor,
-    :tipoffset,
-    # :tipcex,
-    :tipfontsize,
+    :leafoffset,
+    # :leafcex,
+    :leaffontsize,
     :xlim,
     :ylim,
     :style,
