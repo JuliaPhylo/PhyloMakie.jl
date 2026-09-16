@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rename the repository maintainer roster to `MAINTAINERS.md` and update
+  repository references.
 - Replace phylogenetic tip and branch terminology with leaf and edge
   terminology throughout the API, documentation, tests, examples, and app;
   rename `PhyloPlot` and its convenience functions to `PhylogenyPlot`,
