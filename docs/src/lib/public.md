@@ -135,8 +135,6 @@ PhyloMakie.@nexustreeblock_str
 | `edgeimages` | Map edge endpoint selectors or objects to images. |
 | `nodefontsize` | Set the node label font size. |
 | `edgefontsize` | Set the edge label font size. |
-<!-- | `nodecex` | Scale node label text. | -->
-<!-- | `edgecex` | Scale edge label text. | -->
 | `nodelabelcolor` | Set node label color. |
 | `edgelabelcolor` | Set edge label color. |
 | `edgenumbercolor` | Set edge number color. |
@@ -144,7 +142,6 @@ PhyloMakie.@nexustreeblock_str
 | `edgelabeladj` | Set edge label alignment. |
 | `leafoffset` | Move leaf labels away from leaf positions. |
 | `leaffontsize` | Set the leaf and internal-node label font size. |
-<!-- | `leafcex` | Scale leaf label text. | -->
 | `xlim` | Set x data limits. |
 | `ylim` | Set y data limits. |
 | `style` | Choose `:fulltree` or `:majortree`. |

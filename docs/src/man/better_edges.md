@@ -44,7 +44,7 @@ figure
 ```
 
 !!! note
-    I used a DataFrame to add the label "N" to the plot.
+    The example uses a DataFrame to add the label "N" to the plot.
     For more on this, see the [Adding labels](@ref) section.
 
 If edge lengths represent time, D could represent a fossil, or a virus strain
@@ -92,8 +92,8 @@ figure
 
 It may be useful to consider using `style = :majortree` if it causes too much
 confusion, since the `:majortree` style doesn't visually represent minor edge
-lengths. Because of this, I used the `showedgelength = true` option to see the
-information anyway.
+lengths. Because of this, the example below uses the `showedgelength = true`
+option to see the information anyway.
 
 ```@example better_edges
 figure = Figure(size = (760, 320))
@@ -122,8 +122,8 @@ plot!(
 figure
 ```
 
-I also used the `arrowlen = 0.1` option to show the arrow tips to show the
-direction of minor edges, which are hidden by default when using the
+The example also uses the `arrowlen = 0.1` option to show the arrow tips to
+show the direction of minor edges, which are hidden by default when using the
 `style = :majortree` option.
 
 ## Varying edge widths

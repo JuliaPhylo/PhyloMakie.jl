@@ -72,8 +72,7 @@ figaxisplot.figure
 ```
 
 Both `figaxisplot` and `figaxisplot.figure` can display the figure. In a script,
-use `display(figaxisplot.figure)` explicitly; the examples in this manual put
-the figure last so that Documenter renders it. Use Makie's `save` to write a
+use `display(figaxisplot.figure)` explicitly. Use Makie's `save` to write a
 file in the current directory:
 
 ```@example getting_started
@@ -106,7 +105,6 @@ hidespines!(axis)
 plot_handle = plot!(
     axis,
     phylogeny;
-    showgamma = true,
     useedgelength = false,
 )
 figure
@@ -155,7 +153,6 @@ aliases for `plot` and `plot!`:
 ```@example getting_started
 alias_figaxisplot = phylogenyplot(
     phylogeny;
-    showgamma = true,
     showleaflabel = true,
 )
 alias_figaxisplot.figure

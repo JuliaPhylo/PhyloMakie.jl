@@ -75,7 +75,6 @@ plot(
         label = ["edge number 1", "edge # 2"],
     ),
     edgelabelcolor = "orangered",
-    # edgecex = [0.9, 1.1],
     edgefontsize = [14.4, 17.6],
     edgelabeladj = [0.5, -0.3],
 )
@@ -258,7 +257,7 @@ lines!(axis, [9.0, 9.0], [0.8, 7.2]; color = :gray30, linewidth = 3)
 text!(axis, 9.3, 4.0; text = "C", align = (:left, :center), fontsize = 16)
 ```
 
-# Beyond
+## Beyond
 
 To go beyond, we can access data on the nodes and edges to use them as we wish.
 We can access the coordinates of points and segments and more data like this:

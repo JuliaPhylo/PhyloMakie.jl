@@ -5,6 +5,9 @@
 - Introduce Makie figures, axes, plot results, and formatting tools earlier in
   the manual; clarify phylogeny types; add a PhyloNetworks conversion guide and
   a linked index of runnable example scripts.
+- Correct the README's NEXUS format tag (`NexusFormat`) and app help command
+  (`phylomakie --help`); fix a heading level, first-person prose, and stale
+  commented-out lines in the manual and examples.
 - Rename the repository maintainer roster to `MAINTAINERS.md` and update
   repository references.
 - Replace phylogenetic tip and branch terminology with leaf and edge
