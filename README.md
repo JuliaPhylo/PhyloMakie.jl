@@ -28,11 +28,12 @@ visualization of phylogenetic trees and networks.
         - `plot(nexustreeblock"...")`.
     - Standard string and filepath sources:
         - `phylos = parsephylogenies(NewickFormat(), "...")` 
-        - `phylos = parsephylogenies(NexusTreeFormat(), "...")` 
+        - `phylos = parsephylogenies(NexusFormat(), "...")`
         - `phylos = readphylogenies(NewickFormat(), "/path/to/datafile.newick")` 
-        - `phylos = readphylogenies(NexusTreeFormat(), "/path/to/datafile.nexus")` 
-    - Native interoperability with:
-        - `PhyloNetworks.HybridNetwork`.
+        - `phylos = readphylogenies(NexusFormat(), "/path/to/datafile.nexus")`
+    - Conversion to and from `PhyloNetworks.HybridNetwork` with
+      `from_hybridnetwork` and `to_hybridnetwork`; see the
+      [PhyloNetworks guide](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/phylonetworks/).
 
 
 ### Application
@@ -48,7 +49,7 @@ phylomakie view /path/to/treefile.newick
 to open the interactive viewer or
 
 ```bash
-phylomake --help
+phylomakie --help
 ```
 
 for other options.
@@ -76,6 +77,12 @@ modes.
 
 ## Quickstart
 
+Install `GLMakie` with `Pkg.add("GLMakie")` for the interactive example below.
+For static figures, install and load `CairoMakie` instead. These backends
+provide Makie's plotting functions; PhyloMakie adds support for phylogenies.
+The [getting started guide](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/getting_started/)
+introduces the phylogeny types and the figure, axis, and plot result.
+
 ```julia
 using GLMakie
 using PhyloMakie
@@ -93,5 +100,13 @@ plot(
 
 ## Documentation
 
-- [Home](docs/src/index.md)
-- [Public API](docs/src/lib/public.md)
+- [Manual](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/)
+- [Getting started, including Makie basics](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/getting_started/)
+- [Working with PhyloNetworks](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/phylonetworks/)
+- [Example scripts and how to run them](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/examples/)
+- [Public API](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/lib/public/)
+
+The [examples directory](examples) contains complete scripts for basic plotting,
+reactive updates, layouts, and image annotations. Start with the
+[basic network example](examples/src/01_mwe_basic_network_phylomakie.jl) or the
+[offline image walkthrough](examples/src/06b_image_annotations_repl_walkthrough.jl).

@@ -23,9 +23,11 @@ makedocs(
             "Installation" => "man/installation.md",
             "Command-line app" => "man/command_line_app.md",
             "Getting started" => "man/getting_started.md",
+            "Working with PhyloNetworks" => "man/phylonetworks.md",
             "Untangling edges" => "man/untangling_edges.md",
             "Better edges" => "man/better_edges.md",
             "Adding data" => "man/adding_data.md",
+            "Example scripts" => "man/examples.md",
         ],
         "Library" => [
             "Public API" => "lib/public.md",

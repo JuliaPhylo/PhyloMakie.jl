@@ -1,13 +1,22 @@
-```@setup adding_data
+# Adding data
+
+This section adds labels, images, and other annotations to a phylogeny plot.
+It uses Makie's `Figure` and `Axis` to arrange panels and its
+`hidedecorations!` and `hidespines!` functions to hide coordinate decorations
+and panel borders. [Makie basics for phylogeny plots](@ref) introduces these
+tools and links to Makie's documentation.
+
+In addition to CairoMakie and PhyloMakie, this page uses DataFrames for label
+tables. Add it to the active environment with
+`using Pkg; Pkg.add("DataFrames")`, then load the packages used below:
+
+```@example adding_data
 using CairoMakie
 using DataFrames
 using PhyloMakie
 CairoMakie.activate!()
+nothing # hide
 ```
-
-# Adding data
-
-In this section, we look over ways of adding extra information or data to a plot.
 
 ## Adding labels
 
@@ -35,6 +44,10 @@ figure
 
 Edge numbers are shown in grey by default (to avoid mistaking them for edge
 lengths), but their color can be adjusted as shown above.
+Here, `figure[1, 1]` and `figure[1, 2]` place the Makie axes side by side.
+The [edge-number script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/02_mwe_edge_numbers_phylomakie.jl)
+provides another complete example; see [Example scripts](@ref) for setup
+instructions.
 
 We then need to define a DataFrame with 2 columns of information: the number of
 the edge (or node), and the label that goes on it, like this:
@@ -128,43 +141,38 @@ not. Increase the axis `xautolimitmargin` or set `xlim` when images placed to
 the left or right need more margin. PhyloMakie caches decoded file and URL
 sources within each plot, so layout and style updates do not reload them.
 
-The offline `examples/src/06b_image_annotations_repl_walkthrough.jl` script is
+The offline
+[image annotation walkthrough](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/06b_image_annotations_repl_walkthrough.jl) is
 a deliberately repetitive REPL walkthrough of exact, repeated, and
 regular-expression selectors for node and edge images. The more compact
-`examples/src/07_node_edge_images.jl` script uses checked-in colored circle
-files. `examples/src/09_phylopic_native_images.jl` resolves public
+[node and edge image script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/07_node_edge_images.jl) uses checked-in colored circle
+files. The [native PhyloPic image script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/09_phylopic_native_images.jl) resolves public
 PhyloPic thumbnail URLs with PhyloPicMakie and passes those URLs to
 `nodeimages`. PhyloPicMakie owns taxon discovery; PhyloMakie owns the image's
 tree anchor and rendering lifecycle.
 
 For a short REPL-style recipe focused only on placement, see
-`examples/src/08_phylopic_image_placement_recipe.jl`. It maps the named leaves
+the [image placement script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/08_phylopic_image_placement_recipe.jl). It maps the named leaves
 `cat`, `dog`, `bear`, `horse`, and `mouse` directly to URL-backed images and
 shows the `:left`, `:above`, `:center`, `:below`, and `:right` positions side by
 side.
+The [Example scripts](@ref) index includes instructions for running these
+scripts and identifies which require internet access or PhyloPicMakie.
 
 ## Adding other annotations using Makie
 
-We can use the return value of `plot` and the coordinate query functions to get
-information on the coordinates of different elements of the plot. Using this,
-we can add any other information we want.
-
-The `plot` function returns a `Makie.FigureAxisPlot` with these fields:
-
-```julia
-figaxisplot.figure
-figaxisplot.axis
-figaxisplot.plot
-```
-
-Use `.figure` to display the figure, `.axis` to add more Makie annotations, and
-`.plot` with [`node_positions`](@ref PhyloMakie.node_positions) or
-[`edge_positions`](@ref PhyloMakie.edge_positions) to query the coordinates used
-by the live `PhylogenyPlot`.
+Use the plot result's `.plot` field with
+[`node_positions`](@ref PhyloMakie.node_positions) or
+[`edge_positions`](@ref PhyloMakie.edge_positions) to find annotation
+coordinates, then pass its `.axis` field to Makie's plotting functions.
+[The figure, axis, and plot result](@ref) introduces these fields.
 
 These query functions return independent snapshots. Use
 [`node_positions_observable`](@ref PhyloMakie.node_positions_observable) when
-an annotation must move after a layout update:
+an annotation must move after a layout update. Makie's
+[`scatter!`](https://docs.makie.org/stable/reference/plots/scatter) adds point
+markers to an existing axis. In this example, the markers follow the leaves
+when the layout changes:
 
 ```@example adding_data
 reactive_tree = parsephylogeny(NewickFormat(), "((A:1.0,B:2.0):1.0,C:3.0);")
@@ -189,11 +197,16 @@ Passing `reactive_result.plot` to `map` ties the callback to that plot's
 lifecycle. The `leaf_overlay` handle remains the same while its positions
 change.
 
-The optional `examples/src/06_phylopic_composition.jl` example passes leaf
+The [reactive plot script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/03_mwe_reactivity_phylomakie.jl)
+also demonstrates replacing the phylogeny while retaining the same overlay.
+Makie's [Observables guide](https://docs.makie.org/stable/explanations/observables)
+explains the reactive values and callbacks used here.
+
+The optional [PhyloPic composition script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/06_phylopic_composition.jl) passes leaf
 coordinates and scientific names to the discovery-aware
 `PhyloPicMakie.augment_phylopic!` function. PhyloPicMakie resolves and renders
 the silhouettes as an independently owned overlay. The newer
-`examples/src/09_phylopic_native_images.jl` example instead gives resolved URLs
+[native PhyloPic image script](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/09_phylopic_native_images.jl) instead gives resolved URLs
 to `nodeimages`, making the images native children of the tree plot. The
 PhyloMakie package itself does not depend on PhyloPicMakie in either case.
 
@@ -232,7 +245,7 @@ Looking at the x coordinates returned by default, we can see that the x range is
 `(1.0, 10.0)`, forcing the range to be wider on the right, for annotations.
 
 ```julia
-plot(tree; xlim = (1.0, 10.0))
+plot_result = plot(tree; xlim = (1.0, 10.0))
 ```
 
 Knowing the coordinates, we can now add more information to the plot through

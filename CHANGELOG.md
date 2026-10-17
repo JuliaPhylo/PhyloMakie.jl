@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Introduce Makie figures, axes, plot results, and formatting tools earlier in
+  the manual; clarify phylogeny types; add a PhyloNetworks conversion guide and
+  a linked index of runnable example scripts.
 - Rename the repository maintainer roster to `MAINTAINERS.md` and update
   repository references.
 - Replace phylogenetic tip and branch terminology with leaf and edge

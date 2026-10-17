@@ -25,6 +25,8 @@ PhyloNetworks is confined to an adapter. Newick and NEXUS readers use its
 parsers and immediately return a native `LineageNetwork`. Use
 `from_hybridnetwork`, `to_hybridnetwork`, or `convert` for explicit conversion
 in either direction; conversion does not transfer inference caches.
+See [Working with PhyloNetworks](@ref) for a runnable example of conversion,
+plotting, and export.
 
 ```@docs
 PhyloMakie.AbstractPhylogeny
@@ -46,6 +48,9 @@ The `newick"..."` and `nexustreeblock"..."` string literals parse exactly one
 phylogeny for direct use with the plotting entry points.
 
 ## Plotting entry points
+
+For an introduction to Makie's `Figure`, `Axis`, and the fields of a
+`FigureAxisPlot`, see [The figure, axis, and plot result](@ref).
 
 | Function | Return value | Description |
 | --- | --- | --- |
