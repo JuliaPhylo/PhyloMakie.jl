@@ -43,6 +43,12 @@ jobs:
           sudo apt-get install --yes xvfb
       - name: Run tests under a virtual display
         run: xvfb-run -a julia --project --color=yes -e 'using Pkg; Pkg.test(; coverage=true)'
+      - uses: julia-actions/julia-processcoverage@v1
+      - name: upload coverage reports to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
   docs:
     name: Documentation
     runs-on: ubuntu-latest
