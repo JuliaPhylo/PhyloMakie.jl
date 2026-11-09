@@ -14,8 +14,6 @@ visualization of phylogenetic trees and networks.
 
 ## Features
 
-### Library
-
 - `plot(phylogeny)` and `plot!(axis, phylogeny)` follow standard Makie conventions
 - `phylogenyplot` and `phylogenyplot!` as convenience aliases
 - Full-tree and major-tree layout styles
@@ -36,25 +34,6 @@ visualization of phylogenetic trees and networks.
       `from_hybridnetwork` and `to_hybridnetwork`; see the
       [PhyloNetworks guide](https://JuliaPhylo.github.io/PhyloMakie.jl/dev/man/phylonetworks/).
 
-
-### Application
-
-PhyloMakie.jl also provides an installable `phylomakie` app for interactive viewing, metadata inspection
-  and static rendering.
-After installation, open a shell and run:
-
-```bash
-phylomakie view /path/to/treefile.newick
-```
-
-to open the interactive viewer or
-
-```bash
-phylomakie --help
-```
-
-for other options.
-
 ## Installation
 
 Install PhyloMakie from the Julia General registry:
@@ -63,18 +42,6 @@ Install PhyloMakie from the Julia General registry:
 using Pkg
 Pkg.add("PhyloMakie")
 ```
-
-Julia 1.12 can install the command-line app separately:
-
-```julia
-using Pkg
-Pkg.Apps.add("PhyloMakie")
-```
-
-Ensure that the first Julia depot's `bin` directory, normally `~/.julia/bin`,
-is on `PATH`. See the [command-line app guide](docs/src/man/command_line_app.md)
-for input formats, filters, plot attributes, inspection levels, and output
-modes.
 
 ## Quickstart
 

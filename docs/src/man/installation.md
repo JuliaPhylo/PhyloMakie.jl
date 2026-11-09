@@ -10,19 +10,6 @@ using Pkg
 Pkg.add("PhyloMakie")
 ```
 
-Julia 1.12 can install PhyloMakie's command-line app into the first Julia
-depot:
-
-```julia
-using Pkg
-Pkg.Apps.add("PhyloMakie")
-```
-
-The app executable is named `phylomakie`. Add the first Julia depot's `bin`
-directory, normally `~/.julia/bin`, to `PATH`. Pkg app support is experimental
-and is not available in Julia 1.11, although the PhyloMakie library remains
-compatible with Julia 1.11.
-
 ## Choose a Makie backend
 
 Makie backends render and display the plots. This manual uses CairoMakie for

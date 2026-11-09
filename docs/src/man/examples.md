@@ -64,17 +64,3 @@ image URLs directly to PhyloMakie.
 | [08_phylopic_image_placement_recipe.jl](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/08_phylopic_image_placement_recipe.jl) | Image placement around named leaves using CairoMakie and PhyloPic URLs. | [Adding images to nodes and edges](@ref) |
 | [09_phylopic_native_images.jl](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/09_phylopic_native_images.jl) | Taxon lookup with PhyloPicMakie, followed by PhyloMakie node images using CairoMakie. | [Adding images to nodes and edges](@ref) |
 | [06_phylopic_composition.jl](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/06_phylopic_composition.jl) | A separate PhyloPicMakie silhouette overlay placed at leaf coordinates using GLMakie. | [Adding other annotations using Makie](@ref) |
-
-## Command-line viewer
-
-[05_interactive_ex1.jl](https://github.com/JuliaPhylo/PhyloMakie.jl/blob/main/examples/src/05_interactive_ex1.jl)
-launches the interactive viewer described in the [Command-line app](@ref)
-guide. Run it as a separate process, with a path to a Newick or NEXUS file:
-
-```sh
-julia --project=examples examples/src/05_interactive_ex1.jl /path/to/tree.newick
-```
-
-This script calls `exit` when the viewer finishes, so run it from a terminal
-instead of including it in a working REPL session. It requires a graphical
-display.
