@@ -11,7 +11,12 @@ ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PhyloNetworks = "33ad39ac-ed31-50eb-9b15-43d0656eaa72"
 
+[weakdeps]
+# PhyloNetworks permits older CSV releases whose IOBuffer handling fails on Julia 1.11+.
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+
 [compat]
+CSV = "0.10.17"
 DataFrames = "1.8.2"
 Downloads = "1.6"
 FileIO = "1.18"

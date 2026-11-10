@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Keep renderer dependencies in the test, documentation, and example environments.
-
 ## 0.1.0
 
 Initial release of PhyloMakie for visualizing phylogenetic trees and networks
