@@ -1,4 +1,4 @@
-# Maintainers
+# Contributors
 
 - Cecile Ane
 - Jeet Sukumaran <jeetsukumaran@gmail.com>
