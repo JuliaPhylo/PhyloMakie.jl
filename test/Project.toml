@@ -14,4 +14,5 @@ PhyloMakie = {path = ".."}
 
 [compat]
 CairoMakie = "0.15.10"
+DataFrames = "1.8.2"
 Makie = "0.24.10"
