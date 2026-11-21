@@ -6,11 +6,11 @@
 [![coverage](https://codecov.io/gh/juliaphylo/PhyloMakie.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/juliaphylo/PhyloMakie.jl)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-PhyloMakie.jl 
-is a 
-[Julia programming language](https://julialang.org/) package 
+PhyloMakie.jl
+is a
+[Julia programming language](https://julialang.org/) package
 providing a [Makie](https://docs.makie.org/stable/)-based
-visualization of phylogenetic trees and networks. 
+visualization of phylogenetic trees and networks.
 
 ## Features
 
@@ -22,13 +22,13 @@ visualization of phylogenetic trees and networks.
 - Snapshot and reactive node-position queries for independently owned overlays
 - Composable with any Makie layout
 - Library provides both analysis-friendly as well as developer-friendly approaches for data parsing:
-    - String literals for REPL-based or instructional context: 
+    - String literals for REPL-based or instructional context:
         - `plot(newick"(A, (B,C))")`.
         - `plot(nexustreeblock"...")`.
     - Standard string and filepath sources:
-        - `phylos = parsephylogenies(NewickFormat(), "...")` 
+        - `phylos = parsephylogenies(NewickFormat(), "...")`
         - `phylos = parsephylogenies(NexusFormat(), "...")`
-        - `phylos = readphylogenies(NewickFormat(), "/path/to/datafile.newick")` 
+        - `phylos = readphylogenies(NewickFormat(), "/path/to/datafile.newick")`
         - `phylos = readphylogenies(NexusFormat(), "/path/to/datafile.nexus")`
     - Conversion to and from `PhyloNetworks.HybridNetwork` with
       `from_hybridnetwork` and `to_hybridnetwork`; see the
@@ -78,3 +78,19 @@ The [examples directory](examples) contains complete scripts for basic plotting,
 reactive updates, layouts, and image annotations. Start with the
 [basic network example](examples/src/01_mwe_basic_network_phylomakie.jl) or the
 [offline image walkthrough](examples/src/06b_image_annotations_repl_walkthrough.jl).
+
+## Large-language model Artificial intelligence (LLM AI)
+
+This package was developed with the use of LLM AI agent
+workflows, with multiple agents running workflow and cross-checking protocols in
+documented agentic coding harnesses maintained by the authors.
+Development policies governing the agents operating within these
+harnesses are also documented, and can be found in the `STYLE...`
+files in the project root.
+
+Document artifacts of all harnessed agentic coding workflow runs for this project are available at: `.workflow-docs/`,
+including not only ther original architecture, design, and implementation patterns and templates, provided by the authors,
+but also various intermediary documents such as the finalized tasking actually communicated to the agents,
+the human oversight, review, and response documents, etc.
+
+
